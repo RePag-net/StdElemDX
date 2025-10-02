@@ -1,0 +1,23 @@
+import "unknwn.idl";
+
+[object, uuid(10000011-0000-0000-0000-000000000001), oleautomation]
+
+interface ITextLine : IUnknown
+{
+	HRESULT __stdcall CIDialogV(const BYTE* pucFensterName, boolean bModalA, const BYTE* pucWndProc_DLG);
+}
+
+[uuid(10000013-0000-0000-0000-000000000001), helpstring("ProgDlgD2 Library"), version(1.0)]
+
+library StdElemD2
+
+{
+	importlib("stdole32.tlb");
+	interface ITextLine;
+
+	[uuid(10000012-0000-0000-0000-000000000001)]
+	coclass CIProgDlgD2
+	{
+		interface ITextLine;
+	}
+};
