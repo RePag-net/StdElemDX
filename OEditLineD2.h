@@ -63,9 +63,9 @@ namespace RePag
 			unsigned char ucZeichenVorgabe;
 			unsigned long ulZeichenPos;
 			unsigned long ulSelectPos;
-			D2D1_COLOR_F stSelectTextColor;
-			D2D1_COLOR_F stSelectBackColor;
-			D2D1_COLOR_F stCaretColor;
+			D2D1_COLOR_F crfSelectText;
+			D2D1_COLOR_F crfSelectBack;
+			D2D1_COLOR_F crfCaret;
 			ID2D1SolidColorBrush* ifSelectBackColor;
 			ID2D1SolidColorBrush* ifCaretColor;
 			//STRGBFarbe stSelectSchriftfarbe;
@@ -86,13 +86,13 @@ namespace RePag
 			bool __vectorcall ZeichenVorgabe(WPARAM wParam);
 			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ SIZE& stTextPoint);
 			void __vectorcall DeleteCaretPos(void);
-			void __vectorcall SetCaretColor(_In_ unsigned char ucRot, _In_ unsigned char ucGrun, _In_ unsigned char ucBlau, _In_ unsigned char ucAlpha);
-			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& stCaretColorA);
-			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcKlassenName, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
+			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcKlassenName, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 
 		public:
-			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
 			void(__vectorcall* pfnWM_Char_Return)(COEditLine*);
@@ -104,8 +104,10 @@ namespace RePag
 			void(__vectorcall* pfnWM_LButtonDBClick)(COEditLine*, WPARAM, LPARAM);
 			void __vectorcall SetzVerfugbar(bool bVerfugbar);
 			void __vectorcall Text(char* pcText);
-			void __vectorcall SelectSchriftfarbe(unsigned char ucRot, unsigned char ucGrun, unsigned char ucBlau);
-			void __vectorcall SelectHintergrundfarbe(unsigned char ucRot, unsigned char ucGrun, unsigned char ucBlau);
+			void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA);
+			void __vectorcall SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA);
 			void __vectorcall SetzZeichen_Max(unsigned long ulZeichen);
 			unsigned long __vectorcall Zeichen_Max(void);
 			void __vectorcall Zeichenvorgabe(unsigned char ucZeichenvorgabeA);

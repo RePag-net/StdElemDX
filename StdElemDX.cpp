@@ -27,7 +27,8 @@ SOFTWARE.
 #include "HStdElemDX.h"
 #include "OTextLineD2.h"
 #include "OEditLineD2.h"
-#include "OTextBoxD2.h"
+//#include "OTextBoxD2.h"
+#include "OScrollBarD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -35,7 +36,8 @@ HKEY hSchlussel; DWORD dwBytes = 4;
 //---------------------------------------------------------------------------
 char pcRePag_TextLine[] = "RePag_TextLine";
 char pcRePag_EditLine[] = "RePag_EditLine";
-char pcRePag_TextBox[] = "RePag_TextBox";
+//char pcRePag_TextBox[] = "RePag_TextBox";
+char pcRePag_ScrollBar[] = "RePag_ScrollBar";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterKlassenName(void)
@@ -64,10 +66,18 @@ void __vectorcall RegisterKlassenName(void)
   RegisterClassEx(&wndKlasse);
   wndKlasse.style = CS_OWNDC;
 
-  wndKlasse.lpszClassName = pcRePag_TextBox;
-  wndKlasse.lpfnWndProc = WndProc_TextBox;
+  //wndKlasse.lpszClassName = pcRePag_TextBox;
+  //wndKlasse.lpfnWndProc = WndProc_TextBox;
+  //wndKlasse.style |= CS_DBLCLKS;
+  //wndKlasse.hCursor = LoadCursor(NULL, IDC_IBEAM);
+  //wndKlasse.hbrBackground = NULL;
+  //RegisterClassEx(&wndKlasse);
+  //wndKlasse.style = CS_OWNDC;
+
+  wndKlasse.lpszClassName = pcRePag_ScrollBar;
+  wndKlasse.lpfnWndProc = WndProc_ScrollBar;
   wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_IBEAM);
+  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
   wndKlasse.hbrBackground = NULL;
   RegisterClassEx(&wndKlasse);
   wndKlasse.style = CS_OWNDC;
@@ -92,6 +102,7 @@ void __vectorcall UnRegisterKlassenName(void)
 
   UnregisterClass(pcRePag_TextLine, wndKlasse.hInstance);
   UnregisterClass(pcRePag_EditLine, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_TextBox, wndKlasse.hInstance);
+  //UnregisterClass(pcRePag_TextBox, wndKlasse.hInstance);
+  UnregisterClass(pcRePag_ScrollBar, wndKlasse.hInstance);
 }
 //---------------------------------------------------------------------------

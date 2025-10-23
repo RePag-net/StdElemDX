@@ -126,6 +126,7 @@
   <ItemGroup>
     <ClInclude Include="HStdElemDX.h" />
     <ClInclude Include="OEditLineD2.h" />
+    <ClInclude Include="OScrollBarD2.h" />
     <ClInclude Include="OTextLineD2.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -136,6 +137,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OEditLineD2.cpp" />
+    <ClCompile Include="OScrollBarD2.cpp" />
     <ClCompile Include="OTextLineD2.cpp" />
     <ClCompile Include="StdElemDX.cpp" />
   </ItemGroup>

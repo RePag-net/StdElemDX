@@ -88,7 +88,8 @@ void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmS
 
 	vasInhalt = COStringAV(vmSpeicher);
 
-	stTextColor.r = stTextColor.g = stTextColor.b = 0.0f; stTextColor.a = 1.0f;
+	//stTextColor.r = stTextColor.g = stTextColor.b = 0.0f; stTextColor.a = 1.0f;
+	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
 	ucSchriftausrichtung = TXA_LINKS | TXA_MITTEVERTICAL;
 
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
@@ -120,7 +121,7 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 	SafeRelease(&ifTextLayout);
 
 	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(stBackColor);
+	ifD2D1Context6->Clear(crfBackground);
 	ifD2D1Context6->DrawText(wcInhalt, szBytes_Text, ifText, rcfText, ifTextColor);
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
@@ -137,7 +138,7 @@ void __vectorcall RePag::DirectX::COTextLine::OnPaint(void)
 void __vectorcall RePag::DirectX::COTextLine::WM_Create(void)
 {
 	CharacterMetric();
-	ifD2D1Context6->CreateSolidColorBrush(stTextColor, &ifTextColor);	ifTextColor->SetColor(stTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -231,22 +232,19 @@ COStringA* __vectorcall RePag::DirectX::COTextLine::Content(_Out_ COStringA* vas
 	return vasInhaltA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::TextColor(_In_ unsigned char ucRot, _In_ unsigned char ucGrun, _In_ unsigned char ucBlau, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
 	ThreadSicher_Anfang();
-	stTextColor.r = static_cast<float>(ucRot) / 255.0f;
-	stTextColor.g = static_cast<float>(ucGrun) / 255.0f;
-	stTextColor.b = static_cast<float>(ucBlau) / 255.0f;
-	stTextColor.a = static_cast<float>(ucAlpha) / 255.0f;
-	if(ifTextColor) ifTextColor->SetColor(stTextColor);
+	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	if(ifTextColor) ifTextColor->SetColor(crfText);
 	ThreadSicher_Ende();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::TextColor(_In_ D2D1_COLOR_F& stTextColorA)
+void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ D2D1_COLOR_F& stTextA)
 {
 	ThreadSicher_Anfang();
-	stTextColor = stTextColorA;
-	if(ifTextColor) ifTextColor->SetColor(stTextColor);
+	crfText = stTextA;
+	if(ifTextColor) ifTextColor->SetColor(crfText);
 	ThreadSicher_Ende();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

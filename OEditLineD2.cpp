@@ -129,9 +129,12 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmS
 	 ulSelectPos = 0;
 	 ulZeichen_max = 0x7fffffff;
 	 ucZeichenVorgabe = ZV_ALLE; 
-	 stSelectTextColor.r = stSelectTextColor.g = stSelectTextColor.b = 0.0f; stSelectTextColor.a = 1.0f;
-	 stSelectBackColor.r = 0; stSelectBackColor.g = 0.85f; stSelectBackColor.b = 0.85f; stSelectBackColor.a = 1.0f;
-	 stCaretColor.r = stCaretColor.g = stCaretColor.b = stCaretColor.a = 1.0f;
+	 //stSelectTextColor.r = stSelectTextColor.g = stSelectTextColor.b = 0.0f; stSelectTextColor.a = 1.0f;
+	 //stSelectBackColor.r = 0; stSelectBackColor.g = 0.85f; stSelectBackColor.b = 0.85f; stSelectBackColor.a = 1.0f;
+	 //stCaretColor.r = stCaretColor.g = stCaretColor.b = stCaretColor.a = 1.0f;
+	 crfSelectText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
+	 crfSelectBack = D2D1::ColorF(RGB(215, 215, 0), 1.0f);
+	 crfCaret = D2D1::ColorF(RGB(255, 255, 255), 1.0f);
 	 htCaret = nullptr;
 	 heCaret = CreateEvent(nullptr, true, true, nullptr);
 
@@ -165,7 +168,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	IDWriteTextLayout* ifTextLayout; D2D1_RECT_F rcfText; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; 
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
-	ifTextColor->SetColor(stTextColor);
+	ifTextColor->SetColor(crfText);
 	mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lBreite, (float)lHohe, &ifTextLayout);
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
@@ -174,7 +177,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	if(lTextPos || (long)fTextWidth > lBreite) rcfText.left = static_cast<float>(lTextPos * -1);
 
 	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(stBackColor);
+	ifD2D1Context6->Clear(crfBackground);
 	ifD2D1Context6->DrawText(wcInhalt, szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		
 	if(!cSelect){
@@ -195,7 +198,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 
 		ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
 
-		ifTextColor->SetColor(stSelectTextColor);
+		ifTextColor->SetColor(crfSelectText);
 		mbstowcs_s(&szBytes_Text, wcInhalt, vbZeichen, ulZeichen); VMFrei(vbZeichen);
 		ifD2D1Context6->DrawText(wcInhalt, szBytes_Text, ifText, rcfSelect, ifTextColor);
 	}
@@ -216,9 +219,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 {
 	CharacterMetric();
 	//rclSelect.bottom = lHohe;
-	ifD2D1Context6->CreateSolidColorBrush(stTextColor, &ifTextColor);
-	ifD2D1Context6->CreateSolidColorBrush(stSelectBackColor, &ifSelectBackColor); ifSelectBackColor->SetColor(stSelectBackColor);
-	ifD2D1Context6->CreateSolidColorBrush(stCaretColor, &ifCaretColor); ifCaretColor->SetColor(stCaretColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
 
 	ifText->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
@@ -1951,22 +1954,63 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen()
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SelectSchriftfarbe(unsigned char ucRot, unsigned char ucGrun, unsigned char ucBlau)
+void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
+																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
 	ThreadSicher_Anfang();
-	stSelectTextColor.r = static_cast<float>(ucRot); stSelectTextColor.g = static_cast<float>(ucGrun); stSelectTextColor.b = static_cast<float>(ucBlau);
-	stSelectTextColor.a = 1.0f;
+	crfSelectText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	ThreadSicher_Ende();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SelectHintergrundfarbe(unsigned char ucRot, unsigned char ucGrun, unsigned char ucBlau)
+void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA)
 {
 	ThreadSicher_Anfang();
-	stSelectBackColor.r = static_cast<float>(ucRot); stSelectBackColor.g = static_cast<float>(ucGrun); stSelectBackColor.b = static_cast<float>(ucBlau);
-	stSelectBackColor.a = 1.0f;
+	crfSelectText = crfSelectTextA;
 	ThreadSicher_Ende();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
+																																			 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+{
+	ThreadSicher_Anfang();
+	crfSelectBack = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
+	ThreadSicher_Ende();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA)
+{
+	ThreadSicher_Anfang();
+	crfSelectBack = crfSelectBackA;
+	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
+	ThreadSicher_Ende();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
+																														_In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+{
+	ThreadSicher_Anfang();
+	crfCaret = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
+
+	rclDirty.left = ptlCaret.x; rclDirty.right = ptlCaret.x + CARET_PIXEL;
+	OnRender(true);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	ThreadSicher_Ende();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA)
+{
+	ThreadSicher_Anfang();
+	crfCaret = crfCaretA;
+	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
+
+	rclDirty.left = ptlCaret.x; rclDirty.right = ptlCaret.x + CARET_PIXEL;
+	OnRender(true);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	ThreadSicher_Ende();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetzZeichen_Max(unsigned long ulZeichen)
 {
 	ThreadSicher_Anfang();
@@ -2061,29 +2105,6 @@ void __vectorcall RePag::DirectX::COEditLine::DeleteCaretPos(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ unsigned char ucRot, _In_ unsigned char ucGrun, _In_ unsigned char ucBlau, _In_ unsigned char ucAlpha)
-{
-	ThreadSicher_Anfang();
-	stCaretColor.r = static_cast<float>(ucRot) / 255.0f;
-	stCaretColor.g = static_cast<float>(ucGrun) / 255.0f;
-	stCaretColor.b = static_cast<float>(ucBlau) / 255.0f;
-	stCaretColor.a = static_cast<float>(ucAlpha) / 255.0f;
-
-	OnRender(true);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& stCaretColorA)
-{
-	ThreadSicher_Anfang();
-	stCaretColor = stCaretColorA;
-
-	OnRender(true);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ SIZE& stTextPoint)
 {
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;

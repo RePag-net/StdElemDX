@@ -42,6 +42,7 @@ using namespace RePag::System;
 
 extern char pcRePag_TextLine[];
 extern char pcRePag_EditLine[];
+extern char pcRePag_ScrollBar[];
 extern char pcRePag_TextBox[];
 extern char pcRePag_EditBox[];
 extern char pcRePag_ListBox[];
