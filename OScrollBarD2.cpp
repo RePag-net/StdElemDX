@@ -29,25 +29,31 @@ SOFTWARE.
 
 constexpr BYTE ARROW_UP = 1;
 constexpr BYTE ARROW_DOWN = 2;
-constexpr BYTE THUMB = 3;
-constexpr BYTE SLIDER = 4;
-constexpr BYTE NONCLIENT = 5;
+constexpr BYTE ARROW_LEFT = 3;
+constexpr BYTE ARROW_RIGHT = 4;
+constexpr BYTE THUMB_VERT = 5;
+constexpr BYTE THUMB_HORZ = 6;
+constexpr BYTE SLIDER_VERT = 7;
+constexpr BYTE SLIDER_HORZ = 8;
+constexpr BYTE NONCLIENT = 9;
 constexpr CHAR THUMB_UP = -1;
 constexpr CHAR THUMB_DOWN = 1;
+constexpr CHAR THUMB_LEFT = -1;
+constexpr CHAR THUMB_RIGHT = -1;
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources)
+																														 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(VMDialog(), sizeof(COScrollBar));
-	vScrollBar->COScrollBarV(VMDialog(), pcFensterName, uiIDElement, pstDeviceResources);
+	vScrollBar->COScrollBarV(VMDialog(), pcFensterName, uiIDElement, pstDeviceResources, bHorizontal);
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources)
+																														 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(vmSpeicher, sizeof(COScrollBar));
-	vScrollBar->COScrollBarV(vmSpeicher, pcFensterName, uiIDElement, pstDeviceResources);
+	vScrollBar->COScrollBarV(vmSpeicher, pcFensterName, uiIDElement, pstDeviceResources, bHorizontal);
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +86,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(HWND hWnd, unsigned int uiMes
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcKlassenName, _In_ const char* pcFensterName, 
-																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
+																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
 {
 	COGraphicV(vmSpeicher, pcKlassenName, pcFensterName, uiIDElementA, pstDeviceResourcesA);
 
@@ -100,16 +106,17 @@ void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY v
 
 	fScaleArrowThumb = 75.0f;
 	stScrollInfo = {0};
-	rclThumb = {0};
-	lThumb_Hohe = 0;
+	rcfThumb = {0};
+	fThumbSize = 0;
 	bMouseTracking = false;
 	ucDirty = NONCLIENT;
+	bHorizontal = bHorizontalA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
-																														_In_ STDeviceResources* pstDeviceResourcesA)
+																														_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
 {
-	COScrollBarV(vmSpeicher, pcRePag_ScrollBar, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	COScrollBarV(vmSpeicher, pcRePag_ScrollBar, pcFensterName, uiIDElementA, pstDeviceResourcesA, bHorizontalA);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COScrollBar::COFreiV(void)
@@ -156,42 +163,82 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfThumb, &ifThumbColor);
 
-	ptf3Arrow_Up[0] = D2D1::Point2F(lBreite - lBreite * fScaleArrowThumb / 100.0f, lBreite * fScaleArrowThumb / 100.0f);
-	ptf3Arrow_Up[1] = D2D1::Point2F(lBreite * fScaleArrowThumb / 100.0f, lBreite * fScaleArrowThumb / 100.0f);
-	ptf3Arrow_Up[2] = D2D1::Point2F(lBreite / 2, lBreite - lBreite * fScaleArrowThumb / 100.0f);
+	D2D1_POINT_2F ptf3Arrow[3]; D2D1_RECT_F rcfButton; ID2D1GeometrySink* ifSink;
+	float fWidth = lWidth; float fHeight = lHeight;
+	if(bHorizontal){
+		ptf3Arrow[0] = D2D1::Point2F(fWidth - fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[1] = D2D1::Point2F(fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[2] = D2D1::Point2F(fWidth / 2, fWidth - fWidth * fScaleArrowThumb / 100.0f);
 
-	ptf3Arrow_Down[0] = D2D1::Point2F(lBreite - lBreite * fScaleArrowThumb / 100.0f, lHohe - lBreite * fScaleArrowThumb / 100.0f);
-	ptf3Arrow_Down[1] = D2D1::Point2F(lBreite * fScaleArrowThumb / 100.0f, lHohe - lBreite * fScaleArrowThumb / 100.0f);
-	ptf3Arrow_Down[2] = D2D1::Point2F(lBreite / 2, lHohe - lBreite + lBreite * fScaleArrowThumb / 100.0f);
-	
-	D2D1_RECT_F rcf_Button_Down, rcfButton_Up;
-	rcfButton_Up = {0, 0, (float)lBreite, (float)lBreite};
-	pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton_Up, &ifButton_Up);
-	rcf_Button_Down = {0, (float)lHohe - lBreite, (float)lBreite, (float)lHohe};
-	pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcf_Button_Down, &ifButton_Down);
+		pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Up);
+		ifSink = nullptr;
+		ifArrow_Up->Open(&ifSink);
+		ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
 
-	pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Up);
-	ID2D1GeometrySink* ifSink = nullptr;
-	ifArrow_Up->Open(&ifSink);
-	ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+		ifSink->BeginFigure(ptf3Arrow[0], D2D1_FIGURE_BEGIN_FILLED);
 
-	ifSink->BeginFigure(ptf3Arrow_Up[0], D2D1_FIGURE_BEGIN_FILLED);
+		ifSink->AddLines(ptf3Arrow, 3);
+		ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		ifSink->Close();
+		SafeRelease(&ifSink);
 
-	ifSink->AddLines(ptf3Arrow_Up, 3);
-	ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-	ifSink->Close();
-	SafeRelease(&ifSink);
+		ptf3Arrow[0] = D2D1::Point2F(fWidth - fWidth * fScaleArrowThumb / 100.0f, fHeight - fWidth * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[1] = D2D1::Point2F(fWidth * fScaleArrowThumb / 100.0f, fHeight - lWidth * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[2] = D2D1::Point2F(fWidth / 2, fHeight - fWidth + fWidth * fScaleArrowThumb / 100.0f);
 
-	pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Down);
-	ifArrow_Down->Open(&ifSink);
-	ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+		pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Down);
+		ifArrow_Down->Open(&ifSink);
+		ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
 
-	ifSink->BeginFigure(ptf3Arrow_Down[0], D2D1_FIGURE_BEGIN_FILLED);
+		ifSink->BeginFigure(ptf3Arrow[0], D2D1_FIGURE_BEGIN_FILLED);
 
-	ifSink->AddLines(ptf3Arrow_Down, 3);
-	ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-	ifSink->Close();
-	SafeRelease(&ifSink);
+		ifSink->AddLines(ptf3Arrow, 3);
+		ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		ifSink->Close();
+		SafeRelease(&ifSink);
+
+		rcfButton = {0, 0, fWidth, fWidth};
+		pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton, &ifButton_Up);
+		rcfButton = {0, fHeight - fWidth, fWidth, fHeight};
+		pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton, &ifButton_Down);
+	}
+	else{
+		ptf3Arrow[0] = D2D1::Point2F(fHeight * fScaleArrowThumb / 100.0f, fHeight - fHeight * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[1] = D2D1::Point2F(fHeight * fScaleArrowThumb / 100.0f, fHeight * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[2] = D2D1::Point2F(fHeight - fHeight * fScaleArrowThumb / 100.0f, fHeight / 2);
+
+		pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Up);
+		ifSink = nullptr;
+		ifArrow_Up->Open(&ifSink);
+		ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+
+		ifSink->BeginFigure(ptf3Arrow[0], D2D1_FIGURE_BEGIN_FILLED);
+
+		ifSink->AddLines(ptf3Arrow, 3);
+		ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		ifSink->Close();
+		SafeRelease(&ifSink);
+
+		ptf3Arrow[0] = D2D1::Point2F(fWidth - fHeight * fScaleArrowThumb / 100.0f, fHeight * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[1] = D2D1::Point2F(fWidth - fHeight * fScaleArrowThumb / 100.0f, fHeight - fHeight * fScaleArrowThumb / 100.0f);
+		ptf3Arrow[2] = D2D1::Point2F(fWidth - (fHeight - fHeight * fScaleArrowThumb / 100.0f), fHeight / 2);
+
+		pstDeviceResources->ifd2d1Factory7->CreatePathGeometry(&ifArrow_Down);
+		ifArrow_Down->Open(&ifSink);
+		ifSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+
+		ifSink->BeginFigure(ptf3Arrow[0], D2D1_FIGURE_BEGIN_FILLED);
+
+		ifSink->AddLines(ptf3Arrow, 3);
+		ifSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		ifSink->Close();
+		SafeRelease(&ifSink);
+
+		rcfButton = {0, 0, fHeight, fHeight};
+		pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton, &ifButton_Up);
+		rcfButton = {fWidth - fHeight, 0,  fWidth, fHeight};
+		pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton, &ifButton_Down);
+	}
 
 	CreateThumb(false);
 
@@ -206,129 +253,226 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARAM lParam)
 {
-	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl2Dirty[2];	static char cCursor_Move = 0; static long lCursor = 0; static char cThumbDirection = 0;
+	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl2Dirty[2];	D2D1_ROUNDED_RECT rrcfThumb;
+	static char cCursor_Move = 0; static long lCursor = 0; static char cThumbDirection = 0;
 	ThreadSicher_Anfang();
 
-	if(!bMouseTracking){
-		bMouseTracking = true;
-		TrackMouseEvent(&stTrackMouseEvent); 
-	}
+	if(!bMouseTracking){ bMouseTracking = true;	TrackMouseEvent(&stTrackMouseEvent); }
 	else{
 		switch(ucDirty){
-			case ARROW_UP		: if(ptlCursor.y > lBreite){
-													ifButtonColor->SetColor(crfButton);
-													ifArrowColor->SetColor(crfArrow);
-													rclDirty.left = 0; rclDirty.top = 0;
-													rclDirty.right = lBreite; rclDirty.bottom = lBreite;
-
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-													ucDirty = SLIDER;
-												}
-												break;
-			case ARROW_DOWN	: if(ptlCursor.y < lHohe - lBreite){
-													ifButtonColor->SetColor(crfButton);
-													ifArrowColor->SetColor(crfArrow);
-													rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-													rclDirty.right = lBreite; rclDirty.bottom = lHohe;
-
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-													ucDirty = SLIDER;
-												}
-												break;
-			case THUMB			:	if(wParam == MK_LBUTTON){
-													if(ptlCursor.y < lCursor){
-														if(cThumbDirection == THUMB_UP) cCursor_Move -= lCursor - ptlCursor.y;
-														else{	cThumbDirection = THUMB_UP; cCursor_Move = 0; }
-													}
-													else if(ptlCursor.y > lCursor){
-														if(cThumbDirection == THUMB_DOWN) cCursor_Move += ptlCursor.y - lCursor;
-														else{ cThumbDirection = THUMB_DOWN; cCursor_Move = 0; }
-													}
-													lCursor = ptlCursor.y;
-													if(cCursor_Move > lThumb_Hohe && rclThumb.bottom < lHohe - lBreite){
-														cCursor_Move = 0;
-														dxgiPresent.DirtyRectsCount = 2;
-														dxgiPresent.pDirtyRects = rcl2Dirty;
-														rcl2Dirty[0] = rclThumb;
-														stScrollInfo.lPos++;
-
-														D2D1_RECT_F rcfThumb;
-														rclThumb.top = lThumb_Hohe * stScrollInfo.lPos + lBreite;
-														rclThumb.bottom = rclThumb.top + lThumb_Hohe;
-														rcl2Dirty[1] = rclThumb;
-														rcfThumb.left = rclThumb.left; rcfThumb.right = rclThumb.right;
-														rcfThumb.top = rclThumb.top; rcfThumb.bottom = rclThumb.bottom;
-														D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
-														SafeRelease(&ifThumb);
-														pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
-
+			case ARROW_UP			: if(ptlCursor.y > lWidth){
+														ifButtonColor->SetColor(crfButton);
+														ifArrowColor->SetColor(crfArrow);
+														rclDirty.left = 0; rclDirty.top = 0;
+														rclDirty.right = lWidth; rclDirty.bottom = lWidth;
 														OnRender();
 														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														dxgiPresent.DirtyRectsCount = 1;
-														dxgiPresent.pDirtyRects = &rclDirty;
+														ucDirty = SLIDER_VERT;
 													}
-													else if(cCursor_Move < lThumb_Hohe * -1 && rclThumb.top > lBreite){
-														cCursor_Move = 0;
-														dxgiPresent.DirtyRectsCount = 2;
-														dxgiPresent.pDirtyRects = rcl2Dirty;
-														rcl2Dirty[0] = rclThumb;
-														stScrollInfo.lPos--;
-
-														D2D1_RECT_F rcfThumb;
-														rclThumb.top = lThumb_Hohe * stScrollInfo.lPos + lBreite;
-														rclThumb.bottom = rclThumb.top + lThumb_Hohe;
-														rcl2Dirty[1] = rclThumb;
-														rcfThumb.left = rclThumb.left; rcfThumb.right = rclThumb.right;
-														rcfThumb.top = rclThumb.top; rcfThumb.bottom = rclThumb.bottom;
-														D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
-														SafeRelease(&ifThumb);
-														pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
-
+													break;
+			case ARROW_DOWN		: if(ptlCursor.y < lHeight - lWidth){
+														ifButtonColor->SetColor(crfButton);
+														ifArrowColor->SetColor(crfArrow);
+														rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+														rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 														OnRender();
 														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														dxgiPresent.DirtyRectsCount = 1;
-														dxgiPresent.pDirtyRects = &rclDirty;
+														ucDirty = SLIDER_VERT;
 													}
-												}
-												else if(ptlCursor.y < rclThumb.top ||  ptlCursor.y > rclThumb.bottom){
-													ifThumbColor->SetColor(crfThumb);
-													rclDirty = rclThumb;
+													break;
+			case ARROW_LEFT		:	if(ptlCursor.x > lHeight){
+														ifButtonColor->SetColor(crfButton);
+														ifArrowColor->SetColor(crfArrow);
+														rclDirty.left = 0; rclDirty.top = 0;
+														rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = SLIDER_HORZ;
+													}
+													break;
+			case ARROW_RIGHT	: if(ptlCursor.x < lWidth - lHeight){
+														ifButtonColor->SetColor(crfButton);
+														ifArrowColor->SetColor(crfArrow);
+														rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+														rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = SLIDER_HORZ;
+													}
+													break;
+			case THUMB_VERT		:	if(wParam == MK_LBUTTON){
+														if(ptlCursor.y < lCursor){
+															if(cThumbDirection == THUMB_UP) cCursor_Move -= lCursor - ptlCursor.y;
+															else{ cThumbDirection = THUMB_UP; cCursor_Move = 0; }
+														}
+														else if(ptlCursor.y > lCursor){
+															if(cThumbDirection == THUMB_DOWN) cCursor_Move += ptlCursor.y - lCursor;
+															else{ cThumbDirection = THUMB_DOWN; cCursor_Move = 0; }
+														}
+														lCursor = ptlCursor.y;
+														if(cCursor_Move > (char)fThumbSize && stScrollInfo.lPos < stScrollInfo.lMax - stScrollInfo.ulPage){
+															cCursor_Move = 0;
+															stScrollInfo.lPos++;
+															dxgiPresent.DirtyRectsCount = 2;
+															dxgiPresent.pDirtyRects = rcl2Dirty;
 
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-													ucDirty = SLIDER;
-												}
-												break;
-			case SLIDER			:	if(ptlCursor.y <= lBreite){
-													ifButtonColor->SetColor(crfButton_Move);
-													ifArrowColor->SetColor(crfArrow_Move);
-													ucDirty = ARROW_UP;
-													rclDirty.left = 0; rclDirty.top = 0;
-													rclDirty.right = lBreite; rclDirty.bottom = lBreite;
+															rcl2Dirty[0].top = (long)(rcfThumb.top - 2.0f); rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)rcfThumb.right;
+															rcfThumb.top += fThumbSize; rcfThumb.bottom += fThumbSize;
+															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+															SafeRelease(&ifThumb);
+															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+															rcl2Dirty[1].top = (long)rcfThumb.top; rcl2Dirty[1].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[1].left = (long)rcfThumb.left; rcl2Dirty[1].right = (long)rcfThumb.right;
 
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-												}
-												else if(ptlCursor.y >= lHohe - lBreite){
-													ifButtonColor->SetColor(crfButton_Move);
-													ifArrowColor->SetColor(crfArrow_Move);
-													ucDirty = ARROW_DOWN;
-													rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-													rclDirty.right = lBreite; rclDirty.bottom = lHohe;
+															OnRender();
+															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+															dxgiPresent.DirtyRectsCount = 1;
+															dxgiPresent.pDirtyRects = &rclDirty;
+														}
+														else if(cCursor_Move < (char)fThumbSize * -1 && stScrollInfo.lPos){
+															cCursor_Move = 0;
+															stScrollInfo.lPos--;
+															dxgiPresent.DirtyRectsCount = 2;
+															dxgiPresent.pDirtyRects = rcl2Dirty;
 
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-												}
-												else if(ptlCursor.y >= rclThumb.top && ptlCursor.y <= rclThumb.bottom){
-													ifThumbColor->SetColor(crfThumb_Move);
-													ucDirty = THUMB;
-													rclDirty = rclThumb;
+															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)(rcfThumb.bottom + 2.0f);
+															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)rcfThumb.right;
+															rcfThumb.top -= fThumbSize;	rcfThumb.bottom -= fThumbSize;
+															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+															SafeRelease(&ifThumb);
+															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+															rcl2Dirty[1].top = (long)rcfThumb.top; rcl2Dirty[1].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[1].left = (long)rcfThumb.left; rcl2Dirty[1].right = (long)rcfThumb.right;
 
-													OnRender();
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-												}
+															OnRender();
+															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+															dxgiPresent.DirtyRectsCount = 1;
+															dxgiPresent.pDirtyRects = &rclDirty;
+														}
+													}
+													else if(ptlCursor.y < (long)rcfThumb.top || ptlCursor.y > (long)rcfThumb.bottom){
+														ifThumbColor->SetColor(crfThumb);
+														rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+														rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = SLIDER_VERT;
+													}
+													break;
+			case THUMB_HORZ		:	if(wParam == MK_LBUTTON){
+														if(ptlCursor.x < lCursor){
+															if(cThumbDirection == THUMB_LEFT) cCursor_Move -= lCursor - ptlCursor.x;
+															else{ cThumbDirection = THUMB_LEFT; cCursor_Move = 0; }
+														}
+														else if(ptlCursor.x > lCursor){
+															if(cThumbDirection == THUMB_RIGHT) cCursor_Move += ptlCursor.x - lCursor;
+															else{ cThumbDirection = THUMB_RIGHT; cCursor_Move = 0; }
+														}
+														lCursor = ptlCursor.x;
+														if(cCursor_Move > (char)fThumbSize && stScrollInfo.lPos < stScrollInfo.lMax - stScrollInfo.ulPage){
+															cCursor_Move = 0;
+															stScrollInfo.lPos++;
+															dxgiPresent.DirtyRectsCount = 2;
+															dxgiPresent.pDirtyRects = rcl2Dirty;
+
+															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[0].left = (long)(rcfThumb.left - 2.0f); rcl2Dirty[0].right = (long)rcfThumb.right;
+															rcfThumb.left += fThumbSize; rcfThumb.right += fThumbSize;
+															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+															SafeRelease(&ifThumb);
+															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+															rcl2Dirty[1].top = (long)rcfThumb.top; rcl2Dirty[1].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[1].left = (long)rcfThumb.left; rcl2Dirty[1].right = (long)rcfThumb.right;
+
+															OnRender();
+															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+															dxgiPresent.DirtyRectsCount = 1;
+															dxgiPresent.pDirtyRects = &rclDirty;
+														}
+														else if(cCursor_Move < (char)fThumbSize * -1 && stScrollInfo.lPos){
+															cCursor_Move = 0;
+															stScrollInfo.lPos--;
+															dxgiPresent.DirtyRectsCount = 2;
+															dxgiPresent.pDirtyRects = rcl2Dirty;
+
+															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)(rcfThumb.right + 2.0f);
+															rcfThumb.left -= fThumbSize; rcfThumb.right -= fThumbSize;
+															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+															SafeRelease(&ifThumb);
+															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+															rcl2Dirty[1].top = (long)rcfThumb.top; rcl2Dirty[1].bottom = (long)rcfThumb.bottom;
+															rcl2Dirty[1].left = (long)rcfThumb.left; rcl2Dirty[1].right = (long)rcfThumb.right;
+
+															OnRender();
+															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+															dxgiPresent.DirtyRectsCount = 1;
+															dxgiPresent.pDirtyRects = &rclDirty;
+														}
+													}
+													else if(ptlCursor.x < (long)rcfThumb.left || ptlCursor.x > (long)rcfThumb.right){
+														ifThumbColor->SetColor(crfThumb);
+														rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+														rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = SLIDER_HORZ;
+													}
+													break;
+			case SLIDER_VERT	:	if(ptlCursor.y <= lWidth){
+														ifButtonColor->SetColor(crfButton_Move);
+														ifArrowColor->SetColor(crfArrow_Move);
+														rclDirty.left = 0; rclDirty.top = 0;
+														rclDirty.right = lWidth; rclDirty.bottom = lWidth;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = ARROW_UP;
+													}
+													else if(ptlCursor.y >= lHeight - lWidth){
+														ifButtonColor->SetColor(crfButton_Move);
+														ifArrowColor->SetColor(crfArrow_Move);
+														rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+														rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = ARROW_DOWN;
+													}
+													else if(ptlCursor.y >= (long)rcfThumb.top && ptlCursor.y <= (long)rcfThumb.bottom){
+														ifThumbColor->SetColor(crfThumb_Move);
+														rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+														rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = THUMB_VERT;
+													}
+													break;
+			case SLIDER_HORZ	: if(ptlCursor.x <= lHeight){
+														ifButtonColor->SetColor(crfButton_Move);
+														ifArrowColor->SetColor(crfArrow_Move);
+														rclDirty.left = 0; rclDirty.top = 0;
+														rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = ARROW_LEFT;
+													}
+													else if(ptlCursor.x >= lWidth - lHeight){
+														ifButtonColor->SetColor(crfButton_Move);
+														ifArrowColor->SetColor(crfArrow_Move);
+														rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+														rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = ARROW_RIGHT;
+													}
+													else if(ptlCursor.x >= (long)rcfThumb.left && ptlCursor.x <= (long)rcfThumb.right){
+														ifThumbColor->SetColor(crfThumb_Move);
+														rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+														rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+														OnRender();
+														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+														ucDirty = THUMB_HORZ;
+													}
 		}
 	}
 	ThreadSicher_Ende();
@@ -338,36 +482,63 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseOver(WPARAM wParam, LPARA
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSicher_Anfang();
-	if(ptlCursor.y <= lBreite){
-		ifButtonColor->SetColor(crfButton_Move);
-		ifArrowColor->SetColor(crfArrow_Move);
-		ucDirty = ARROW_UP;
-		rclDirty.left = 0; rclDirty.top = 0;
-		rclDirty.right = lBreite; rclDirty.bottom = lBreite;
-
-		OnRender();
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	if(bHorizontal){
+		if(ptlCursor.y <= lWidth){
+			ifButtonColor->SetColor(crfButton_Move);
+			ifArrowColor->SetColor(crfArrow_Move);
+			rclDirty.left = 0; rclDirty.top = 0;
+			rclDirty.right = lWidth; rclDirty.bottom = lWidth;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = ARROW_UP;
+		}
+		else if(ptlCursor.y >= lHeight - lWidth){
+			ifButtonColor->SetColor(crfButton_Move);
+			ifArrowColor->SetColor(crfArrow_Move);
+			rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+			rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = ARROW_DOWN;
+		}
+		else if(ptlCursor.y >= (long)rcfThumb.top && ptlCursor.y <= (long)rcfThumb.bottom){
+			ifThumbColor->SetColor(crfThumb_Move);
+			rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+			rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = THUMB_VERT;
+		}
+		else if(ptlCursor.y < (long)rcfThumb.top || ptlCursor.y > (long)rcfThumb.bottom) ucDirty = SLIDER_VERT;
 	}
-	else if(ptlCursor.y >= lHohe - lBreite){
-		ifButtonColor->SetColor(crfButton_Move);
-		ifArrowColor->SetColor(crfArrow_Move);
-		ucDirty = ARROW_DOWN;
-		rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-		rclDirty.right = lBreite; rclDirty.bottom = lHohe;
-
-		OnRender();
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	}
-	else if(ptlCursor.y >= rclThumb.top && ptlCursor.y <= rclThumb.bottom){
-		ifThumbColor->SetColor(crfThumb_Move);
-		ucDirty = THUMB;
-		rclDirty = rclThumb;
-
-		OnRender();
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	}
-	else if(ptlCursor.y < rclThumb.top || ptlCursor.y > rclThumb.bottom){
-		ucDirty = SLIDER;
+	else{
+		if(ptlCursor.x <= lHeight){
+			ifButtonColor->SetColor(crfButton_Move);
+			ifArrowColor->SetColor(crfArrow_Move);
+			rclDirty.left = 0; rclDirty.top = 0;
+			rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = ARROW_LEFT;
+		}
+		else if(ptlCursor.x >= lWidth - lHeight){
+			ifButtonColor->SetColor(crfButton_Move);
+			ifArrowColor->SetColor(crfArrow_Move);
+			rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+			rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = ARROW_RIGHT;
+		}
+		else if(ptlCursor.x >= (long)rcfThumb.left && ptlCursor.x <= (long)rcfThumb.right){
+			ifThumbColor->SetColor(crfThumb_Move);
+			rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+			rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+			OnRender();
+			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			ucDirty = THUMB_HORZ;
+		}
+		else if(ptlCursor.x < (long)rcfThumb.left || ptlCursor.x > (long)rcfThumb.right) ucDirty = SLIDER_HORZ;
 	}
 	ThreadSicher_Ende();
 }
@@ -376,24 +547,40 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseLeave(void)
 {
 	ThreadSicher_Anfang();
 	switch(ucDirty){
-		case ARROW_UP   : ifButtonColor->SetColor(crfButton);
-											ifArrowColor->SetColor(crfArrow);
-											rclDirty.left = 0; rclDirty.top = 0;
-											rclDirty.right = lBreite; rclDirty.bottom = lBreite;
-											OnRender();
-											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-											break;
-		case ARROW_DOWN :	ifButtonColor->SetColor(crfButton);
-											ifArrowColor->SetColor(crfArrow);
-											rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-											rclDirty.right = lBreite; rclDirty.bottom = lHohe;
-											OnRender();
-											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-											break;
-		case THUMB			:	ifThumbColor->SetColor(crfThumb);
-											rclDirty = rclThumb;
-											OnRender();
-											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+		case ARROW_UP			: ifButtonColor->SetColor(crfButton);
+												ifArrowColor->SetColor(crfArrow);
+												rclDirty.left = 0; rclDirty.top = 0;
+												rclDirty.right = lWidth; rclDirty.bottom = lWidth;
+												OnRender();
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												break;
+		case ARROW_DOWN	 :	ifButtonColor->SetColor(crfButton);
+												ifArrowColor->SetColor(crfArrow);
+												rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+												rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+												OnRender();
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												break;
+		case ARROW_LEFT		: ifButtonColor->SetColor(crfButton);
+												ifArrowColor->SetColor(crfArrow);
+												rclDirty.left = 0; rclDirty.top = 0;
+												rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+												OnRender();
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												break;
+		case ARROW_RIGHT	:	ifButtonColor->SetColor(crfButton);
+												ifArrowColor->SetColor(crfArrow);
+												rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+												rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+												OnRender();
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												break;
+		case THUMB_HORZ		:
+		case THUMB_VERT		:	ifThumbColor->SetColor(crfThumb);
+												rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+												rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+												OnRender();
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	ucDirty = NONCLIENT;
 	bMouseTracking = false;
@@ -405,153 +592,342 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPA
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSicher_Anfang();
 	switch(ucDirty){
-		case	ARROW_UP	:	if(ptlCursor.y <= lBreite){
-												ifButtonColor->SetColor(crfButton_Click);
-												ifArrowColor->SetColor(crfArrow_Click);
-												rclDirty.left = 0; rclDirty.top = 0;
-												rclDirty.right = lBreite; rclDirty.bottom = lBreite;
-												OnRender();
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-											}
-											break;
-		case ARROW_DOWN	:	if(ptlCursor.y >= lHohe - lBreite){
-												ifButtonColor->SetColor(crfButton_Click);
-												ifArrowColor->SetColor(crfArrow_Click);
-												rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-												rclDirty.right = lBreite; rclDirty.bottom = lHohe;
-												OnRender();
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-											}
-											break;
-		case THUMB			: if(ptlCursor.y >= rclThumb.top && ptlCursor.y <= rclThumb.bottom){
-												ifThumbColor->SetColor(crfThumb_Click);
-												rclDirty = rclThumb;
-												OnRender();
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-											}
+		case	ARROW_UP		:	if(ptlCursor.y <= lWidth){
+													ifButtonColor->SetColor(crfButton_Click);
+													ifArrowColor->SetColor(crfArrow_Click);
+													rclDirty.left = 0; rclDirty.top = 0;
+													rclDirty.right = lWidth; rclDirty.bottom = lWidth;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case ARROW_DOWN		:	if(ptlCursor.y >= lHeight - lWidth){
+													ifButtonColor->SetColor(crfButton_Click);
+													ifArrowColor->SetColor(crfArrow_Click);
+													rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+													rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case	ARROW_LEFT	:	if(ptlCursor.x <= lHeight){
+													ifButtonColor->SetColor(crfButton_Click);
+													ifArrowColor->SetColor(crfArrow_Click);
+													rclDirty.left = 0; rclDirty.top = 0;
+													rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case ARROW_RIGHT	:	if(ptlCursor.x >=  lWidth - lHeight){
+													ifButtonColor->SetColor(crfButton_Click);
+													ifArrowColor->SetColor(crfArrow_Click);
+													rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+													rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case THUMB_VERT		: if(ptlCursor.y >= (long)rcfThumb.top && ptlCursor.y <= (long)rcfThumb.bottom){
+													ifThumbColor->SetColor(crfThumb_Click);
+													rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+													rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case THUMB_HORZ		: if(ptlCursor.x >= (long)rcfThumb.left && ptlCursor.x <= (long)rcfThumb.right){
+													ifThumbColor->SetColor(crfThumb_Click);
+													rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+													rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
 	}
 	ThreadSicher_Ende();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARAM lParam)
 {
-	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3];
+	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb;
 	ThreadSicher_Anfang();
 	switch(ucDirty){
-		case ARROW_UP			:	if(ptlCursor.y <= lBreite){
-													if(stScrollInfo.lPos > 0){
-														stScrollInfo.lPos--;
-														dxgiPresent.DirtyRectsCount = 3;
-														dxgiPresent.pDirtyRects = rcl3Dirty;
+		case ARROW_UP			:	if(stScrollInfo.lPos > 0){
+													stScrollInfo.lPos--;
+													dxgiPresent.DirtyRectsCount = 3;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
 
-														rcl3Dirty[2] = rclThumb;
+													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)(rcfThumb.bottom + 2.0f);
+													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)rcfThumb.right;
+													rcfThumb.top -= fThumbSize;	rcfThumb.bottom -= fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[1].top = (long)rcfThumb.top; rcl3Dirty[1].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[1].left = (long)rcfThumb.left; rcl3Dirty[1].right = (long)rcfThumb.right;
 
-														D2D1_RECT_F rcfThumb;
-														rclThumb.top = lThumb_Hohe * stScrollInfo.lPos + lBreite;
-														rclThumb.bottom = rclThumb.top + lThumb_Hohe;
-														rcl3Dirty[1] = rclThumb;
-														rcfThumb.left = rclThumb.left; rcfThumb.right = rclThumb.right;
-														rcfThumb.top = rclThumb.top; rcfThumb.bottom = rclThumb.bottom;
-														D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
-														SafeRelease(&ifThumb);
-														pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													ifArrowColor->SetColor(crfArrow_Move);
+													ifButtonColor->SetColor(crfButton_Move);
+													rcl3Dirty[0].left = 0; rcl3Dirty[0].top = 0;
+													rcl3Dirty[0].right = lWidth; rcl3Dirty[0].bottom = lWidth;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
 
-														ifButtonColor->SetColor(crfButton_Move);
-														ifArrowColor->SetColor(crfArrow_Move);
-														rcl3Dirty[0].left = 0; rcl3Dirty[0].top = 0;
-														rcl3Dirty[0].right = lBreite; rcl3Dirty[0].bottom = lBreite;
-
-														OnRender();
-														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														dxgiPresent.DirtyRectsCount = 1;
-														dxgiPresent.pDirtyRects = &rclDirty;
-
-													}
-													else{
-														ifButtonColor->SetColor(crfButton_Move);
-														ifArrowColor->SetColor(crfArrow_Move);
-														rclDirty.left = 0; rclDirty.top = 0;
-														rclDirty.right = lBreite; rclDirty.bottom = lBreite;
-
-														OnRender();
-														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-													}
 													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, NULL);
 												}
-												break;
-		case	ARROW_DOWN	:	if(ptlCursor.y >= lHohe - lBreite){
-													if(stScrollInfo.lPos < stScrollInfo.lMax - (long)stScrollInfo.ulPage){
-														stScrollInfo.lPos++;
-														dxgiPresent.DirtyRectsCount = 3;
-														dxgiPresent.pDirtyRects = rcl3Dirty;
-
-														rcl3Dirty[2] = rclThumb;
-
-														D2D1_RECT_F rcfThumb;
-														rclThumb.top = lThumb_Hohe * stScrollInfo.lPos + lBreite;
-														rclThumb.bottom = rclThumb.top + lThumb_Hohe;
-														rcl3Dirty[1] = rclThumb;
-														rcfThumb.left = rclThumb.left; rcfThumb.right = rclThumb.right;
-														rcfThumb.top = rclThumb.top; rcfThumb.bottom = rclThumb.bottom;
-														D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
-														SafeRelease(&ifThumb);
-														pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
-
-														ifButtonColor->SetColor(crfButton_Move);
-														ifArrowColor->SetColor(crfArrow_Move);
-														rcl3Dirty[0].left = 0; rcl3Dirty[0].top = lHohe - lBreite;
-														rcl3Dirty[0].right = lBreite; rcl3Dirty[0].bottom = lHohe;
-
-														OnRender();
-														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														dxgiPresent.DirtyRectsCount = 1;
-														dxgiPresent.pDirtyRects = &rclDirty;
-
-													}
-													else{
-														ifButtonColor->SetColor(crfButton_Move);
-														ifArrowColor->SetColor(crfArrow_Move);
-														rclDirty.left = 0; rclDirty.top = lHohe - lBreite;
-														rclDirty.right = lBreite; rclDirty.bottom = lHohe;
-
-														OnRender();
-														ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-
-													}
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+												else{
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rclDirty.left = 0; rclDirty.top = 0;
+													rclDirty.right = lWidth; rclDirty.bottom = lWidth;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case	THUMB				:	rclDirty = rclThumb;
-												ifThumbColor->SetColor(crfThumb_Move);
+		case	ARROW_DOWN	:	if(stScrollInfo.lPos + stScrollInfo.ulPage < stScrollInfo.lMax){
+													stScrollInfo.lPos++;
+													dxgiPresent.DirtyRectsCount = 3;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
 
+													rcl3Dirty[2].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)rcfThumb.right;
+													rcfThumb.top += fThumbSize; rcfThumb.bottom += fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[1].top = (long)rcfThumb.top; rcl3Dirty[1].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[1].left = (long)rcfThumb.left; rcl3Dirty[1].right = (long)rcfThumb.right;
+
+													ifArrowColor->SetColor(crfArrow_Move);
+													ifButtonColor->SetColor(crfButton_Move);
+													rcl3Dirty[0].left = 0; rcl3Dirty[0].top = lHeight - lWidth;
+													rcl3Dirty[0].right = lWidth; rcl3Dirty[0].bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+												}
+												else{
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rclDirty.left = 0; rclDirty.top = lHeight - lWidth;
+													rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case ARROW_LEFT		:	if(stScrollInfo.lPos > 0){
+													stScrollInfo.lPos--;
+													dxgiPresent.DirtyRectsCount = 3;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)(rcfThumb.right + 2.0f);
+													rcfThumb.left -= fThumbSize; rcfThumb.right -= fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[1].top = (long)rcfThumb.top; rcl3Dirty[1].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[1].left = (long)rcfThumb.left; rcl3Dirty[1].right = (long)rcfThumb.right;
+
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rcl3Dirty[0].left = 0; rcl3Dirty[0].top = 0;
+													rcl3Dirty[0].right = lHeight; rcl3Dirty[0].bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, NULL);
+												}
+												else{
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rclDirty.left = 0; rclDirty.top = 0;
+													rclDirty.right = lHeight; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case	ARROW_RIGHT	:	if(stScrollInfo.lPos < stScrollInfo.lMax - (long)stScrollInfo.ulPage){
+													stScrollInfo.lPos++;
+													dxgiPresent.DirtyRectsCount = 3;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[2].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[2].right = (long)rcfThumb.right;
+													rcfThumb.left += fThumbSize; rcfThumb.right += fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[1].top = (long)rcfThumb.top; rcl3Dirty[1].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[1].left = (long)rcfThumb.left; rcl3Dirty[1].right = (long)rcfThumb.right;
+
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rcl3Dirty[0].left = lWidth - lHeight; rcl3Dirty[0].top = 0;
+													rcl3Dirty[0].right = lWidth; rcl3Dirty[0].bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+												}
+												else{
+													ifButtonColor->SetColor(crfButton_Move);
+													ifArrowColor->SetColor(crfArrow_Move);
+													rclDirty.left = lWidth - lHeight; rclDirty.top = 0;
+													rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												}
+												break;
+		case THUMB_HORZ		:
+		case THUMB_VERT		:	rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+												rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+												ifThumbColor->SetColor(crfThumb_Move);
 												OnRender();
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+												break;
+		case SLIDER_VERT:		if(ptlCursor.y > (long)rcfThumb.bottom && ptlCursor.y < lHeight - lWidth){
+													if(stScrollInfo.lPos + (long)stScrollInfo.ulPage * 2 < stScrollInfo.lMax) stScrollInfo.lPos += stScrollInfo.ulPage;
+													else stScrollInfo.lPos = stScrollInfo.lMax - stScrollInfo.ulPage;
+													dxgiPresent.DirtyRectsCount = 2;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
+													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
+													rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
+													rcfThumb.bottom = rcfThumb.top + fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[0].top = (long)rcfThumb.top; rcl3Dirty[0].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[0].left = (long)rcfThumb.left; rcl3Dirty[0].right = (long)rcfThumb.right;
+
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEDOWN, NULL);
+												}
+												else if(ptlCursor.y < (long)rcfThumb.top && ptlCursor.y > lWidth){
+													if(stScrollInfo.lPos > (long)stScrollInfo.ulPage) stScrollInfo.lPos -= stScrollInfo.ulPage;
+													else stScrollInfo.lPos = 0;
+													dxgiPresent.DirtyRectsCount = 2;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
+													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
+													rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
+													rcfThumb.bottom = rcfThumb.top + fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[0].top = (long)rcfThumb.top; rcl3Dirty[0].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[0].left = (long)rcfThumb.left; rcl3Dirty[0].right = (long)rcfThumb.right;
+
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEUP, NULL);
+												}
+												break;
+		case SLIDER_HORZ	:	if(ptlCursor.x > (long)rcfThumb.right && ptlCursor.x < lWidth - lHeight){
+													if(stScrollInfo.lPos + (long)stScrollInfo.ulPage * 2 < stScrollInfo.lMax) stScrollInfo.lPos += stScrollInfo.ulPage;
+													else stScrollInfo.lPos = stScrollInfo.lMax - stScrollInfo.ulPage;
+													dxgiPresent.DirtyRectsCount = 2;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
+													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
+													rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
+													rcfThumb.right = rcfThumb.left + fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[0].top = (long)rcfThumb.top; rcl3Dirty[0].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[0].left = (long)rcfThumb.left; rcl3Dirty[0].right = (long)rcfThumb.right;
+
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGERIGHT, NULL);
+												}
+												else if(ptlCursor.x < (long)rcfThumb.left && ptlCursor.x > lHeight){
+													if(stScrollInfo.lPos > (long)stScrollInfo.ulPage) stScrollInfo.lPos -= stScrollInfo.ulPage;
+													else stScrollInfo.lPos = 0;
+													dxgiPresent.DirtyRectsCount = 2;
+													dxgiPresent.pDirtyRects = rcl3Dirty;
+
+													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
+													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
+													rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
+													rcfThumb.right = rcfThumb.left + fThumbSize;
+													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+													SafeRelease(&ifThumb);
+													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+													rcl3Dirty[0].top = (long)rcfThumb.top; rcl3Dirty[0].bottom = (long)rcfThumb.bottom;
+													rcl3Dirty[0].left = (long)rcfThumb.left; rcl3Dirty[0].right = (long)rcfThumb.right;
+
+													OnRender();
+													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													dxgiPresent.DirtyRectsCount = 1;
+													dxgiPresent.pDirtyRects = &rclDirty;
+
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGELEFT, NULL);
+												}
 	}
 	ThreadSicher_Ende();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 {
-	if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage){
-		D2D1_RECT_F rcfThumb;
-		rcfThumb.left = lBreite - lBreite * fScaleArrowThumb / 100.0f; rcfThumb.right = lBreite * fScaleArrowThumb / 100.0f;
-		rclThumb.left = (long)rcfThumb.left; rclThumb.right = (long)rcfThumb.right;
-
-		if(stScrollInfo.lMax > (long)stScrollInfo.ulPage){
-			rcfThumb.top = lBreite; rcfThumb.bottom = (lHohe - lBreite * 2) / (stScrollInfo.lMax - stScrollInfo.ulPage + 1) + lBreite;
-			rclThumb.top = (long)rcfThumb.top; rclThumb.bottom = (long)rcfThumb.bottom;
-			lThumb_Hohe = rcfThumb.bottom - rcfThumb.top;
-
+	if(bHorizontal){
+		if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage && stScrollInfo.lMax > (long)stScrollInfo.ulPage){
+			rcfThumb.left = (float)lWidth - (float)lWidth * fScaleArrowThumb / 100.0f; rcfThumb.right = (float)lWidth * fScaleArrowThumb / 100.0f;
+			fThumbSize = (float)(lHeight - lWidth * 2) / (float)(stScrollInfo.lMax - stScrollInfo.ulPage + 1);
+			rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
+			rcfThumb.bottom = rcfThumb.top + fThumbSize;
 			if(ifThumb) SafeRelease(&ifThumb);
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
-
 			if(bRender){
-				rclDirty = rclThumb;
+				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-			}		
+			}
 		}
+	}
+	else{
+		if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage && stScrollInfo.lMax > (long)stScrollInfo.ulPage){
+			rcfThumb.top = (float)lHeight - (float)lHeight * fScaleArrowThumb / 100.0f; rcfThumb.bottom = (float)lHeight * fScaleArrowThumb / 100.0f;
+			fThumbSize = (float)(lWidth - lHeight * 2) / (float)(stScrollInfo.lMax - stScrollInfo.ulPage + 1);
+			rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
+			rcfThumb.right = rcfThumb.left + fThumbSize;
+			if(ifThumb) SafeRelease(&ifThumb);
+			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
+			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
+			if(bRender){
+				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
+				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+				OnRender();
+				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+			}
+		}
+
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

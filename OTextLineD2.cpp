@@ -116,7 +116,7 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lBreite, (float)lHohe, &ifTextLayout);
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -160,11 +160,11 @@ void __vectorcall RePag::DirectX::COTextLine::CharacterMetric(void)
 	//size_t szBytes_Text; WCHAR wcInhalt[255];
 	//if(vasInhalt->Length()) mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
 	//else mbstowcs_s(&szBytes_Text, wcInhalt, "Text", 5);
-	//pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lBreite, (float)lHohe, &ifTextLayout);
+	//pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	//ifTextLayout->GetMetrics(&stTextMetrics);
 	//lZeichen_hohe = (long)stTextMetrics.height;
 
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"888lllBBBIIIiiiaaaAAATTTttt", 28, ifText, (float)lBreite, (float)lHohe, &ifTextLayout);
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"888lllBBBIIIiiiaaaAAATTTttt", 28, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	lZeichen_hohe = (long)stTextMetrics.height;
 	stTextMetrics.height -= (float)lZeichen_hohe;
@@ -179,10 +179,10 @@ void __vectorcall RePag::DirectX::COTextLine::CharacterMetric(void)
 //	GetTextMetrics(hdc, &stTextmetric);
 //	GetTextExtentPoint32(hdc, vasInhalt->c_Str(), vasInhalt->Length(), &stZeichengrosse);
 //	ptText.x = ptText.y = 0;
-//	if(ucSchriftausrichtung & TXA_RECHTS) ptText.x = lBreite - stZeichengrosse.cx;
-//	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) ptText.x = (lBreite - stZeichengrosse.cx) / 2;
-//	if(ucSchriftausrichtung & TXA_UNTEN) ptText.y = lHohe - stTextmetric.tmHeight + stTextmetric.tmExternalLeading;
-//	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) ptText.y = (lHohe - stTextmetric.tmHeight + stTextmetric.tmExternalLeading) / 2;
+//	if(ucSchriftausrichtung & TXA_RECHTS) ptText.x = lWidth - stZeichengrosse.cx;
+//	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) ptText.x = (lWidth - stZeichengrosse.cx) / 2;
+//	if(ucSchriftausrichtung & TXA_UNTEN) ptText.y = lHeight - stTextmetric.tmHeight + stTextmetric.tmExternalLeading;
+//	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) ptText.y = (lHeight - stTextmetric.tmHeight + stTextmetric.tmExternalLeading) / 2;
 //}
 ////-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_POINT_2F& ptfText)
@@ -190,10 +190,10 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 	DWRITE_TEXT_METRICS stTextMetrics;
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	ptfText.x = ptfText.y = 0; fTextWidth = stTextMetrics.width;
-	if(ucSchriftausrichtung & TXA_RECHTS) ptfText.x = (float)lBreite - stTextMetrics.width;
-	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) ptfText.x = ((float)lBreite - stTextMetrics.width) / 2.0f;
-	if(ucSchriftausrichtung & TXA_UNTEN) ptfText.y = (float)lHohe - stTextMetrics.height;
-	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) ptfText.y = ((float)lHohe - stTextMetrics.height) / 2.0f;
+	if(ucSchriftausrichtung & TXA_RECHTS) ptfText.x = (float)lWidth - stTextMetrics.width;
+	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) ptfText.x = ((float)lWidth - stTextMetrics.width) / 2.0f;
+	if(ucSchriftausrichtung & TXA_UNTEN) ptfText.y = (float)lHeight - stTextMetrics.height;
+	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) ptfText.y = ((float)lHeight - stTextMetrics.height) / 2.0f;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_RECT_F& rcfText)
@@ -201,10 +201,10 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 	DWRITE_TEXT_METRICS stTextMetrics;
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	rcfText.top = rcfText.left = 0; fTextWidth = stTextMetrics.width;
-	if(ucSchriftausrichtung & TXA_RECHTS) rcfText.left = (float)lBreite - stTextMetrics.width;
-	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) rcfText.left = ((float)lBreite - stTextMetrics.width) / 2.0f;
-	if(ucSchriftausrichtung & TXA_UNTEN) rcfText.top = (float)lHohe - stTextMetrics.height;
-	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) rcfText.top = ((float)lHohe - stTextMetrics.height) / 2.0f;
+	if(ucSchriftausrichtung & TXA_RECHTS) rcfText.left = (float)lWidth - stTextMetrics.width;
+	if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL) rcfText.left = ((float)lWidth - stTextMetrics.width) / 2.0f;
+	if(ucSchriftausrichtung & TXA_UNTEN) rcfText.top = (float)lHeight - stTextMetrics.height;
+	if(ucSchriftausrichtung & TXA_MITTEVERTICAL) rcfText.top = ((float)lHeight - stTextMetrics.height) / 2.0f;
 	rcfText.right = rcfText.left + stTextMetrics.width; rcfText.bottom = rcfText.top + stTextMetrics.height;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
