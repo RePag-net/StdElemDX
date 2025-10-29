@@ -151,10 +151,10 @@ void __vectorcall RePag::DirectX::COScrollBar::OnRender(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::OnPaint(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
@@ -165,7 +165,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 
 	D2D1_POINT_2F ptf3Arrow[3]; D2D1_RECT_F rcfButton; ID2D1GeometrySink* ifSink;
 	float fWidth = lWidth; float fHeight = lHeight;
-	if(bHorizontal){
+	if(!bHorizontal){
 		ptf3Arrow[0] = D2D1::Point2F(fWidth - fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
 		ptf3Arrow[1] = D2D1::Point2F(fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
 		ptf3Arrow[2] = D2D1::Point2F(fWidth / 2, fWidth - fWidth * fScaleArrowThumb / 100.0f);
@@ -255,7 +255,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl2Dirty[2];	D2D1_ROUNDED_RECT rrcfThumb;
 	static char cCursor_Move = 0; static long lCursor = 0; static char cThumbDirection = 0;
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 
 	if(!bMouseTracking){ bMouseTracking = true;	TrackMouseEvent(&stTrackMouseEvent); }
 	else{
@@ -475,14 +475,14 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 													}
 		}
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_MouseOver(WPARAM wParam, LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
-	ThreadSicher_Anfang();
-	if(bHorizontal){
+	ThreadSafe_Begin();
+	if(!bHorizontal){
 		if(ptlCursor.y <= lWidth){
 			ifButtonColor->SetColor(crfButton_Move);
 			ifArrowColor->SetColor(crfArrow_Move);
@@ -540,12 +540,12 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseOver(WPARAM wParam, LPARA
 		}
 		else if(ptlCursor.x < (long)rcfThumb.left || ptlCursor.x > (long)rcfThumb.right) ucDirty = SLIDER_HORZ;
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_MouseLeave(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	switch(ucDirty){
 		case ARROW_UP			: ifButtonColor->SetColor(crfButton);
 												ifArrowColor->SetColor(crfArrow);
@@ -584,13 +584,13 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseLeave(void)
 	}
 	ucDirty = NONCLIENT;
 	bMouseTracking = false;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	switch(ucDirty){
 		case	ARROW_UP		:	if(ptlCursor.y <= lWidth){
 													ifButtonColor->SetColor(crfButton_Click);
@@ -644,13 +644,13 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb;
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	switch(ucDirty){
 		case ARROW_UP			:	if(stScrollInfo.lPos > 0){
 													stScrollInfo.lPos--;
@@ -889,12 +889,12 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGELEFT, NULL);
 												}
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 {
-	if(bHorizontal){
+	if(!bHorizontal){
 		if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage && stScrollInfo.lMax > (long)stScrollInfo.ulPage){
 			rcfThumb.left = (float)lWidth - (float)lWidth * fScaleArrowThumb / 100.0f; rcfThumb.right = (float)lWidth * fScaleArrowThumb / 100.0f;
 			fThumbSize = (float)(lHeight - lWidth * 2) / (float)(stScrollInfo.lMax - stScrollInfo.ulPage + 1);
@@ -933,22 +933,22 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::GetScrollInfo(_In_ STScrollInfo& stScrollInfoA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	stScrollInfoA = stScrollInfo;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetScrollInfo(_In_ STScrollInfo& stScrollInfoA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	stScrollInfo = stScrollInfoA;
 	if(hWndElement) CreateThumb(true);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::ScaleArrowThumb(_In_ float fScale)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(fScale > 100) fScale = 100;
 	if(fScale < 0) fScale = 0;
 	fScaleArrowThumb = fScale;
@@ -956,133 +956,133 @@ void __vectorcall RePag::DirectX::COScrollBar::ScaleArrowThumb(_In_ float fScale
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifButtonColor) ifButtonColor->SetColor(crfButton);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor(_In_ D2D1_COLOR_F& crfButtonA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton = crfButtonA;
 	if(ifButtonColor) ifButtonColor->SetColor(crfButton);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Move(_In_ D2D1_COLOR_F& crfButton_MoveA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton_Move = crfButton_MoveA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Click(_In_ D2D1_COLOR_F& crfButton_ClickA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfButton_Click = crfButton_ClickA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifArrowColor) ifArrowColor->SetColor(crfArrow);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor(_In_ D2D1_COLOR_F& crfArrowA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow = crfArrowA;
 	if(ifArrowColor) ifArrowColor->SetColor(crfArrow);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Move(_In_ D2D1_COLOR_F& crfArrow_MoveA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow_Move = crfArrow_MoveA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Click(_In_ D2D1_COLOR_F& crfArrow_ClickA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfArrow_Click = crfArrow_ClickA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifThumbColor) ifThumbColor->SetColor(crfThumb);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor(_In_ D2D1_COLOR_F& crfThumbA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb = crfThumbA;
 	if(ifThumbColor) ifThumbColor->SetColor(crfThumb);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Move(_In_ D2D1_COLOR_F& crfThumb_MoveA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb_Move = crfThumb_MoveA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Click(_In_ D2D1_COLOR_F& crfThumb_ClickA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfThumb_Click = crfThumb_ClickA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

@@ -68,9 +68,9 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(HWND hWnd, unsigned int uiMess
 		case WM_COMMAND       : pEditLine = (COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 														if(!pEditLine->WM_Command(wParam)) return NULL;
 														else if(pEditLine->pfnWM_Command){
-															pEditLine->ThreadSicher_Anfang();
-															if(!pEditLine->pfnWM_Command(pEditLine, wParam)){ pEditLine->ThreadSicher_Ende(); return NULL; }
-															pEditLine->ThreadSicher_Ende();
+															pEditLine->ThreadSafe_Begin();
+															if(!pEditLine->pfnWM_Command(pEditLine, wParam)){ pEditLine->ThreadSafe_End(); return NULL; }
+															pEditLine->ThreadSafe_End();
 														}
 														else PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 														break;
@@ -84,8 +84,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(HWND hWnd, unsigned int uiMess
 														return NULL;
 		case WM_LBUTTONDBLCLK : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDBClick(wParam, lParam);
 														return NULL;
-		//case WM_PAINT         : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_Paint();
-		//												return NULL;
 		case WM_NCDESTROY     : pEditLine = (COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 														if(pEditLine->htEffekt_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditLine->htEffekt_Timer, INVALID_HANDLE_VALUE);
 														VMFreiV(pEditLine);
@@ -100,13 +98,13 @@ void CALLBACK RePag::DirectX::Timer_Caret(void* pvParam, bool bTimerOrWaitFired)
 	static bool bCaret = false;
 	bCaret ? bCaret = false : bCaret = true;
 
-	_EditLine->ThreadSicher_Anfang();
+	_EditLine->ThreadSafe_Begin();
 	_EditLine->rclDirty.left = _EditLine->ptlCaret.x;
 	_EditLine->rclDirty.right = _EditLine->rclDirty.left + CARET_PIXEL;
 
 	_EditLine->OnRender(bCaret);
 	_EditLine->ifDXGISwapChain4->Present1(0, NULL, &_EditLine->dxgiPresent);
-	_EditLine->ThreadSicher_Ende();
+	_EditLine->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcKlassenName, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
@@ -129,9 +127,6 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmS
 	 ulSelectPos = 0;
 	 ulZeichen_max = 0x7fffffff;
 	 ucZeichenVorgabe = ZV_ALLE; 
-	 //stSelectTextColor.r = stSelectTextColor.g = stSelectTextColor.b = 0.0f; stSelectTextColor.a = 1.0f;
-	 //stSelectBackColor.r = 0; stSelectBackColor.g = 0.85f; stSelectBackColor.b = 0.85f; stSelectBackColor.a = 1.0f;
-	 //stCaretColor.r = stCaretColor.g = stCaretColor.b = stCaretColor.a = 1.0f;
 	 crfSelectText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
 	 crfSelectBack = D2D1::ColorF(RGB(215, 215, 0), 1.0f);
 	 crfCaret = D2D1::ColorF(RGB(255, 255, 255), 1.0f);
@@ -209,10 +204,10 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnPaint(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
@@ -244,7 +239,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
 
 	mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
@@ -276,12 +271,12 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	if(!cSelect){
 		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret, this, 0, 500, 0);
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_KillFocus(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); htCaret = nullptr;
 	
 	rclDirty.left = ptlCaret.x; rclDirty.right = ptlCaret.x + CARET_PIXEL;
@@ -289,14 +284,14 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KillFocus(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 	if(pfnWM_KillFocus) pfnWM_KillFocus(this);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM lParam)
 {
 	SIZE stZeichengrosse, stZeichenPos_Caret; VMBLOCK vbZeichen; RECT rcl2Dirty[2];
 	switch(wParam){
-		case VK_HOME    : ThreadSicher_Anfang();
+		case VK_HOME    : ThreadSafe_Begin();
 											DeleteCaretPos();
 											if(cSelect) DeSelect();
 											ulZeichenPos = 0;
@@ -313,9 +308,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												else if(ucSchriftausrichtung & TXA_RECHTS) ptlCaret.x = lWidth - stZeichengrosse.cx;
 												else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
 											} 
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											break;
-		case VK_END     : ThreadSicher_Anfang();
+		case VK_END     : ThreadSafe_Begin();
 											DeleteCaretPos();
 											if(cSelect) DeSelect();
 											ulZeichenPos = vasInhalt->Length();
@@ -329,9 +324,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 											else if(ucSchriftausrichtung & TXA_LINKS) ptlCaret.x = stZeichengrosse.cx;
 											else if(ucSchriftausrichtung & TXA_RECHTS) ptlCaret.x = lWidth - CARET_PIXEL;
 											else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2 + stZeichengrosse.cx;
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											break;
-		case VK_LEFT		: ThreadSicher_Anfang();											
+		case VK_LEFT		: ThreadSafe_Begin();											
 											if(ulZeichenPos){
 												if(cSelect) DeleteCaretPos();
 												rclDirty.right = ptlCaret.x;
@@ -400,9 +395,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											break;
-		case VK_RIGHT		: ThreadSicher_Anfang();
+		case VK_RIGHT		: ThreadSafe_Begin();
 											if(ulZeichenPos < vasInhalt->Length()){
 												if(!cSelect) DeleteCaretPos();
 												rclDirty.left = ptlCaret.x;
@@ -476,10 +471,10 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											break;
-		case VK_DELETE	: ThreadSicher_Anfang();
-											if(!ucZeichenVorgabe){ ThreadSicher_Ende(); break; }
+		case VK_DELETE	: ThreadSafe_Begin();
+											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 											if(!vasZeichenMaske->Length()){	
 												if(cSelect) Select_Loschen();
 												else if(ulZeichenPos < vasInhalt->Length()){
@@ -735,7 +730,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														dxgiPresent.pScrollOffset = nullptr;
 													}
 												}
-												ThreadSicher_Ende();
+												ThreadSafe_End();
 											}
 											PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_CHAR);
 											break;
@@ -747,24 +742,24 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 {
 	VMBLOCK vbZeichen; SIZE stZeichengrosse, stZeichengrosse_1; RECT rcl2Dirty[2]; RECT rcZeichnen = {0};
 	switch(wParam){
-		case VK_TAB    : ThreadSicher_Anfang();
-										 if(!ucZeichenVorgabe){ ThreadSicher_Ende(); break; }
+		case VK_TAB    : ThreadSafe_Begin();
+										 if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 										 rclDirty.right = 0;
 										 do{ SendMessage(hWndElement, WM_CHAR, ' ', NULL); }
 										 while(++rclDirty.right < 4);
-										 ThreadSicher_Ende();
+										 ThreadSafe_End();
 										 break;
-		case VK_RETURN : ThreadSicher_Anfang();
+		case VK_RETURN : ThreadSafe_Begin();
 										 if(pfnWM_Char_Return) pfnWM_Char_Return(this);
-										 ThreadSicher_Ende();
+										 ThreadSafe_End();
 										 break;
-		case VK_ESCAPE : ThreadSicher_Anfang();
+		case VK_ESCAPE : ThreadSafe_Begin();
 										 SetFocus(GetParent(hWndElement));
 										 if(pfnWM_Char_Escape) pfnWM_Char_Escape(this);
-										 ThreadSicher_Ende();
+										 ThreadSafe_End();
 										 break;
-		case VK_BACK   : ThreadSicher_Anfang();
-											if(!ucZeichenVorgabe){ ThreadSicher_Ende(); break; }
+		case VK_BACK   : ThreadSafe_Begin();
+											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 											if(ulZeichenPos || !ulZeichenPos && cSelect){ 
 												if(!vasZeichenMaske->Length()){
 													if(cSelect) Select_Loschen();
@@ -1050,10 +1045,10 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 													}
 												}
 											} 
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_CHAR);
 											break;
-		default        :  ThreadSicher_Anfang();
+		default        :  ThreadSafe_Begin();
 											if(ZeichenVorgabe(wParam) && ulZeichenPos < ulZeichen_max){
 												if(!vasZeichenMaske->Length()){
 													if(cSelect) Select_Loschen();
@@ -1352,7 +1347,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 													}
 												}
 											}
-											ThreadSicher_Ende();
+											ThreadSafe_End();
 											PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_CHAR);
 											break;
 	}
@@ -1362,7 +1357,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 {
 	VMBLOCK vbZeichen; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; SIZE szZeichen_Inhalt, szZeichen_Clipboard; RECT rcl2Dirty[2];
 	switch(LOWORD(wParam)){
-		case IDM_KOPIEREN			: ThreadSicher_Anfang();
+		case IDM_KOPIEREN			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
 														if(cSelect > 0) ulZeichen = vasInhalt->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
 														else ulZeichen = vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
@@ -1372,10 +1367,10 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														pcAblage[ulZeichen] = 0;
 														GlobalUnlock(hGlobal);
 														SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
-														ThreadSicher_Ende();
+														ThreadSafe_End();
 														return false;
-		case IDM_AUSSCHNEIDEN : ThreadSicher_Anfang();
-														if(vasZeichenMaske->Length() || !ucZeichenVorgabe){ ThreadSicher_Ende(); return false; }
+		case IDM_AUSSCHNEIDEN : ThreadSafe_Begin();
+														if(vasZeichenMaske->Length() || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
 														OpenClipboard(hWndElement); EmptyClipboard();
 														DeSelect();
 														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
@@ -1491,11 +1486,11 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 															OnRender(true);
 															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 														}
-														ThreadSicher_Ende();
+														ThreadSafe_End();
 														return false;
-		case IDM_EINFUGEN	:			ThreadSicher_Anfang();
-														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucZeichenVorgabe){ ThreadSicher_Ende(); return false; }
-														if(vasZeichenMaske->Length()){ ThreadSicher_Ende(); return false; }
+		case IDM_EINFUGEN	:			ThreadSafe_Begin();
+														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
+														if(vasZeichenMaske->Length()){ ThreadSafe_End(); return false; }
 														if(cSelect) Select_Loschen();
 														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
 
@@ -1586,7 +1581,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 															}
 															// tue nix
 														}
-														ThreadSicher_Ende();
+														ThreadSafe_End();
 														return false;
 		default               : return true;
 	}
@@ -1594,7 +1589,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(LPARAM lParam)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(vasZeichenMaske->Length()){
 		EnableMenuItem(hMenu, IDM_AUSSCHNEIDEN, MF_BYCOMMAND | MF_GRAYED);
 		EnableMenuItem(hMenu, IDM_EINFUGEN, MF_BYCOMMAND | MF_GRAYED);
@@ -1608,23 +1603,23 @@ void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(LPARAM lParam)
 	ptPosition.x = LOWORD(lParam); ptPosition.y = HIWORD(lParam);
 	if(ptPosition.x == USHRT_MAX && ptPosition.y == USHRT_MAX) ClientToScreen(GetParent(hWndElement), &Position(ptPosition));
 	TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, ptPosition.x, ptPosition.y, hWndElement, nullptr);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(WPARAM wParam, LPARAM lParam)
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
-		ThreadSicher_Anfang();
+		ThreadSafe_Begin();
 		if(GET_X_LPARAM(lParam) < ptlCaret.x - lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
 		else if(GET_X_LPARAM(lParam) > ptlCaret.x + lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
-		ThreadSicher_Ende();
+		ThreadSafe_End();
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(WPARAM wParam, LPARAM lParam)
 {
 	SetCapture(hWndElement);
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(hWndElement == GetFocus()) DeleteCaretPos();
 	else SetFocus(hWndElement);
 	if(cSelect) DeSelect();
@@ -1667,24 +1662,24 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(WPARAM wParam, LPAR
 	}
 
 	if(pfnWM_LButtonDown) pfnWM_LButtonDown(this, wParam, lParam);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(WPARAM wParam, LPARAM lParam)
 {
 	ReleaseCapture();
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(pfnWM_LButtonUp) pfnWM_LButtonUp(this, wParam, lParam);
 	else PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_LBUTTONUP);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDBClick(WPARAM wParam, LPARAM lParam)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	SelectAlles();
 	if(pfnWM_LButtonDBClick) pfnWM_LButtonDBClick(this, wParam, lParam);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(bool bVerfugbar)
@@ -1820,7 +1815,7 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Loschen(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::Text(char* pcText)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	*vasInhalt = NULL; ulZeichenPos = 0;
 	if(pcText){
 		if(vasZeichenMaske->Length() && StrLength(pcText)){ VMBLOCK vbZeichen_Maske, vbZeichen_Text; BYTE ucFesteZeichen = 0, ucZeichen; COStringA asText = pcText;
@@ -1880,7 +1875,7 @@ void __vectorcall RePag::DirectX::COEditLine::Text(char* pcText)
 		else *vasInhalt = pcText;
 	}
 	//UpdateFenster(nullptr, true, false);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::DeSelect(void)
@@ -1957,85 +1952,85 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen()
 void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
 																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfSelectText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfSelectText = crfSelectTextA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
 																																			 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfSelectBack = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfSelectBack = crfSelectBackA;
 	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
 																														_In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfCaret = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
 
 	rclDirty.left = ptlCaret.x; rclDirty.right = ptlCaret.x + CARET_PIXEL;
 	OnRender(true);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfCaret = crfCaretA;
 	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
 
 	rclDirty.left = ptlCaret.x; rclDirty.right = ptlCaret.x + CARET_PIXEL;
 	OnRender(true);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetzZeichen_Max(unsigned long ulZeichen)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	ulZeichen_max = ulZeichen;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 unsigned long __vectorcall RePag::DirectX::COEditLine::Zeichen_Max(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	ULONG ulMaxZeichen = ulZeichen_max;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 	return ulMaxZeichen;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::Zeichenvorgabe(unsigned char ucZeichenVorgabeA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	ucZeichenVorgabe = ucZeichenVorgabeA;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(const char* pcZeichenmaske)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(!pcZeichenmaske || !StrCompare(pcZeichenmaske, 1, "", 1)){ *vasZeichenMaske = NULL; ulZeichen_max = 0x7fffffff; }
 	else if(*vasZeichenMaske != pcZeichenmaske){ VMBLOCK vbZeichen; ULONG ulZeichenLange;
 		*vasZeichenMaske = pcZeichenmaske; *vasInhalt = NULL;
@@ -2054,14 +2049,14 @@ void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(const char* pcZeichen
 		}
 		ulZeichen_max = vasInhalt->Length();
 	}
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 COStringA* __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(COStringA* pasZeichenmaske)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	*pasZeichenmaske = *vasZeichenMaske;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 	return pasZeichenmaske;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -2069,7 +2064,7 @@ void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)
 {
 	if(hWndElement){
 		SIZE stZeichengrosse;
-		ThreadSicher_Anfang();
+		ThreadSafe_Begin();
 		cSelect = 1; ulSelectPos = 0; ulZeichenPos = vasInhalt->Length();
 
 		GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
@@ -2087,15 +2082,15 @@ void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)
 		rclDirty.left = rclSelect.left; rclDirty.right = rclSelect.right;
 		OnRender(true);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-		ThreadSicher_Ende();
+		ThreadSafe_End();
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SelectEntfernen(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	if(cSelect) DeSelect();
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::DeleteCaretPos(void)

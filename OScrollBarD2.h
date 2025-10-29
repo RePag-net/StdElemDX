@@ -70,17 +70,16 @@ namespace RePag
 				ID2D1SolidColorBrush* ifThumbColor;
 				D2D1_RECT_F rcfThumb;
 				float fThumbSize;
-				void __vectorcall CreateThumb(bool bRender);
+				void __vectorcall CreateThumb(_In_ bool bRender);
 
 			protected:
 				void __vectorcall OnRender(void);
-				void __vectorcall OnPaint(void);
 				void __vectorcall WM_Create(void);
-				void __vectorcall WM_MouseMove(WPARAM wParam, LPARAM lParam);
-				void __vectorcall WM_MouseOver(WPARAM wParam, LPARAM lParam);
+				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_MouseOver(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseLeave(void);
-				void __vectorcall WM_LButtonDown(WPARAM wParam, LPARAM lParam);
-				void __vectorcall WM_LButtonUp(WPARAM wParam, LPARAM lParam);
+				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcKlassenName, _In_z_ const char* pcFensterName,
 																			 _In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA);
 
@@ -109,6 +108,7 @@ namespace RePag
 				void __vectorcall SetThumbColor_Move(_In_ D2D1_COLOR_F& crfThumb_MoveA);
 				void __vectorcall SetThumbColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 				void __vectorcall SetThumbColor_Click(_In_ D2D1_COLOR_F& crfThumb_ClickA);
+				void __vectorcall OnPaint(void);
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_z_ const char* pcFensterName, _In_ unsigned int uiIDElement,

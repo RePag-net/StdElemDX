@@ -54,9 +54,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 												if(pTextZeile) pTextZeile->WM_Size_Element(hWnd, lParam);
 												else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 												return NULL;
-		//case WM_PAINT			:	pTextZeile = (COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		//										pTextZeile->WM_Paint();
-		//										return NULL;
 		case WM_NCDESTROY :	pTextZeile = (COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 												if(pTextZeile->htEffekt_Timer) DeleteTimerQueueTimer(TimerQueue(), pTextZeile->htEffekt_Timer, INVALID_HANDLE_VALUE);
 												VMFreiV(pTextZeile);
@@ -129,10 +126,10 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::OnPaint(void)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::WM_Create(void)
@@ -210,48 +207,48 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::Text(_In_z_ char* pcText)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	*vasInhalt = pcText; 
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::Font(STFont& stFont)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	SafeRelease(&ifText);
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(stFont.fontFamilyName, stFont.fontCollection, stFont.fontWeight, stFont.fontSytle,
 																												 stFont.fontStretch, stFont.fontSize, stFont.localeName, &ifText);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 COStringA* __vectorcall RePag::DirectX::COTextLine::Content(_Out_ COStringA* vasInhaltA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	*vasInhaltA = *vasInhalt;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 	return vasInhaltA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
 	if(ifTextColor) ifTextColor->SetColor(crfText);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ D2D1_COLOR_F& stTextA)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	crfText = stTextA;
 	if(ifTextColor) ifTextColor->SetColor(crfText);
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ unsigned char ucTextAlignment)
 {
-	ThreadSicher_Anfang();
+	ThreadSafe_Begin();
 	ucSchriftausrichtung = ucTextAlignment;
-	ThreadSicher_Ende();
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
