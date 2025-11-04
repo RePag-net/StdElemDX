@@ -30,19 +30,19 @@ SOFTWARE.
 #define _EditLine ((RePag::DirectX::COEditLine*)pvParam)
 constexpr LONG CARET_PIXEL = 2;
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditLine* vEditLine = (COEditLine*)VMBlock(VMDialog(), sizeof(COEditLine));
-	vEditLine->COEditLineV(VMDialog(), pcFensterName, uiIDElement, pstDeviceResources);
+	vEditLine->COEditLineV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources);
 	return vEditLine;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources)
 {
-	COEditLine* vEditLine = (COEditLine*)VMBlock(vmSpeicher, sizeof(COEditLine));
-	vEditLine->COEditLineV(vmSpeicher, pcFensterName, uiIDElement, pstDeviceResources);
+	COEditLine* vEditLine = (COEditLine*)VMBlock(vmMemory, sizeof(COEditLine));
+	vEditLine->COEditLineV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
 	return vEditLine;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,10 +107,10 @@ void CALLBACK RePag::DirectX::Timer_Caret(void* pvParam, bool bTimerOrWaitFired)
 	_EditLine->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcKlassenName, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcClassName, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																											_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	 COTextLineV(vmSpeicher, pcKlassenName, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	 COTextLineV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	 pfnWM_Char_Return = nullptr;
 	 pfnWM_Char_Escape = nullptr;
@@ -133,7 +133,7 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmS
 	 htCaret = nullptr;
 	 heCaret = CreateEvent(nullptr, true, true, nullptr);
 
-	 vasZeichenMaske = COStringAV(vmSpeicher);
+	 vasZeichenMaske = COStringAV(vmMemory);
 
 	 hMenu = CreatePopupMenu();
 	 AppendMenu(hMenu, MF_STRING, IDM_AUSSCHNEIDEN, "Ausschneiden		Strg+X");
@@ -141,10 +141,10 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmS
 	 AppendMenu(hMenu, MF_STRING, IDM_EINFUGEN, "Einfügen		Strg+V");
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																											_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COEditLineV(vmSpeicher, pcRePag_EditLine, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	COEditLineV(vmMemory, pcRePag_EditLine, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
@@ -164,7 +164,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
-	mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
+	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
@@ -178,15 +178,15 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	if(!cSelect){
 		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
 			ptfTop.x = (float)ptlCaret.x;
-			ptfTop.y = static_cast<float>(ptlCaret.y + lZeichen_hohe);
+			ptfTop.y = (float)ptlCaret.y + szfSign.height;
 			ptfBottom.x = (float)ptlCaret.x;
 			ptfBottom.y = (float)ptlCaret.y;
 			ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)CARET_PIXEL, nullptr);
 		}
 	}
 	else{	VMBLOCK vbZeichen; ULONG ulZeichen; D2D1_RECT_F rcfSelect;
-		if(cSelect > 0)	ulZeichen = vasInhalt->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
-		else ulZeichen = vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
+		if(cSelect > 0)	ulZeichen = vasContent->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
+		else ulZeichen = vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
 
 		rcfSelect.top = rcfText.top; rcfSelect.bottom = rcfText.bottom;
 		rcfSelect.left = (float)rclSelect.left; rcfSelect.right = (float)rclSelect.right;
@@ -221,12 +221,12 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 	ifText->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	SIZE szZeichen_Inhalt;
-	if(ucSchriftausrichtung & TXA_RECHTS){
-		GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
+	if(ucTextAlignment & TXA_RECHTS){
+		GetTextPoint(vasContent->c_Str(), vasContent->Length(), szZeichen_Inhalt);
 		if(szZeichen_Inhalt.cx > lWidth) lTextPos = szZeichen_Inhalt.cx - lWidth;
 	}
-	else if(ucSchriftausrichtung & TXA_MITTEHORIZONTAL){
-		GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
+	else if(ucTextAlignment & TXA_MITTEHORIZONTAL){
+		GetTextPoint(vasContent->c_Str(), vasContent->Length(), szZeichen_Inhalt);
 		if(szZeichen_Inhalt.cx > lWidth){
 			lTextPos = szZeichen_Inhalt.cx - lWidth;
 			lTextPos /= 2;
@@ -242,7 +242,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	ThreadSafe_Begin();
 	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
 
-	mbstowcs_s(&szBytes_Text, wcInhalt, vasInhalt->c_Str(), vasInhalt->Length());
+	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 
 	TextAlignment(ifTextLayout, fTextWidth, ptfText);
@@ -252,7 +252,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	ptfText.y -= (float)ptlCaret.y;
 	if(ptfText.y >= 0.5f) ptlCaret.y += 1;
 
-	rclScroll.top = rclDirty.top = lHeight - lZeichen_hohe - ptlCaret.y;
+	rclScroll.top = rclDirty.top = lHeight - (long)szfSign.height - ptlCaret.y;
 	rclScroll.bottom = rclDirty.bottom = lHeight - ptlCaret.y;
 	ptlScrollOffset.y = 0;
 
@@ -265,7 +265,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 		EnableMenuItem(hMenu, IDM_EINFUGEN, MF_BYCOMMAND | MF_GRAYED);
 	}
 	else{	ptlCaret.x = static_cast<long>(ptfText.x + fTextWidth);
-		if(!cSelect) ulZeichenPos = vasInhalt->Length();
+		if(!cSelect) ulZeichenPos = vasContent->Length();
 	}
 
 	if(!cSelect){
@@ -301,11 +301,11 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
-											else if(ucSchriftausrichtung & TXA_LINKS) ptlCaret.x = 0; 
+											else if(ucTextAlignment & TXA_LINKS) ptlCaret.x = 0; 
 											else{ 
-												GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+												GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 												if(stZeichengrosse.cx > lWidth) ptlCaret.x = 0;
-												else if(ucSchriftausrichtung & TXA_RECHTS) ptlCaret.x = lWidth - stZeichengrosse.cx;
+												else if(ucTextAlignment & TXA_RECHTS) ptlCaret.x = lWidth - stZeichengrosse.cx;
 												else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
 											} 
 											ThreadSafe_End();
@@ -313,16 +313,16 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 		case VK_END     : ThreadSafe_Begin();
 											DeleteCaretPos();
 											if(cSelect) DeSelect();
-											ulZeichenPos = vasInhalt->Length();
-											GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+											ulZeichenPos = vasContent->Length();
+											GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 											if(stZeichengrosse.cx > lWidth){
 												lTextPos = stZeichengrosse.cx - lWidth; ptlCaret.x = lWidth - CARET_PIXEL;
 												rclDirty.left = 0; rclDirty.right = lWidth;
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
-											else if(ucSchriftausrichtung & TXA_LINKS) ptlCaret.x = stZeichengrosse.cx;
-											else if(ucSchriftausrichtung & TXA_RECHTS) ptlCaret.x = lWidth - CARET_PIXEL;
+											else if(ucTextAlignment & TXA_LINKS) ptlCaret.x = stZeichengrosse.cx;
+											else if(ucTextAlignment & TXA_RECHTS) ptlCaret.x = lWidth - CARET_PIXEL;
 											else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2 + stZeichengrosse.cx;
 											ThreadSafe_End();
 											break;
@@ -330,11 +330,11 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 											if(ulZeichenPos){
 												if(cSelect) DeleteCaretPos();
 												rclDirty.right = ptlCaret.x;
-												GetTextPoint(vasInhalt->c_Str(), --ulZeichenPos, stZeichengrosse);
+												GetTextPoint(vasContent->c_Str(), --ulZeichenPos, stZeichengrosse);
 												if(stZeichengrosse.cx - lTextPos < 0)	ScrollLeft(stZeichengrosse);
-												else if(ucSchriftausrichtung & TXA_LINKS){
+												else if(ucTextAlignment & TXA_LINKS){
 													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestLinks()) GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+														if(ZeichenMaske_FestLinks()) GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 													}
 													rclDirty.left = ptlCaret.x = stZeichengrosse.cx - lTextPos;
 													rclDirty.right += CARET_PIXEL;
@@ -342,23 +342,23 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												else{
 													if(vasZeichenMaske->Length()){
 														if(ZeichenMaske_FestLinks()){
-															GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-															ucSchriftausrichtung & TXA_RECHTS ? ptlCaret.x = lWidth - stZeichengrosse.cx
+															GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+															ucTextAlignment & TXA_RECHTS ? ptlCaret.x = lWidth - stZeichengrosse.cx
 																: ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x += stZeichengrosse.cx;
 														}
 														else{
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															ptlCaret.x -= stZeichengrosse.cx;
 														}
 													}
 													else{
 														stZeichenPos_Caret = stZeichengrosse;
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 														if(stZeichengrosse.cx < lWidth){
-															if(ucSchriftausrichtung & TXA_RECHTS)	ptlCaret.x = lWidth - stZeichengrosse.cx + stZeichenPos_Caret.cx;
+															if(ucTextAlignment & TXA_RECHTS)	ptlCaret.x = lWidth - stZeichengrosse.cx + stZeichenPos_Caret.cx;
 															else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2 + stZeichenPos_Caret.cx;
 														}
 														else ptlCaret.x = stZeichenPos_Caret.cx - lTextPos;
@@ -398,15 +398,15 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 											ThreadSafe_End();
 											break;
 		case VK_RIGHT		: ThreadSafe_Begin();
-											if(ulZeichenPos < vasInhalt->Length()){
+											if(ulZeichenPos < vasContent->Length()){
 												if(!cSelect) DeleteCaretPos();
 												rclDirty.left = ptlCaret.x;
-												GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, stZeichengrosse);
+												GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, stZeichengrosse);
 												if(stZeichengrosse.cx - lTextPos > lWidth)	ScrollRight(stZeichengrosse);
 												else if(stZeichengrosse.cx - lTextPos == lWidth)	ptlCaret.x = lWidth - CARET_PIXEL;
-												else if(ucSchriftausrichtung & TXA_LINKS){
+												else if(ucTextAlignment & TXA_LINKS){
 													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestRechts()) GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+														if(ZeichenMaske_FestRechts()) GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 													}
 													rclDirty.left -= CARET_PIXEL;
 													rclDirty.right = ptlCaret.x = stZeichengrosse.cx - lTextPos;
@@ -414,23 +414,23 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 												else{
  													if(vasZeichenMaske->Length()){
 														if(ZeichenMaske_FestRechts()){
-															GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-															ucSchriftausrichtung & TXA_RECHTS ? ptlCaret.x = lWidth - stZeichengrosse.cx
+															GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+															ucTextAlignment & TXA_RECHTS ? ptlCaret.x = lWidth - stZeichengrosse.cx
 																: ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x += stZeichengrosse.cx;
 														}
 	 													else{
-															vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+															vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															ptlCaret.x = lWidth - stZeichengrosse.cx;
 														}
 													}
 													else{
 														stZeichenPos_Caret = stZeichengrosse;
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 														if(stZeichengrosse.cx < lWidth){
-															if(ucSchriftausrichtung & TXA_RECHTS)	ptlCaret.x = lWidth - stZeichengrosse.cx + stZeichenPos_Caret.cx;
+															if(ucTextAlignment & TXA_RECHTS)	ptlCaret.x = lWidth - stZeichengrosse.cx + stZeichenPos_Caret.cx;
 															else ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2 + stZeichenPos_Caret.cx;
 															if(ptlCaret.x == lWidth) ptlCaret.x -= CARET_PIXEL;
 														}
@@ -477,18 +477,18 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 											if(!vasZeichenMaske->Length()){	
 												if(cSelect) Select_Loschen();
-												else if(ulZeichenPos < vasInhalt->Length()){
-													GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-													if(ucSchriftausrichtung & TXA_LINKS){
+												else if(ulZeichenPos < vasContent->Length()){
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+													if(ucTextAlignment & TXA_LINKS){
 														if(!lTextPos){
 															if(stZeichengrosse.cx < lWidth) rclDirty.right = stZeichengrosse.cx;
 															else rclDirty.right = lWidth;
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-															vasInhalt->Delete(ulZeichenPos, 1);
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															vasContent->Delete(ulZeichenPos, 1);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx;
 															if(rclDirty.left > ptlCaret.x){
 																rclScroll.right = rclDirty.left;
@@ -509,12 +509,12 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														else{
 															if(stZeichengrosse.cx - lTextPos > lWidth){
 																rclDirty.right = lWidth;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-																vasInhalt->Delete(ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																vasContent->Delete(ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																rclScroll.right = rclDirty.left;
 																rclScroll.left = ptlCaret.x;
@@ -528,17 +528,17 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 															}
 															else{
 																rclDirty.left = 0;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.left = rclDirty.right = stZeichengrosse.cx;
 																rclScroll.right = ptlCaret.x + stZeichengrosse.cx;
 																ptlScrollOffset.x = stZeichengrosse.cx;
-																vasInhalt->Delete(ulZeichenPos, 1);
+																vasContent->Delete(ulZeichenPos, 1);
 
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																lTextPos = stZeichengrosse.cx - lWidth;
 
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																if(lTextPos < 0){	lTextPos = 0;	rclDirty.right = lWidth; }
 
@@ -551,23 +551,23 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 															}
 														}
 													}
-													else if(ucSchriftausrichtung & TXA_RECHTS){ 
+													else if(ucTextAlignment & TXA_RECHTS){ 
 														if(stZeichengrosse.cx <= lWidth){
 															rclDirty.left = lWidth - stZeichengrosse.cx;
 															if(rclDirty.left == ptlCaret.x){
 																rclDirty.left = lWidth - stZeichengrosse.cx - CARET_PIXEL;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclDirty.right = rclDirty.left + stZeichengrosse.cx;
-																vasInhalt->Delete(ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																vasContent->Delete(ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																ptlCaret.x = lWidth - stZeichengrosse.cx;
 																if(ptlCaret.x >= lWidth) ptlCaret.x = lWidth - CARET_PIXEL;
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else{
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.left = rclDirty.right = rclDirty.left + stZeichengrosse.cx;
 																if(rclDirty.left < stZeichengrosse.cx) rclDirty.left = 0;
@@ -576,8 +576,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 																ptlScrollOffset.x = stZeichengrosse.cx;
 																dxgiPresent.pScrollRect = &rclScroll;
 																dxgiPresent.pScrollOffset = &ptlScrollOffset;
-																vasInhalt->Delete(ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																vasContent->Delete(ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = rclDirty.right + stZeichengrosse.cx;
 																if(ptlCaret.x >= lWidth) ptlCaret.x = lWidth - CARET_PIXEL;
 																OnRender(true);
@@ -588,7 +588,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														}
 														else if(!lTextPos){
 															rclDirty.left = stZeichengrosse.cx - lWidth;
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															if(rclDirty.left < stZeichengrosse.cx){
 																rcl2Dirty[0].top = rcl2Dirty[1].top = rclDirty.top;
@@ -596,8 +596,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 																rcl2Dirty[0].right = lWidth;
 																rcl2Dirty[1].left = 0;
 																ptlCaret.x = stZeichengrosse.cx - rclDirty.left;
-																vasInhalt->Delete(ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																vasContent->Delete(ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x += stZeichengrosse.cx;
 																if(ptlCaret.x >= lWidth) ptlCaret.x = lWidth - CARET_PIXEL;
 																rcl2Dirty[1].right = ptlCaret.x;
@@ -621,7 +621,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 																rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 																dxgiPresent.pScrollRect = &rclScroll;
 																dxgiPresent.pScrollOffset = &ptlScrollOffset;
-																vasInhalt->Delete(ulZeichenPos, 1);
+																vasContent->Delete(ulZeichenPos, 1);
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 																dxgiPresent.pScrollRect = nullptr;
@@ -630,27 +630,27 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														}
 														else{
 															if(stZeichengrosse.cx - lTextPos > lWidth){
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
-																vasInhalt->Delete(ulZeichenPos, 1);
+																vasContent->Delete(ulZeichenPos, 1);
 																rclDirty.right = lWidth;
 																rclScroll.left = ptlCaret.x;
 																ptlScrollOffset.x = stZeichengrosse.cx * -1;
 																rclScroll.right = rclDirty.left = lWidth - stZeichengrosse.cx;
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 															}
 															else{
 																rclDirty.left = 0;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+																vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.left = rclDirty.right = stZeichengrosse.cx;
-																vasInhalt->Delete(ulZeichenPos, 1);
+																vasContent->Delete(ulZeichenPos, 1);
 
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																lTextPos = stZeichengrosse.cx - lWidth;
 
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																if(ptlCaret.x >= lWidth)	ptlCaret.x = lWidth - CARET_PIXEL;
 																if(lTextPos < 0) lTextPos = 0;
@@ -670,35 +670,35 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														if(stZeichengrosse.cx <= lWidth){
 															rclDirty.left = (lWidth - stZeichengrosse.cx) / 2;
 															rclDirty.right = rclDirty.left + stZeichengrosse.cx;
-															vasInhalt->Delete(ulZeichenPos, 1);
-															GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+															vasContent->Delete(ulZeichenPos, 1);
+															GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 															stZeichengrosse.cx = (lWidth - stZeichengrosse.cx) / 2;
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichenPos_Caret);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichenPos_Caret);
 															ptlCaret.x = stZeichenPos_Caret.cx + stZeichengrosse.cx;
 															OnRender(true);
 															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 														}
 														else if(!lTextPos){
 															rclDirty.right = lWidth;
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
-															vasInhalt->Delete(ulZeichenPos, 1);
+															vasContent->Delete(ulZeichenPos, 1);
 
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx;
 															rclScroll.left = ptlCaret.x;
 															ptlScrollOffset.x = rclDirty.left - rclDirty.right;
 														}
 														else if(stZeichengrosse.cx - lTextPos > lWidth){
 															rclDirty.right = lWidth;
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-															vasInhalt->Delete(ulZeichenPos, 1);
+															vasContent->Delete(ulZeichenPos, 1);
 
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx - lTextPos;
 
 															rclScroll.left = ptlCaret.x;
@@ -706,16 +706,16 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 														}
 														else{
 															rclDirty.left = 0;
-															vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
+															vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulZeichenPos + 1);
 															GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 															rclScroll.left = rclDirty.right = stZeichengrosse.cx;
 
-															vasInhalt->Delete(ulZeichenPos, 1);
+															vasContent->Delete(ulZeichenPos, 1);
 
-															GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 															lTextPos = stZeichengrosse.cx - lWidth;
 
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx - lTextPos;
 															ptlScrollOffset.x = rclDirty.right;
 															if(lTextPos < 0){	lTextPos = 0; rclDirty.right = lWidth;	}
@@ -764,17 +764,17 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 												if(!vasZeichenMaske->Length()){
 													if(cSelect) Select_Loschen();
 													else{
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-														if(ucSchriftausrichtung & TXA_LINKS){ 
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+														if(ucTextAlignment & TXA_LINKS){ 
 															if(!lTextPos){
 																if(stZeichengrosse.cx < lWidth) rclDirty.right = stZeichengrosse.cx;
 																else rclDirty.right = lWidth;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-																vasInhalt->Delete(--ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																vasContent->Delete(--ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx;
 																if(rclDirty.left > ptlCaret.x){
 																	rclScroll.right = rclDirty.left;
@@ -796,12 +796,12 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															else{
 																if(stZeichengrosse.cx - lTextPos > lWidth){
 																	rclDirty.right = lWidth;
-																	vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																	vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																	GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																	rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-																	vasInhalt->Delete(--ulZeichenPos, 1);
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	vasContent->Delete(--ulZeichenPos, 1);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																	rclScroll.right = rclDirty.left;
 																	rclScroll.left = ptlCaret.x;
@@ -815,17 +815,17 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																}
 																else{
 																	rclDirty.left = 0;
-																	vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																	vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																	GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																	rclScroll.left = rclDirty.right = stZeichengrosse.cx;
 																	rclScroll.right = ptlCaret.x;
 																	ptlScrollOffset.x = stZeichengrosse.cx;
-																	vasInhalt->Delete(--ulZeichenPos, 1);
+																	vasContent->Delete(--ulZeichenPos, 1);
 
-																	GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																	lTextPos = stZeichengrosse.cx - lWidth;
 
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																	if(lTextPos < 0){ lTextPos = 0;	rclDirty.right = lWidth; }
 
@@ -838,15 +838,15 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																}
 															}
 														}
-														else if(ucSchriftausrichtung & TXA_RECHTS){ 
+														else if(ucTextAlignment & TXA_RECHTS){ 
 															if(stZeichengrosse.cx <= lWidth){
 																rclDirty.left = lWidth - stZeichengrosse.cx;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.left = rclDirty.right = rclDirty.left + stZeichengrosse.cx;
 																if(rclDirty.left < stZeichengrosse.cx) rclDirty.left = 0;
 																rclScroll.right = ptlCaret.x;
-																vasInhalt->Delete(--ulZeichenPos, 1);
+																vasContent->Delete(--ulZeichenPos, 1);
 																if(rclScroll.right == rclScroll.left){
 																	OnRender(true);
 																	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -856,7 +856,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																	ptlScrollOffset.x = stZeichengrosse.cx;
 																	dxgiPresent.pScrollRect = &rclScroll;
 																	dxgiPresent.pScrollOffset = &ptlScrollOffset;
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x = rclDirty.right + stZeichengrosse.cx;
 																	if(ptlCaret.x >= lWidth) ptlCaret.x = lWidth - CARET_PIXEL;
 																	OnRender(true);
@@ -867,7 +867,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															}
 															else if(!lTextPos){
 																rclDirty.left = stZeichengrosse.cx - lWidth;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																if(rclDirty.left < stZeichengrosse.cx){
 																	rcl2Dirty[0].top = rcl2Dirty[1].top = rclDirty.top;
@@ -875,8 +875,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																	rcl2Dirty[0].right = lWidth;
 																	rcl2Dirty[1].left = 0;
 																	ptlCaret.x = stZeichengrosse.cx - rclDirty.left;
-																	vasInhalt->Delete(--ulZeichenPos, 1);
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	vasContent->Delete(--ulZeichenPos, 1);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x += stZeichengrosse.cx;
 																	if(ptlCaret.x >= lWidth) ptlCaret.x = lWidth - CARET_PIXEL;
 																	rcl2Dirty[1].right = ptlCaret.x;
@@ -897,8 +897,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																	rclDirty.right = lWidth;
 																	ptlScrollOffset.x = stZeichengrosse.cx * -1;
 																	rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
-																	vasInhalt->Delete(--ulZeichenPos, 1);
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	vasContent->Delete(--ulZeichenPos, 1);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	rclScroll.left = ptlCaret.x = stZeichengrosse.cx;
 																	dxgiPresent.pScrollRect = &rclScroll;
 																	dxgiPresent.pScrollOffset = &ptlScrollOffset;
@@ -910,27 +910,27 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															}
 															else{
 																if(stZeichengrosse.cx - lTextPos > lWidth){
-																	vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																	vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																	GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
-																	vasInhalt->Delete(--ulZeichenPos, 1);
+																	vasContent->Delete(--ulZeichenPos, 1);
 																	rclDirty.right = lWidth;
 																	rclScroll.right = rclDirty.left = lWidth - stZeichengrosse.cx;
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																	rclScroll.left = ptlCaret.x;
 																	ptlScrollOffset.x = rclDirty.left - rclDirty.right;
 																}
 																else{
 																	rclDirty.left = 0;
-																	vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																	vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																	GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																	rclScroll.left = rclDirty.right = stZeichengrosse.cx;
-																	vasInhalt->Delete(--ulZeichenPos, 1);
+																	vasContent->Delete(--ulZeichenPos, 1);
 
-																	GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																	lTextPos = stZeichengrosse.cx - lWidth;
 
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																	if(ptlCaret.x >= lWidth)	ptlCaret.x = lWidth - CARET_PIXEL;
 																	if(lTextPos < 0) lTextPos = 0;
@@ -950,35 +950,35 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															if(stZeichengrosse.cx <= lWidth){
 																rclDirty.left = (lWidth - stZeichengrosse.cx) / 2;
 																rclDirty.right = rclDirty.left + stZeichengrosse.cx;
-																vasInhalt->Delete(--ulZeichenPos, 1);
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																vasContent->Delete(--ulZeichenPos, 1);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																stZeichengrosse.cx = (lWidth - stZeichengrosse.cx) / 2;
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse_1);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse_1);
 																ptlCaret.x = stZeichengrosse_1.cx + stZeichengrosse.cx;
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else if(!lTextPos){
 																rclDirty.right = lWidth;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
-																vasInhalt->Delete(--ulZeichenPos, 1);
+																vasContent->Delete(--ulZeichenPos, 1);
 
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx;
 																rclScroll.left = ptlCaret.x;
 																ptlScrollOffset.x = rclDirty.left - rclDirty.right;
 															}
 															else if(stZeichengrosse.cx - lTextPos > lWidth){
 																rclDirty.right = lWidth;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.right = rclDirty.left = rclDirty.right - stZeichengrosse.cx;
 
-																vasInhalt->Delete(--ulZeichenPos, 1);
+																vasContent->Delete(--ulZeichenPos, 1);
 
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 
 																rclScroll.left = ptlCaret.x;
@@ -986,16 +986,16 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															}
 															else{
 																rclDirty.left = 0;
-																vasInhalt->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
+																vasContent->SubString(vbZeichen, ulZeichenPos, ulZeichenPos);
 																GetTextPoint(vbZeichen, 1, stZeichengrosse); VMFrei(vbZeichen);
 																rclScroll.left = rclDirty.right = stZeichengrosse.cx;
 
-																vasInhalt->Delete(--ulZeichenPos, 1);
+																vasContent->Delete(--ulZeichenPos, 1);
 
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																lTextPos = stZeichengrosse.cx - lWidth;
 
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																ptlCaret.x = stZeichengrosse.cx - lTextPos;
 																ptlScrollOffset.x = rclDirty.right;
 																if(lTextPos < 0){ lTextPos = 0; rclDirty.right = lWidth; }
@@ -1015,27 +1015,27 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 													if(cSelect){
 														if(cSelect < 0) ulZeichenPos = ulSelectPos;
 														DeSelect();
-														GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+														GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 														ptlCaret.x = stZeichengrosse.cx;	
 													}
 
 													if(ZeichenMaske_Loschen()){
-														vasInhalt->Delete(--ulZeichenPos, 1);
-														(ucZeichenVorgabe & ZV_SICHTBAR ? vasInhalt->Insert("_", ulZeichenPos) : vasInhalt->Insert(" ", ulZeichenPos));
+														vasContent->Delete(--ulZeichenPos, 1);
+														(ucZeichenVorgabe & ZV_SICHTBAR ? vasContent->Insert("_", ulZeichenPos) : vasContent->Insert(" ", ulZeichenPos));
 														rclDirty.right = 1;
 													}
 													else rclDirty.right = 0;
 
-													if(ucSchriftausrichtung & TXA_LINKS) ptlCaret.x = 0;	
-													else if(ucSchriftausrichtung & TXA_RECHTS){
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+													if(ucTextAlignment & TXA_LINKS) ptlCaret.x = 0;	
+													else if(ucTextAlignment & TXA_RECHTS){
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 														ptlCaret.x = lWidth - stZeichengrosse.cx;
 													}
 													else{
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 														ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
 													}
-													GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+													GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 													ptlCaret.x += stZeichengrosse.cx;
 
 													if(rclDirty.right){ 
@@ -1052,24 +1052,24 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 											if(ZeichenVorgabe(wParam) && ulZeichenPos < ulZeichen_max){
 												if(!vasZeichenMaske->Length()){
 													if(cSelect) Select_Loschen();
-													GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-													if(ucSchriftausrichtung & TXA_LINKS){
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+													if(ucTextAlignment & TXA_LINKS){
 														if(stZeichengrosse.cx - lTextPos < lWidth){
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															rclDirty.left = stZeichengrosse.cx - lTextPos;
 															GetTextPoint((LPSTR)&wParam, 1, stZeichengrosse);
 															rclDirty.right = ptlCaret.x = rclDirty.left + stZeichengrosse.cx;
 															if(rclDirty.right < lWidth){
-																if(ulZeichenPos == vasInhalt->Length()){
-																	*vasInhalt += (char*)&wParam;
+																if(ulZeichenPos == vasContent->Length()){
+																	*vasContent += (char*)&wParam;
 																	ulZeichenPos++;
 
 																	OnRender(true);
 																	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 																}
 																else{
-																	vasInhalt->Insert((char*)&wParam, ulZeichenPos);
-																	GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																	vasContent->Insert((char*)&wParam, ulZeichenPos);
+																	GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																	if(stZeichengrosse.cx < lWidth){
 																		rclScroll.left = rclDirty.right;
 																		ptlScrollOffset.x = rclDirty.right - rclDirty.left;
@@ -1099,19 +1099,19 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																		dxgiPresent.pScrollOffset = nullptr;
 																	}
 																	else{
-																		vasInhalt->Delete(ulZeichenPos, 1);
+																		vasContent->Delete(ulZeichenPos, 1);
 																		ptlCaret.x = rclDirty.left;
 																	}
 																}
 															}
 															else if(ucZeichenVorgabe & ZV_UBERLANGE){
-																*vasInhalt += (char*)&wParam;
+																*vasContent += (char*)&wParam;
 																ptlScrollOffset.x = lWidth - rclDirty.right;
 																rclScroll.left = 0;
 																rclDirty.right = lWidth;
 																rclDirty.left = rclScroll.right = rclDirty.right - stZeichengrosse.cx;
 																rclDirty.left -= CARET_PIXEL * 2;
-																GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, stZeichengrosse);
 																lTextPos = stZeichengrosse.cx - lWidth;
 																ptlCaret.x = lWidth - CARET_PIXEL;
 
@@ -1124,12 +1124,12 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															}
 														}
 														else if(ucZeichenVorgabe & ZV_UBERLANGE){
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															rclDirty.left = stZeichengrosse.cx - lTextPos;
 															GetTextPoint((LPSTR)&wParam, 1, stZeichengrosse);
 															rclDirty.right = rclDirty.left + stZeichengrosse.cx;
 															if(rclDirty.right < lWidth){
-																vasInhalt->Insert((char*)&wParam, ulZeichenPos);
+																vasContent->Insert((char*)&wParam, ulZeichenPos);
 
 																rclScroll.left = rclDirty.right;
 																ptlScrollOffset.x = stZeichengrosse.cx;
@@ -1144,8 +1144,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																dxgiPresent.pScrollOffset = nullptr;
 															}
 															else{
-																ulZeichenPos == vasInhalt->Length() ? *vasInhalt += (char*)&wParam 
-																	: vasInhalt->Insert((char*)&wParam, ulZeichenPos);
+																ulZeichenPos == vasContent->Length() ? *vasContent += (char*)&wParam 
+																	: vasContent->Insert((char*)&wParam, ulZeichenPos);
 
 																rclScroll.left = 0;
 																rclDirty.left = lWidth - stZeichengrosse.cx;
@@ -1167,9 +1167,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															ulZeichenPos++;
 														}
 													}
-													else if(ucSchriftausrichtung & TXA_RECHTS){
-														vasInhalt->Insert((char*)&wParam, ulZeichenPos);
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse_1);
+													else if(ucTextAlignment & TXA_RECHTS){
+														vasContent->Insert((char*)&wParam, ulZeichenPos);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse_1);
 														if(stZeichengrosse_1.cx < lWidth){
 															if(!ulZeichenPos){
 																GetTextPoint((LPSTR)&wParam, 1, stZeichengrosse);
@@ -1245,7 +1245,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																rclScroll.right = ptlCaret.x;
 																ptlScrollOffset.x = stZeichengrosse.cx * -1;
 																ulZeichenPos++;
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																lTextPos = stZeichengrosse.cx - ptlCaret.x;
 
 																dxgiPresent.pScrollRect = &rclScroll;
@@ -1256,11 +1256,11 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																dxgiPresent.pScrollOffset = nullptr;
 															}
 														}
-														else vasInhalt->Delete(ulZeichenPos, 1);
+														else vasContent->Delete(ulZeichenPos, 1);
 													}
 													else{ // TXA_MITTE
-														vasInhalt->Insert((char*)&wParam, ulZeichenPos);
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+														vasContent->Insert((char*)&wParam, ulZeichenPos);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 														rclDirty.left = (lWidth - stZeichengrosse.cx) / 2;
 														if(stZeichengrosse.cx < lWidth){
 															if(rclDirty.left < 0){
@@ -1270,7 +1270,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															}
 															else rclDirty.right = rclDirty.left + stZeichengrosse.cx;
 
-															GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = rclDirty.left + stZeichengrosse.cx;
 
 															OnRender(true);
@@ -1281,7 +1281,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 															if(lTextPos < rclDirty.left) lTextPos = rclDirty.left;
 															rclDirty.right = lWidth;
 
-															GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx - lTextPos;
 
 															if(ptlCaret.x < lWidth){
@@ -1295,7 +1295,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																ptlScrollOffset.x = stZeichengrosse.cx * -1;
 																if(lTextPos == rclDirty.left) lTextPos += lWidth - ptlCaret.x + stZeichengrosse.cx;
 																else{
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 																	lTextPos = stZeichengrosse.cx - lWidth;
 																}
 
@@ -1313,32 +1313,32 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 																dxgiPresent.pScrollOffset = nullptr;
 															}
 														}
-														else vasInhalt->Delete(ulZeichenPos, 1);
+														else vasContent->Delete(ulZeichenPos, 1);
 													}
 												}
 												else{
 													if(cSelect){
 														if(cSelect > 0){
 															ulZeichenPos = ulSelectPos;
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x = stZeichengrosse.cx;
 														}
 														DeSelect();
 													}
 													else{
 														if(ZeichenMaske_Einfugen(wParam)){
-															vasInhalt->Delete(ulZeichenPos, 1); vasInhalt->Insert((char*)&wParam, ulZeichenPos++);
-															if(ucSchriftausrichtung & TXA_LINKS) ptlCaret.x = 0;
-															else if(ucSchriftausrichtung & TXA_RECHTS){
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+															vasContent->Delete(ulZeichenPos, 1); vasContent->Insert((char*)&wParam, ulZeichenPos++);
+															if(ucTextAlignment & TXA_LINKS) ptlCaret.x = 0;
+															else if(ucTextAlignment & TXA_RECHTS){
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																ptlCaret.x = lWidth - stZeichengrosse.cx;
 															}
 															else{ // TXA_MITTE
-																GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+																GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 																ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
 															}
 
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 															ptlCaret.x += stZeichengrosse.cx;
 															rclDirty.left = 0; rclDirty.right = ptlCaret.x;
 															OnRender(true);
@@ -1359,8 +1359,8 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 	switch(LOWORD(wParam)){
 		case IDM_KOPIEREN			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
-														if(cSelect > 0) ulZeichen = vasInhalt->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
-														else ulZeichen = vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
+														if(cSelect > 0) ulZeichen = vasContent->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
+														else ulZeichen = vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
 														hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulZeichen + 1);
 														pcAblage = (char*)GlobalLock(hGlobal);
 														MemCopy(pcAblage, vbZeichen, ulZeichen); VMFrei(vbZeichen);
@@ -1373,15 +1373,15 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														if(vasZeichenMaske->Length() || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
 														OpenClipboard(hWndElement); EmptyClipboard();
 														DeSelect();
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szZeichen_Inhalt);
 														if(ulSelectPos <= ulZeichenPos){
-															ulZeichen = vasInhalt->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
-															vasInhalt->Delete(ulSelectPos, ulZeichen);
+															ulZeichen = vasContent->SubString(vbZeichen, ulSelectPos + 1, ulZeichenPos);
+															vasContent->Delete(ulSelectPos, ulZeichen);
 															ulZeichenPos = ulSelectPos;
 														}
 														else{
-															ulZeichen = vasInhalt->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
-															vasInhalt->Delete(ulZeichenPos, ulZeichen);
+															ulZeichen = vasContent->SubString(vbZeichen, ulZeichenPos + 1, ulSelectPos);
+															vasContent->Delete(ulZeichenPos, ulZeichen);
 														}
 
 														hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulZeichen + 1);
@@ -1392,7 +1392,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
 														GetTextPoint(pcAblage, ulZeichen, szZeichen_Clipboard);
 
-														if(ucSchriftausrichtung & TXA_LINKS){
+														if(ucTextAlignment & TXA_LINKS){
 															if(lTextPos){
 																if(lTextPos >= szZeichen_Clipboard.cx){
 																	ptlScrollOffset.x = szZeichen_Clipboard.cx;
@@ -1407,7 +1407,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 																	lTextPos = 0;
 																	rclDirty.left = 0;
 																	rclDirty.right = lWidth;
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 																	ptlCaret.x = szZeichen_Inhalt.cx;
 																}
 															}
@@ -1430,7 +1430,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 															dxgiPresent.pScrollRect = nullptr;
 															dxgiPresent.pScrollOffset = nullptr;
 														}
-														else if(ucSchriftausrichtung & TXA_RECHTS){
+														else if(ucTextAlignment & TXA_RECHTS){
 															if(szZeichen_Inhalt.cx - lTextPos > lWidth){
 																if(szZeichen_Inhalt.cx - lWidth - lTextPos >= szZeichen_Clipboard.cx){
 																	rclScroll.left = ptlCaret.x = rclSelect.left;
@@ -1447,7 +1447,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 																}
 																else{
 																	lTextPos += (szZeichen_Inhalt.cx - lWidth - lTextPos) - szZeichen_Clipboard.cx;
-																	GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+																	GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 																	ptlCaret.x = szZeichen_Inhalt.cx - lTextPos;
 																	if(lTextPos < 0) lTextPos = 0;
 																	rclDirty.right = lWidth;
@@ -1477,7 +1477,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														}
 														else{ // TXA_MITTE
 															lTextPos = ((szZeichen_Inhalt.cx - szZeichen_Clipboard.cx) - lWidth) / 2;
-															GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+															GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 															ptlCaret.x = szZeichen_Inhalt.cx - lTextPos;
 															if(lTextPos < 0) lTextPos = 0;
 															rclDirty.left = 0;
@@ -1492,7 +1492,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
 														if(vasZeichenMaske->Length()){ ThreadSafe_End(); return false; }
 														if(cSelect) Select_Loschen();
-														GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szZeichen_Inhalt);
 
 														OpenClipboard(hWndElement);
 														hGlobal = GetClipboardData(CF_TEXT);
@@ -1503,9 +1503,9 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														GetTextPoint(pcAblage, ulZeichen, szZeichen_Clipboard);
 
 														szZeichen_Inhalt.cx -= lTextPos;
-														if(ucSchriftausrichtung & TXA_LINKS){
+														if(ucTextAlignment & TXA_LINKS){
 															if(szZeichen_Inhalt.cx + szZeichen_Clipboard.cx < lWidth){
-																ulZeichenPos == vasInhalt->Length() ? *vasInhalt += pcAblage : vasInhalt->Insert(pcAblage, ulZeichenPos);
+																ulZeichenPos == vasContent->Length() ? *vasContent += pcAblage : vasContent->Insert(pcAblage, ulZeichenPos);
 																ulZeichenPos += ulZeichen;
 																ptlCaret.x += szZeichen_Clipboard.cx;
 
@@ -1514,9 +1514,9 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else if(ucZeichenVorgabe & ZV_UBERLANGE){
-																ulZeichenPos == vasInhalt->Length() ? *vasInhalt += pcAblage : vasInhalt->Insert(pcAblage, ulZeichenPos);
+																ulZeichenPos == vasContent->Length() ? *vasContent += pcAblage : vasContent->Insert(pcAblage, ulZeichenPos);
 																ulZeichenPos += ulZeichen;
-																GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+																GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 																if(szZeichen_Inhalt.cx - lTextPos > lWidth) lTextPos = szZeichen_Inhalt.cx - lWidth;
 
 																szZeichen_Inhalt.cx - lTextPos < lWidth ? ptlCaret.x = szZeichen_Inhalt.cx - lTextPos
@@ -1528,9 +1528,9 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 															}
 															// tue nix
 														}
-														else if(ucSchriftausrichtung & TXA_RECHTS){
+														else if(ucTextAlignment & TXA_RECHTS){
 															if(szZeichen_Inhalt.cx + szZeichen_Clipboard.cx < lWidth){
-																ulZeichenPos == vasInhalt->Length() ? *vasInhalt += pcAblage : vasInhalt->Insert(pcAblage, ulZeichenPos);
+																ulZeichenPos == vasContent->Length() ? *vasContent += pcAblage : vasContent->Insert(pcAblage, ulZeichenPos);
 																ulZeichenPos += ulZeichen;
 
 																rclDirty.left = 0; rclDirty.right = lWidth;
@@ -1538,11 +1538,11 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else if(ucZeichenVorgabe & ZV_UBERLANGE){
-																if(ulZeichenPos == vasInhalt->Length()){
-																	*vasInhalt += pcAblage;
+																if(ulZeichenPos == vasContent->Length()){
+																	*vasContent += pcAblage;
 																	ptlCaret.x = lWidth - CARET_PIXEL;
 																}
-																else vasInhalt->Insert(pcAblage, ulZeichenPos);
+																else vasContent->Insert(pcAblage, ulZeichenPos);
 																ulZeichenPos += ulZeichen;
 																lTextPos += szZeichen_Clipboard.cx;
 
@@ -1554,7 +1554,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 														}
 														else{
 															if(szZeichen_Inhalt.cx + szZeichen_Clipboard.cx < lWidth){
-																ulZeichenPos == vasInhalt->Length() ? *vasInhalt += pcAblage : vasInhalt->Insert(pcAblage, ulZeichenPos);
+																ulZeichenPos == vasContent->Length() ? *vasContent += pcAblage : vasContent->Insert(pcAblage, ulZeichenPos);
 																ulZeichenPos += ulZeichen;
 																ptlCaret.x += szZeichen_Clipboard.cx / 2;
 
@@ -1563,13 +1563,13 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else if(ucZeichenVorgabe & ZV_UBERLANGE){
-																if(ulZeichenPos == vasInhalt->Length()){
-																	*vasInhalt += pcAblage;
+																if(ulZeichenPos == vasContent->Length()){
+																	*vasContent += pcAblage;
 																	lTextPos = (szZeichen_Inhalt.cx + szZeichen_Clipboard.cx) - lWidth;
 																	ptlCaret.x = lWidth - CARET_PIXEL;
 																}
 																else{
-																	vasInhalt->Insert(pcAblage, ulZeichenPos);
+																	vasContent->Insert(pcAblage, ulZeichenPos);
 																	lTextPos = ((szZeichen_Inhalt.cx + szZeichen_Clipboard.cx) - lWidth) / 2;
 																	ptlCaret.x += szZeichen_Clipboard.cx / 2;
 																}
@@ -1610,8 +1610,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(WPARAM wParam, LPARAM
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
 		ThreadSafe_Begin();
-		if(GET_X_LPARAM(lParam) < ptlCaret.x - lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
-		else if(GET_X_LPARAM(lParam) > ptlCaret.x + lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
+		if(GET_X_LPARAM(lParam) < ptlCaret.x - (long)szfSign.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
+		else if(GET_X_LPARAM(lParam) > ptlCaret.x + (long)szfSign.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
 		ThreadSafe_End();
 	}
 }
@@ -1625,35 +1625,35 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(WPARAM wParam, LPAR
 	if(cSelect) DeSelect();
 
 	ulZeichenPos = 0;
-	if(vasInhalt->Length()){ SIZE szZeichen_Inhalt;
-		if(lTextPos || ucSchriftausrichtung & TXA_LINKS){
-			do{ GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, szZeichen_Inhalt); }
-			while(szZeichen_Inhalt.cx - lTextPos < LOWORD(lParam) && ulZeichenPos < vasInhalt->Length());
+	if(vasContent->Length()){ SIZE szZeichen_Inhalt;
+		if(lTextPos || ucTextAlignment & TXA_LINKS){
+			do{ GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, szZeichen_Inhalt); }
+			while(szZeichen_Inhalt.cx - lTextPos < LOWORD(lParam) && ulZeichenPos < vasContent->Length());
 			ptlCaret.x = szZeichen_Inhalt.cx - lTextPos;
 
 			if(vasZeichenMaske->Length()){
 				if(ZeichenMaske_FestRechts()){
-					GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+					GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 					ptlCaret.x = szZeichen_Inhalt.cx;
 				}
 			}
 		}
 		else{
-			GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), szZeichen_Inhalt);
+			GetTextPoint(vasContent->c_Str(), vasContent->Length(), szZeichen_Inhalt);
 			if(szZeichen_Inhalt.cx > lWidth){
-				do{ GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, szZeichen_Inhalt); }
-				while(szZeichen_Inhalt.cx < LOWORD(lParam) && ulZeichenPos < vasInhalt->Length());
+				do{ GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, szZeichen_Inhalt); }
+				while(szZeichen_Inhalt.cx < LOWORD(lParam) && ulZeichenPos < vasContent->Length());
 				ptlCaret.x = szZeichen_Inhalt.cx;
 			}
-			else if(ucSchriftausrichtung & TXA_RECHTS) ptlCaret.x = lWidth - szZeichen_Inhalt.cx;
+			else if(ucTextAlignment & TXA_RECHTS) ptlCaret.x = lWidth - szZeichen_Inhalt.cx;
 			else ptlCaret.x = (lWidth - szZeichen_Inhalt.cx) / 2;
 
 			if(LOWORD(lParam) > ptlCaret.x){
-				do{ GetTextPoint(vasInhalt->c_Str(), ++ulZeichenPos, szZeichen_Inhalt);}
-				while(szZeichen_Inhalt.cx + ptlCaret.x < LOWORD(lParam) && ulZeichenPos < vasInhalt->Length());
+				do{ GetTextPoint(vasContent->c_Str(), ++ulZeichenPos, szZeichen_Inhalt);}
+				while(szZeichen_Inhalt.cx + ptlCaret.x < LOWORD(lParam) && ulZeichenPos < vasContent->Length());
 			 
 				if(vasZeichenMaske->Length()){
-					if(ZeichenMaske_FestRechts()) GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, szZeichen_Inhalt);
+					if(ZeichenMaske_FestRechts()) GetTextPoint(vasContent->c_Str(), ulZeichenPos, szZeichen_Inhalt);
 				}
 				ptlCaret.x += szZeichen_Inhalt.cx;
 			} 
@@ -1816,7 +1816,7 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Loschen(void)
 void __vectorcall RePag::DirectX::COEditLine::Text(char* pcText)
 {
 	ThreadSafe_Begin();
-	*vasInhalt = NULL; ulZeichenPos = 0;
+	*vasContent = NULL; ulZeichenPos = 0;
 	if(pcText){
 		if(vasZeichenMaske->Length() && StrLength(pcText)){ VMBLOCK vbZeichen_Maske, vbZeichen_Text; BYTE ucFesteZeichen = 0, ucZeichen; COStringA asText = pcText;
 			for(ULONG ulZeichen = 1; ulZeichen <= vasZeichenMaske->Length(); ulZeichen++){
@@ -1824,55 +1824,55 @@ void __vectorcall RePag::DirectX::COEditLine::Text(char* pcText)
 				if(asText.Length() >= ulZeichen - ucFesteZeichen){
 					asText.SubString(vbZeichen_Text, ulZeichen - ucFesteZeichen, ulZeichen - ucFesteZeichen);
 					switch(*(PBYTE)vbZeichen_Maske){
-						case 0x41	: if(*(PBYTE)vbZeichen_Text >= 0x41 && *(PBYTE)vbZeichen_Text <= 0x5a) *vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+						case 0x41	: if(*(PBYTE)vbZeichen_Text >= 0x41 && *(PBYTE)vbZeichen_Text <= 0x5a) *vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
-						case 0x61	: if(*(PBYTE)vbZeichen_Text >= 0x61 && *(PBYTE)vbZeichen_Text <= 0x7a) *vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+						case 0x61	: if(*(PBYTE)vbZeichen_Text >= 0x61 && *(PBYTE)vbZeichen_Text <= 0x7a) *vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
 						case 0x42	: if(*(PBYTE)vbZeichen_Text >= 0x20 && *(PBYTE)vbZeichen_Text <= 0x2f || *(PBYTE)vbZeichen_Text >= 0x3a && *(PBYTE)vbZeichen_Text <= 0x7d)
-												*vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+												*vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
 						case 0x62	: if(*(PBYTE)vbZeichen_Text >= 0x20 && *(PBYTE)vbZeichen_Text <= 0x2f || *(PBYTE)vbZeichen_Text >= 0x3a && *(PBYTE)vbZeichen_Text <= 0x40 ||
 														*(PBYTE)vbZeichen_Text >= 0x5b && *(PBYTE)vbZeichen_Text <= 0x60 || *(PBYTE)vbZeichen_Text >= 0x7b && *(PBYTE)vbZeichen_Text <= 0x7e)
-												*vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+												*vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
-						case 0x5a	: *vasInhalt += vbZeichen_Text;
+						case 0x5a	: *vasContent += vbZeichen_Text;
 												break;
-						case 0x39	: if(*(PBYTE)vbZeichen_Text >= 0x30 && *(PBYTE)vbZeichen_Text <= 0x39) *vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+						case 0x39	: if(*(PBYTE)vbZeichen_Text >= 0x30 && *(PBYTE)vbZeichen_Text <= 0x39) *vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
-						case 0x38	: if(*(PBYTE)vbZeichen_Text >= 0x30 && *(PBYTE)vbZeichen_Text <= 0x39 || *(PBYTE)vbZeichen_Text >= 0x2b && *(PBYTE)vbZeichen_Text <= 0x2e) *vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+						case 0x38	: if(*(PBYTE)vbZeichen_Text >= 0x30 && *(PBYTE)vbZeichen_Text <= 0x39 || *(PBYTE)vbZeichen_Text >= 0x2b && *(PBYTE)vbZeichen_Text <= 0x2e) *vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
 						case 0x27	: ucZeichen = (BYTE)(vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length()) - ulZeichen++);
 												vasZeichenMaske->SubString(vbZeichen_Maske, ulZeichen, ulZeichen + ucZeichen - 2);
-												*vasInhalt += vbZeichen_Maske;
+												*vasContent += vbZeichen_Maske;
 												ucFesteZeichen += 2;
 												ulZeichen += ucZeichen - 1;
 												break;
 						case 0x58	: if(*(PBYTE)vbZeichen_Text >= 0x30 && *(PBYTE)vbZeichen_Text <= 0x39 || *(PBYTE)vbZeichen_Text >= 0x41 && *(PBYTE)vbZeichen_Text <= 0x46 ||
-														*(PBYTE)vbZeichen_Text >= 0x61 && *(PBYTE)vbZeichen_Text <= 0x66)	*vasInhalt += vbZeichen_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-												else *vasInhalt += " ";
+														*(PBYTE)vbZeichen_Text >= 0x61 && *(PBYTE)vbZeichen_Text <= 0x66)	*vasContent += vbZeichen_Text;
+												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else *vasContent += " ";
 												break;
 					}
 					VMFrei(vbZeichen_Text);
 				}
-				else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-				else *vasInhalt += " ";
+				else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+				else *vasContent += " ";
 				VMFrei(vbZeichen_Maske); 
 			}
 		}		
-		else *vasInhalt = pcText;
+		else *vasContent = pcText;
 	}
 	//UpdateFenster(nullptr, true, false);
 	ThreadSafe_End();
@@ -1894,11 +1894,11 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen()
 	SIZE stZeichengrosse;
 
 	DeSelect();
-	GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
-	if(ulSelectPos <= ulZeichenPos){ vasInhalt->Delete(ulSelectPos, ulZeichenPos - ulSelectPos); ulZeichenPos = ulSelectPos; }
-	else vasInhalt->Delete(ulZeichenPos, ulSelectPos - ulZeichenPos);
+	GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
+	if(ulSelectPos <= ulZeichenPos){ vasContent->Delete(ulSelectPos, ulZeichenPos - ulSelectPos); ulZeichenPos = ulSelectPos; }
+	else vasContent->Delete(ulZeichenPos, ulSelectPos - ulZeichenPos);
 
-	if(ucSchriftausrichtung & TXA_LINKS){
+	if(ucTextAlignment & TXA_LINKS){
 		stZeichengrosse.cx - lTextPos < lWidth ? rclDirty.right = stZeichengrosse.cx - lTextPos : rclDirty.right = lWidth;
 		ptlScrollOffset.x = rclSelect.left - rclSelect.right;
 		rclDirty.left = rclDirty.right + ptlScrollOffset.x;
@@ -1913,7 +1913,7 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen()
 		dxgiPresent.pScrollOffset = nullptr;
 
 	}
-	else if(ucSchriftausrichtung & TXA_RECHTS){
+	else if(ucTextAlignment & TXA_RECHTS){
 		ptlScrollOffset.x = rclSelect.right - rclSelect.left;
 		if(!lTextPos) rclDirty.left = lWidth - stZeichengrosse.cx;
 		else{	rclDirty.left = 0; lTextPos -= ptlScrollOffset.x;	}
@@ -1936,10 +1936,10 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen()
 			rclDirty.left = (lWidth - stZeichengrosse.cx) / 2;
 			rclDirty.right = lWidth - rclDirty.left;
 
-			GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+			GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 			ptlCaret.x = (lWidth - stZeichengrosse.cx) / 2;
 
-			GetTextPoint(vasInhalt->c_Str(), ulZeichenPos, stZeichengrosse);
+			GetTextPoint(vasContent->c_Str(), ulZeichenPos, stZeichengrosse);
 			ptlCaret.x += stZeichengrosse.cx;
 		}
 		else{	rclDirty.left = 0; rclDirty.right = lWidth; }
@@ -2033,21 +2033,21 @@ void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(const char* pcZeichen
 	ThreadSafe_Begin();
 	if(!pcZeichenmaske || !StrCompare(pcZeichenmaske, 1, "", 1)){ *vasZeichenMaske = NULL; ulZeichen_max = 0x7fffffff; }
 	else if(*vasZeichenMaske != pcZeichenmaske){ VMBLOCK vbZeichen; ULONG ulZeichenLange;
-		*vasZeichenMaske = pcZeichenmaske; *vasInhalt = NULL;
+		*vasZeichenMaske = pcZeichenmaske; *vasContent = NULL;
 
 		for(ULONG ulZeichen = 1; ulZeichen <= vasZeichenMaske->Length(); ulZeichen++){
 			vasZeichenMaske->SubString(vbZeichen, ulZeichen, ulZeichen);
 			if(*(PBYTE)vbZeichen == 0x27){ VMFrei(vbZeichen); ulZeichen++;
 				ulZeichenLange = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
 				vasZeichenMaske->SubString(vbZeichen, ulZeichen, ulZeichenLange - 1);
-				*vasInhalt += vbZeichen;
+				*vasContent += vbZeichen;
 				ulZeichen += ulZeichenLange - ulZeichen;
 			}
-			else if(ucZeichenVorgabe & 1 << 5) *vasInhalt += "_";
-			else *vasInhalt += " ";
+			else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+			else *vasContent += " ";
 			VMFrei(vbZeichen);
 		}
-		ulZeichen_max = vasInhalt->Length();
+		ulZeichen_max = vasContent->Length();
 	}
 	ThreadSafe_End();
 }
@@ -2065,13 +2065,13 @@ void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)
 	if(hWndElement){
 		SIZE stZeichengrosse;
 		ThreadSafe_Begin();
-		cSelect = 1; ulSelectPos = 0; ulZeichenPos = vasInhalt->Length();
+		cSelect = 1; ulSelectPos = 0; ulZeichenPos = vasContent->Length();
 
-		GetTextPoint(vasInhalt->c_Str(), vasInhalt->Length(), stZeichengrosse);
+		GetTextPoint(vasContent->c_Str(), vasContent->Length(), stZeichengrosse);
 		ResetEvent(heCaret);
 
-		if(ucSchriftausrichtung & TXA_LINKS){ rclSelect.right = stZeichengrosse.cx; rclSelect.left = 0; ptlCaret.x = stZeichengrosse.cx; }
-		else if(ucSchriftausrichtung & TXA_RECHTS){ rclSelect.right = lWidth; ptlCaret.x = lWidth;
+		if(ucTextAlignment & TXA_LINKS){ rclSelect.right = stZeichengrosse.cx; rclSelect.left = 0; ptlCaret.x = stZeichengrosse.cx; }
+		else if(ucTextAlignment & TXA_RECHTS){ rclSelect.right = lWidth; ptlCaret.x = lWidth;
 			(stZeichengrosse.cx > lWidth ? rclSelect.left = 0 : rclSelect.left = lWidth - stZeichengrosse.cx);
 		}
 		else{
@@ -2115,7 +2115,6 @@ void __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _I
 	stTextPoint.cy = (long)stTextMetrics.height;
 	stTextMetrics.height -= (float)stTextPoint.cy;
 	if(stTextMetrics.height >= 0.5f) stTextPoint.cy += 1;
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::ScrollRight(SIZE& stZeichengrosse)

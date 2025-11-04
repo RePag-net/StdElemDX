@@ -41,19 +41,19 @@ constexpr CHAR THUMB_DOWN = 1;
 constexpr CHAR THUMB_LEFT = -1;
 constexpr CHAR THUMB_RIGHT = -1;
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(VMDialog(), sizeof(COScrollBar));
-	vScrollBar->COScrollBarV(VMDialog(), pcFensterName, uiIDElement, pstDeviceResources, bHorizontal);
+	vScrollBar->COScrollBarV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources, bHorizontal);
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
 {
-	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(vmSpeicher, sizeof(COScrollBar));
-	vScrollBar->COScrollBarV(vmSpeicher, pcFensterName, uiIDElement, pstDeviceResources, bHorizontal);
+	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(vmMemory, sizeof(COScrollBar));
+	vScrollBar->COScrollBarV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources, bHorizontal);
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,10 +85,10 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(HWND hWnd, unsigned int uiMes
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcKlassenName, _In_ const char* pcFensterName, 
+void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcClassName, _In_ const char* pcWindowName, 
 																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
 {
-	COGraphicV(vmSpeicher, pcKlassenName, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	COGraphicV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	crfBackground = D2D1::ColorF(RGB(255, 255, 0), 1.0f);
 
@@ -107,16 +107,17 @@ void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY v
 	fScaleArrowThumb = 75.0f;
 	stScrollInfo = {0};
 	rcfThumb = {0};
-	fThumbSize = 0;
+	fThumb = 0;
+	fStep = 0;
 	bMouseTracking = false;
 	ucDirty = NONCLIENT;
 	bHorizontal = bHorizontalA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																														_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
 {
-	COScrollBarV(vmSpeicher, pcRePag_ScrollBar, pcFensterName, uiIDElementA, pstDeviceResourcesA, bHorizontalA);
+	COScrollBarV(vmMemory, pcRePag_ScrollBar, pcWindowName, uiIDElementA, pstDeviceResourcesA, bHorizontalA);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COScrollBar::COFreiV(void)
@@ -310,15 +311,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 															else{ cThumbDirection = THUMB_DOWN; cCursor_Move = 0; }
 														}
 														lCursor = ptlCursor.y;
-														if(cCursor_Move > (char)fThumbSize && stScrollInfo.lPos < stScrollInfo.lMax - stScrollInfo.ulPage){
+														if(cCursor_Move > (char)fStep && stScrollInfo.fPos < stScrollInfo.fMax - stScrollInfo.fPage){
 															cCursor_Move = 0;
-															stScrollInfo.lPos++;
+															stScrollInfo.fPos += stScrollInfo.szfSign.height;
 															dxgiPresent.DirtyRectsCount = 2;
 															dxgiPresent.pDirtyRects = rcl2Dirty;
 
 															rcl2Dirty[0].top = (long)(rcfThumb.top - 2.0f); rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
 															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)rcfThumb.right;
-															rcfThumb.top += fThumbSize; rcfThumb.bottom += fThumbSize;
+															rcfThumb.top += fStep; rcfThumb.bottom += fStep;
 															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 															SafeRelease(&ifThumb);
 															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -330,15 +331,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 															dxgiPresent.DirtyRectsCount = 1;
 															dxgiPresent.pDirtyRects = &rclDirty;
 														}
-														else if(cCursor_Move < (char)fThumbSize * -1 && stScrollInfo.lPos){
+														else if(cCursor_Move < (char)fStep * -1 && stScrollInfo.fPos){
 															cCursor_Move = 0;
-															stScrollInfo.lPos--;
+															stScrollInfo.fPos -= stScrollInfo.szfSign.height;
 															dxgiPresent.DirtyRectsCount = 2;
 															dxgiPresent.pDirtyRects = rcl2Dirty;
 
 															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)(rcfThumb.bottom + 2.0f);
 															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)rcfThumb.right;
-															rcfThumb.top -= fThumbSize;	rcfThumb.bottom -= fThumbSize;
+															rcfThumb.top -= fStep; rcfThumb.bottom -= fStep;
 															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 															SafeRelease(&ifThumb);
 															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -370,15 +371,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 															else{ cThumbDirection = THUMB_RIGHT; cCursor_Move = 0; }
 														}
 														lCursor = ptlCursor.x;
-														if(cCursor_Move > (char)fThumbSize && stScrollInfo.lPos < stScrollInfo.lMax - stScrollInfo.ulPage){
+														if(cCursor_Move > (char)fStep && stScrollInfo.fPos < stScrollInfo.fMax - stScrollInfo.fPage){
 															cCursor_Move = 0;
-															stScrollInfo.lPos++;
+															stScrollInfo.fPos += stScrollInfo.szfSign.width;
 															dxgiPresent.DirtyRectsCount = 2;
 															dxgiPresent.pDirtyRects = rcl2Dirty;
 
 															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
 															rcl2Dirty[0].left = (long)(rcfThumb.left - 2.0f); rcl2Dirty[0].right = (long)rcfThumb.right;
-															rcfThumb.left += fThumbSize; rcfThumb.right += fThumbSize;
+															rcfThumb.left += fStep; rcfThumb.right += fStep;
 															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 															SafeRelease(&ifThumb);
 															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -390,15 +391,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 															dxgiPresent.DirtyRectsCount = 1;
 															dxgiPresent.pDirtyRects = &rclDirty;
 														}
-														else if(cCursor_Move < (char)fThumbSize * -1 && stScrollInfo.lPos){
+														else if(cCursor_Move < (char)fStep * -1 && stScrollInfo.fPos){
 															cCursor_Move = 0;
-															stScrollInfo.lPos--;
+															stScrollInfo.fPos -= stScrollInfo.szfSign.width;
 															dxgiPresent.DirtyRectsCount = 2;
 															dxgiPresent.pDirtyRects = rcl2Dirty;
 
 															rcl2Dirty[0].top = (long)rcfThumb.top; rcl2Dirty[0].bottom = (long)rcfThumb.bottom;
 															rcl2Dirty[0].left = (long)rcfThumb.left; rcl2Dirty[0].right = (long)(rcfThumb.right + 2.0f);
-															rcfThumb.left -= fThumbSize; rcfThumb.right -= fThumbSize;
+															rcfThumb.left -= fStep; rcfThumb.right -= fStep;
 															rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 															SafeRelease(&ifThumb);
 															pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -592,7 +593,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPA
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSafe_Begin();
 	switch(ucDirty){
-		case	ARROW_UP		:	if(ptlCursor.y <= lWidth){
+		case ARROW_UP			:	if(ptlCursor.y <= lWidth){
 													ifButtonColor->SetColor(crfButton_Click);
 													ifArrowColor->SetColor(crfArrow_Click);
 													rclDirty.left = 0; rclDirty.top = 0;
@@ -610,7 +611,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case	ARROW_LEFT	:	if(ptlCursor.x <= lHeight){
+		case ARROW_LEFT		:	if(ptlCursor.x <= lHeight){
 													ifButtonColor->SetColor(crfButton_Click);
 													ifArrowColor->SetColor(crfArrow_Click);
 													rclDirty.left = 0; rclDirty.top = 0;
@@ -652,14 +653,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb;
 	ThreadSafe_Begin();
 	switch(ucDirty){
-		case ARROW_UP			:	if(stScrollInfo.lPos > 0){
-													stScrollInfo.lPos--;
+		case ARROW_UP			:	if(stScrollInfo.fPos > 0){
+													stScrollInfo.fPos -= stScrollInfo.szfSign.height;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)(rcfThumb.bottom + 2.0f);
 													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)rcfThumb.right;
-													rcfThumb.top -= fThumbSize;	rcfThumb.bottom -= fThumbSize;
+													if(stScrollInfo.fPos > 0){	rcfThumb.bottom -= fStep; rcfThumb.top -= fStep; }
+													else{ rcfThumb.top = (float)lWidth; rcfThumb.bottom = rcfThumb.top + fThumb;  }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -686,14 +688,16 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case	ARROW_DOWN	:	if(stScrollInfo.lPos + stScrollInfo.ulPage < stScrollInfo.lMax){
-													stScrollInfo.lPos++;
+		case	ARROW_DOWN	:	if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+													stScrollInfo.fPos += stScrollInfo.szfSign.height;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[2].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
 													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)rcfThumb.right;
-													rcfThumb.top += fThumbSize; rcfThumb.bottom += fThumbSize;
+													if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+																rcfThumb.bottom += fStep; rcfThumb.top += fStep; }
+													else{ rcfThumb.bottom = (float)(lHeight - lWidth); rcfThumb.top = rcfThumb.bottom - fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -720,14 +724,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case ARROW_LEFT		:	if(stScrollInfo.lPos > 0){
-													stScrollInfo.lPos--;
+		case ARROW_LEFT		:	if(stScrollInfo.fPos > 0){
+													stScrollInfo.fPos -= stScrollInfo.szfSign.width;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
 													rcl3Dirty[2].left = (long)rcfThumb.left; rcl3Dirty[2].right = (long)(rcfThumb.right + 2.0f);
-													rcfThumb.left -= fThumbSize; rcfThumb.right -= fThumbSize;
+													if(stScrollInfo.fPos > 0){ rcfThumb.right -= fStep; rcfThumb.left -= fStep;	}
+													else{ rcfThumb.left = (float)lHeight; rcfThumb.right = rcfThumb.left + fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -743,7 +748,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINELEFT, NULL);
 												}
 												else{
 													ifButtonColor->SetColor(crfButton_Move);
@@ -754,14 +759,16 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case	ARROW_RIGHT	:	if(stScrollInfo.lPos < stScrollInfo.lMax - (long)stScrollInfo.ulPage){
-													stScrollInfo.lPos++;
+		case	ARROW_RIGHT	:	if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+													stScrollInfo.fPos += stScrollInfo.szfSign.width;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[2].top = (long)rcfThumb.top; rcl3Dirty[2].bottom = (long)rcfThumb.bottom;
 													rcl3Dirty[2].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[2].right = (long)rcfThumb.right;
-													rcfThumb.left += fThumbSize; rcfThumb.right += fThumbSize;
+													if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+																rcfThumb.right += fStep; rcfThumb.left += fStep; }
+													else{ rcfThumb.right = (float)(lWidth - lHeight); rcfThumb.left = rcfThumb.right - fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -777,7 +784,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINERIGHT, NULL);
 												}
 												else{
 													ifButtonColor->SetColor(crfButton_Move);
@@ -796,15 +803,16 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												break;
 		case SLIDER_VERT:		if(ptlCursor.y > (long)rcfThumb.bottom && ptlCursor.y < lHeight - lWidth){
-													if(stScrollInfo.lPos + (long)stScrollInfo.ulPage * 2 < stScrollInfo.lMax) stScrollInfo.lPos += stScrollInfo.ulPage;
-													else stScrollInfo.lPos = stScrollInfo.lMax - stScrollInfo.ulPage;
+													if(stScrollInfo.fPos + stScrollInfo.fPage * 2 < stScrollInfo.fMax) stScrollInfo.fPos += stScrollInfo.fPage;
+													else stScrollInfo.fPos = stScrollInfo.fMax - stScrollInfo.fPage;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
 													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
-													rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
-													rcfThumb.bottom = rcfThumb.top + fThumbSize;
+													if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+																rcfThumb.top += fThumb; rcfThumb.bottom += fThumb; }
+													else{	rcfThumb.bottom = (float)(lHeight - lWidth); rcfThumb.top = rcfThumb.bottom - fThumb;	}
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -819,15 +827,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEDOWN, NULL);
 												}
 												else if(ptlCursor.y < (long)rcfThumb.top && ptlCursor.y > lWidth){
-													if(stScrollInfo.lPos > (long)stScrollInfo.ulPage) stScrollInfo.lPos -= stScrollInfo.ulPage;
-													else stScrollInfo.lPos = 0;
+													if(stScrollInfo.fPos > stScrollInfo.fPage) stScrollInfo.fPos -= stScrollInfo.fPage;
+													else stScrollInfo.fPos = 0;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
 													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
-													rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
-													rcfThumb.bottom = rcfThumb.top + fThumbSize;
+													if(stScrollInfo.fPos > 0){ rcfThumb.top -= fThumb; rcfThumb.bottom -= fThumb;	}
+													else{	rcfThumb.top = (float)lWidth; rcfThumb.bottom = rcfThumb.top + fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -843,15 +851,16 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 												}
 												break;
 		case SLIDER_HORZ	:	if(ptlCursor.x > (long)rcfThumb.right && ptlCursor.x < lWidth - lHeight){
-													if(stScrollInfo.lPos + (long)stScrollInfo.ulPage * 2 < stScrollInfo.lMax) stScrollInfo.lPos += stScrollInfo.ulPage;
-													else stScrollInfo.lPos = stScrollInfo.lMax - stScrollInfo.ulPage;
+													if(stScrollInfo.fPos + stScrollInfo.fPage * 2 < stScrollInfo.fMax) stScrollInfo.fPos += stScrollInfo.fPage;
+													else stScrollInfo.fPos = stScrollInfo.fMax - stScrollInfo.fPage;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
 													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
-													rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
-													rcfThumb.right = rcfThumb.left + fThumbSize;
+													if(stScrollInfo.fPos + stScrollInfo.fPage < stScrollInfo.fMax){
+																rcfThumb.left += fThumb; rcfThumb.right += fThumb; }
+													else{ rcfThumb.right = (float)(lWidth - lHeight); rcfThumb.left = rcfThumb.right - fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -866,15 +875,15 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGERIGHT, NULL);
 												}
 												else if(ptlCursor.x < (long)rcfThumb.left && ptlCursor.x > lHeight){
-													if(stScrollInfo.lPos > (long)stScrollInfo.ulPage) stScrollInfo.lPos -= stScrollInfo.ulPage;
-													else stScrollInfo.lPos = 0;
+													if(stScrollInfo.fPos > stScrollInfo.fPage) stScrollInfo.fPos -= stScrollInfo.fPage;
+													else stScrollInfo.fPos = 0;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
 													rcl3Dirty[1].top = (long)(rcfThumb.top - 2.0f); rcl3Dirty[1].bottom = (long)(rcfThumb.bottom + 2.0f);
 													rcl3Dirty[1].left = (long)(rcfThumb.left - 2.0f); rcl3Dirty[1].right = (long)(rcfThumb.right + 2.0f);
-													rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
-													rcfThumb.right = rcfThumb.left + fThumbSize;
+													if(stScrollInfo.fPos > 0){ rcfThumb.left -= fThumb; rcfThumb.right -= fThumb; }
+													else{ rcfThumb.left = (float)lHeight; rcfThumb.right = rcfThumb.left + fThumb; }
 													rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 													SafeRelease(&ifThumb);
 													pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -895,11 +904,12 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 {
 	if(!bHorizontal){
-		if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage && stScrollInfo.lMax > (long)stScrollInfo.ulPage){
+		if(stScrollInfo.szfSign.height && stScrollInfo.fPage && stScrollInfo.fMax
+			 && stScrollInfo.fPage < stScrollInfo.fMax && stScrollInfo.fPos <= stScrollInfo.fMax - stScrollInfo.fPage){
+			fThumb = (float)(lHeight - lWidth * 2) * stScrollInfo.fPage / stScrollInfo.fMax;
+			fStep = stScrollInfo.szfSign.height * fThumb / stScrollInfo.fPage;
 			rcfThumb.left = (float)lWidth - (float)lWidth * fScaleArrowThumb / 100.0f; rcfThumb.right = (float)lWidth * fScaleArrowThumb / 100.0f;
-			fThumbSize = (float)(lHeight - lWidth * 2) / (float)(stScrollInfo.lMax - stScrollInfo.ulPage + 1);
-			rcfThumb.top = fThumbSize * (float)stScrollInfo.lPos + (float)lWidth;
-			rcfThumb.bottom = rcfThumb.top + fThumbSize;
+			rcfThumb.top = stScrollInfo.fPos * fThumb / stScrollInfo.fPage + (float)lWidth; rcfThumb.bottom = rcfThumb.top + fThumb;
 			if(ifThumb) SafeRelease(&ifThumb);
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
@@ -912,17 +922,18 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 		}
 	}
 	else{
-		if(stScrollInfo.lMax > 0 && stScrollInfo.ulPage && stScrollInfo.lMax > (long)stScrollInfo.ulPage){
+		if(stScrollInfo.szfSign.width && stScrollInfo.fPage && stScrollInfo.fMax
+			 && stScrollInfo.fPage < stScrollInfo.fMax && stScrollInfo.fPos <= stScrollInfo.fMax - stScrollInfo.fPage){
+			fThumb = (float)(lWidth - lHeight * 2) * stScrollInfo.fPage / stScrollInfo.fMax;
+			fStep = stScrollInfo.szfSign.width * fThumb / stScrollInfo.fPage;
 			rcfThumb.top = (float)lHeight - (float)lHeight * fScaleArrowThumb / 100.0f; rcfThumb.bottom = (float)lHeight * fScaleArrowThumb / 100.0f;
-			fThumbSize = (float)(lWidth - lHeight * 2) / (float)(stScrollInfo.lMax - stScrollInfo.ulPage + 1);
-			rcfThumb.left = fThumbSize * (float)stScrollInfo.lPos + (float)lHeight;
-			rcfThumb.right = rcfThumb.left + fThumbSize;
+			rcfThumb.left = stScrollInfo.fPos * fThumb / stScrollInfo.fPage + (float)lHeight;	rcfThumb.right = rcfThumb.left + fThumb; 
 			if(ifThumb) SafeRelease(&ifThumb);
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
 			if(bRender){
 				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
-				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)(rcfThumb.right + 1.0f);
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 			}

@@ -68,8 +68,6 @@ namespace RePag
 			D2D1_COLOR_F crfCaret;
 			ID2D1SolidColorBrush* ifSelectBackColor;
 			ID2D1SolidColorBrush* ifCaretColor;
-			//STRGBFarbe stSelectSchriftfarbe;
-			//STRGBFarbe stSelectHintergrundfarbe;
 			void __vectorcall OnRender(_In_ bool bCaret);
 			void __vectorcall OnPaint(void);
 			void __vectorcall WM_Create(void);
@@ -85,14 +83,15 @@ namespace RePag
 			void __vectorcall WM_LButtonDBClick(WPARAM wParam, LPARAM lParam);
 			bool __vectorcall ZeichenVorgabe(WPARAM wParam);
 			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ SIZE& stTextPoint);
+			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 			void __vectorcall DeleteCaretPos(void);
 			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
-			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcKlassenName, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 
 		public:
-			void __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
 			void(__vectorcall* pfnWM_Char_Return)(COEditLine*);
@@ -118,8 +117,8 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const char* pcFensterName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const VMEMORY vmSpeicher, _In_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																															 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}

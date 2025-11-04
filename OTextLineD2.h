@@ -47,43 +47,39 @@ namespace RePag
 			friend LRESULT CALLBACK WndProc_TextLine(HWND hWnd, unsigned int uiMessage, WPARAM wParam, LPARAM lParam);
 
 		private:			
+			void __vectorcall OnRender(void);
 
 		protected:
-			//LOGFONT lfSchrift;
-			//HFONT hFont;
-			COStringA* vasInhalt;
+			COStringA* vasContent;
 			STFont stFont;
 			IDWriteTextFormat* ifText;
 			D2D1_COLOR_F crfText;
 			ID2D1SolidColorBrush* ifTextColor;
-			long lZeichen_mittel;
-			long lZeichen_hohe;
-			unsigned char ucSchriftausrichtung;
-			void __vectorcall OnRender(void);
-			void __vectorcall OnPaint(void);
+			D2D_SIZE_F szfSign;
+			float fTextLine_maxwidth;
+			unsigned char ucTextAlignment;
 			void __vectorcall WM_Create(void);
 			void __vectorcall CharacterMetric(void);
-			//void __vectorcall Schriftausrichtung(HDC hdc, SIZE& stZeichengrosse, POINT& ptText);
 			void __vectorcall TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_POINT_2F& ptfText);
 			void __vectorcall TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_RECT_F& rcfText);
-			void __vectorcall COTextLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcKlassenName, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResourcesA);
+			void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																		_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 
 		public:
-			void __vectorcall COTextLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_z_ unsigned int uiIDElementA,
+			void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_z_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
 			void __vectorcall Text(_In_z_ char* pcText);
 			void __vectorcall Font(STFont& stFont);
-			COStringA* __vectorcall Content(_Out_ COStringA* vasInhaltA);
+			COStringA* __vectorcall Content(_Out_ COStringA* vasContentA);
 			void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 			void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
 			void __vectorcall TextAlignment(_In_ unsigned char ucTextAlignment);
-
+			void __vectorcall OnPaint(void);
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcFensterName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, unsigned int uiIDElement,
+		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, unsigned int uiIDElement,
 																															 _In_ STDeviceResources* pstDeviceResourcesA);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
