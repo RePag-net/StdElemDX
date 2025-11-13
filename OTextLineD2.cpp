@@ -55,7 +55,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 												else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 												return NULL;
 		case WM_NCDESTROY :	pTextZeile = (COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-												if(pTextZeile->htEffekt_Timer) DeleteTimerQueueTimer(TimerQueue(), pTextZeile->htEffekt_Timer, INVALID_HANDLE_VALUE);
+												if(pTextZeile->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pTextZeile->htEffect_Timer, INVALID_HANDLE_VALUE);
 												VMFreiV(pTextZeile);
 												return NULL;
 	}
@@ -146,8 +146,8 @@ void __vectorcall RePag::DirectX::COTextLine::CharacterMetric(void)
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"888lllBBBIIIiiiaaaAAATTTttt", 28, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	ifTextLayout->GetMetrics(&stTextMetrics);
-	szfSign.height = stTextMetrics.height;
-	szfSign.width = stTextMetrics.width / 27.0f;
+	szfCharacter.height = stTextMetrics.height;
+	szfCharacter.width = stTextMetrics.width / 27.0f;
 	fTextLine_maxwidth = stTextMetrics.width / 27.0f * 255.0f;
 	SafeRelease(&ifTextLayout);
 }

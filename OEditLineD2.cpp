@@ -85,7 +85,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(HWND hWnd, unsigned int uiMess
 		case WM_LBUTTONDBLCLK : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDBClick(wParam, lParam);
 														return NULL;
 		case WM_NCDESTROY     : pEditLine = (COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditLine->htEffekt_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditLine->htEffekt_Timer, INVALID_HANDLE_VALUE);
+														if(pEditLine->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditLine->htEffect_Timer, INVALID_HANDLE_VALUE);
 														VMFreiV(pEditLine);
 														return NULL;
 	}
@@ -178,7 +178,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	if(!cSelect){
 		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
 			ptfTop.x = (float)ptlCaret.x;
-			ptfTop.y = (float)ptlCaret.y + szfSign.height;
+			ptfTop.y = (float)ptlCaret.y + szfCharacter.height;
 			ptfBottom.x = (float)ptlCaret.x;
 			ptfBottom.y = (float)ptlCaret.y;
 			ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)CARET_PIXEL, nullptr);
@@ -252,7 +252,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	ptfText.y -= (float)ptlCaret.y;
 	if(ptfText.y >= 0.5f) ptlCaret.y += 1;
 
-	rclScroll.top = rclDirty.top = lHeight - (long)szfSign.height - ptlCaret.y;
+	rclScroll.top = rclDirty.top = lHeight - (long)szfCharacter.height - ptlCaret.y;
 	rclScroll.bottom = rclDirty.bottom = lHeight - ptlCaret.y;
 	ptlScrollOffset.y = 0;
 
@@ -1610,8 +1610,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(WPARAM wParam, LPARAM
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
 		ThreadSafe_Begin();
-		if(GET_X_LPARAM(lParam) < ptlCaret.x - (long)szfSign.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
-		else if(GET_X_LPARAM(lParam) > ptlCaret.x + (long)szfSign.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
+		if(GET_X_LPARAM(lParam) < ptlCaret.x - (long)szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
+		else if(GET_X_LPARAM(lParam) > ptlCaret.x + (long)szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
 		ThreadSafe_End();
 	}
 }

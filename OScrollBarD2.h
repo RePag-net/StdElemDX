@@ -36,8 +36,15 @@ namespace RePag
 			float fMax;
 			float fPage;
 			float fPos;
-			D2D_SIZE_F szfSign;
+			BYTE ucMask;
+			D2D_SIZE_F szfCharacter;
 		} STScrollInfo;
+		constexpr BYTE SBI_MAX = 1;
+		constexpr BYTE SBI_PAGE = 2;
+		constexpr BYTE SBI_POS = 4;
+		constexpr BYTE SBI_CHARACTER_WIDTH = 8;
+		constexpr BYTE SBI_CHARACTER_HEIGHT = 16;
+		constexpr BYTE SBI_ALL = 31;
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport) COScrollBar : public COGraphic
 		{
@@ -46,31 +53,34 @@ namespace RePag
 
 			private:
 				bool bHorizontal;
-				STScrollInfo stScrollInfo;
+				STScrollInfo siScrollInfo;
 				BYTE ucDirty;
 				bool bMouseTracking;
 				TRACKMOUSEEVENT stTrackMouseEvent;
 				ID2D1RectangleGeometry* ifButton_Up;
 				ID2D1RectangleGeometry* ifButton_Down;
+				ID2D1SolidColorBrush* ifButtonColor_Up;
+				ID2D1SolidColorBrush* ifButtonColor_Down;
 				D2D1_COLOR_F crfButton;
 				D2D1_COLOR_F crfButton_Click;
 				D2D1_COLOR_F crfButton_Move;
-				ID2D1SolidColorBrush* ifButtonColor;
 				ID2D1PathGeometry* ifArrow_Up;
 				ID2D1PathGeometry* ifArrow_Down;
+				ID2D1SolidColorBrush* ifArrowColor_Up;
+				ID2D1SolidColorBrush* ifArrowColor_Down;
 				D2D1_COLOR_F crfArrow;
 				D2D1_COLOR_F crfArrow_Click;
 				D2D1_COLOR_F crfArrow_Move;
-				ID2D1SolidColorBrush* ifArrowColor;
-				FLOAT fScaleArrowThumb;
 				ID2D1RoundedRectangleGeometry* ifThumb;
+				ID2D1SolidColorBrush* ifThumbColor;
 				D2D1_COLOR_F crfThumb;
 				D2D1_COLOR_F crfThumb_Click;
 				D2D1_COLOR_F crfThumb_Move;
-				ID2D1SolidColorBrush* ifThumbColor;
 				D2D1_RECT_F rcfThumb;
+				float fScaleArrowThumb;
 				float fThumb;
 				float fStep;
+				void __vectorcall Geometry(void);
 				void __vectorcall CreateThumb(_In_ bool bRender);
 
 			protected:
@@ -81,6 +91,8 @@ namespace RePag
 				void __vectorcall WM_MouseLeave(void);
 				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_VScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_HScroll(_In_ WPARAM wParam);
 				void __vectorcall COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																			 _In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA);
 
@@ -88,8 +100,11 @@ namespace RePag
 				void __vectorcall COScrollBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																			 _In_ STDeviceResources* pstDeviceResources, bool bHorizontalA);
 				VMEMORY __vectorcall COFreiV(void);
-				void __vectorcall GetScrollInfo(_In_ STScrollInfo& stScrollInfoA);
-				void __vectorcall SetScrollInfo(_In_ STScrollInfo& stScrollInfoA);
+				void __vectorcall GetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
+				void __vectorcall SetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
+				void __vectorcall NewSize(_In_ long lHeightA, _In_ long lWidthA);
+				void __vectorcall NewHeight(_In_ long lHeightA);
+				void __vectorcall NewWidth(_In_ long lWidth);
 				void __vectorcall ScaleArrowThumb(_In_ float fScale);
 				void __vectorcall SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 				void __vectorcall SetButtonColor(_In_ D2D1_COLOR_F& crfButtonA);

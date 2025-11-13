@@ -55,7 +55,7 @@ namespace RePag
 			IDWriteTextFormat* ifText;
 			D2D1_COLOR_F crfText;
 			ID2D1SolidColorBrush* ifTextColor;
-			D2D_SIZE_F szfSign;
+			D2D_SIZE_F szfCharacter;
 			float fTextLine_maxwidth;
 			unsigned char ucTextAlignment;
 			void __vectorcall WM_Create(void);
