@@ -40,6 +40,7 @@ namespace RePag
 			private:
 				COScrollBar* sbHorizontal;
 				COScrollBar* sbVertical;
+				BYTE ucScrollBarSize;
 				void __vectorcall CreateText(void);
 				void __vectorcall OnRender(void);
 				void __vectorcall ChangeSizeVisibleScrollBars(void);
@@ -48,13 +49,12 @@ namespace RePag
 				COList* vliText;
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
-				void __vectorcall WM_VScroll(_In_ WPARAM wParam);
-				void __vectorcall WM_HScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
 				void __vectorcall WM_LButtonDown(void);
+				void __vectorcall WM_RButtonDown(void);
 				void __vectorcall WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& stScrollInfo);
-				void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
-				inline long& __vectorcall FloatToLong(_In_ float fZahl, _Out_ long& lZahl);
 				void __vectorcall DeSelect(void);
 				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars !!!
@@ -64,11 +64,12 @@ namespace RePag
 																		 _In_ STDeviceResources* pstDeviceResources);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall Text(_In_ char* pcText);
-				void __vectorcall Text_NeueZeile(_In_ char* pcText);
-				unsigned long __vectorcall Zeilenanzahl(void);
-				void __vectorcall Scroll_Anfang(void);
-				void __vectorcall Scroll_Ende(void);
-				void __vectorcall Scroll_Zeile(_In_ bool bAbwarts);
+				void __vectorcall Text_NewLine(_In_ char* pcText, _In_ bool bDraw);
+				unsigned long __vectorcall LineNumbers(void);
+				void __vectorcall Scroll_Begin(void);
+				void __vectorcall Scroll_End(void);
+				void __vectorcall Scroll_Line(_In_ BYTE ucDown_UP);
+				void __vectorcall ScrollBarSize(_In_ BYTE ucWidth_Height);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

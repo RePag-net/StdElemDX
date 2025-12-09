@@ -84,10 +84,8 @@ void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmM
 	//lfSchrift.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
 	vasContent = COStringAV(vmMemory);
-
-	//stTextColor.r = stTextColor.g = stTextColor.b = 0.0f; stTextColor.a = 1.0f;
 	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
-	ucTextAlignment = TXA_LINKS | TXA_MITTEVERTICAL;
+	ucTextAlignment = TXA_LEFT | TXA_CENTERVERTICAL;
 
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 																												 13.0f, L"de-DE", &ifText);
@@ -103,7 +101,6 @@ VMEMORY __vectorcall RePag::DirectX::COTextLine::COFreiV(void)
 {
 	SafeRelease(&ifText); SafeRelease(&ifTextColor);
 	VMFreiV(vasContent);
-	//if(hFont) DeleteObject(hFont);
 	return ((COElement*)this)->COFreiV();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,13 +110,13 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
-	ifD2D1Context6->DrawText(wcInhalt, szBytes_Text, ifText, rcfText, ifTextColor);
+	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
 }
@@ -144,11 +141,12 @@ void __vectorcall RePag::DirectX::COTextLine::WM_Create(void)
 void __vectorcall RePag::DirectX::COTextLine::CharacterMetric(void)
 {
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"888lllBBBIIIiiiaaaAAATTTttt", 28, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+																												 63, ifText, 5000.0f, (float)lHeight, &ifTextLayout);
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	szfCharacter.height = stTextMetrics.height;
-	szfCharacter.width = stTextMetrics.width / 27.0f;
-	fTextLine_maxwidth = stTextMetrics.width / 27.0f * 255.0f;
+	szfCharacter.width = stTextMetrics.width / 62.0f;
+	fTextLine_maxwidth = stTextMetrics.width / 62.0f * 255.0f;
 	SafeRelease(&ifTextLayout);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,10 +155,10 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 	DWRITE_TEXT_METRICS stTextMetrics;
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	ptfText.x = ptfText.y = 0; fTextWidth = stTextMetrics.width;
-	if(ucTextAlignment & TXA_RECHTS) ptfText.x = (float)lWidth - stTextMetrics.width;
-	if(ucTextAlignment & TXA_MITTEHORIZONTAL) ptfText.x = ((float)lWidth - stTextMetrics.width) / 2.0f;
-	if(ucTextAlignment & TXA_UNTEN) ptfText.y = (float)lHeight - stTextMetrics.height;
-	if(ucTextAlignment & TXA_MITTEVERTICAL) ptfText.y = ((float)lHeight - stTextMetrics.height) / 2.0f;
+	if(ucTextAlignment & TXA_RIGHT) ptfText.x = (float)lWidth - stTextMetrics.width;
+	if(ucTextAlignment & TXA_CENTERHORIZONTAL) ptfText.x = ((float)lWidth - stTextMetrics.width) / 2.0f;
+	if(ucTextAlignment & TXA_BOTTOM) ptfText.y = (float)lHeight - stTextMetrics.height;
+	if(ucTextAlignment & TXA_CENTERVERTICAL) ptfText.y = ((float)lHeight - stTextMetrics.height) / 2.0f;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_RECT_F& rcfText)
@@ -168,10 +166,10 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 	DWRITE_TEXT_METRICS stTextMetrics;
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	rcfText.top = rcfText.left = 0; fTextWidth = stTextMetrics.width;
-	if(ucTextAlignment & TXA_RECHTS) rcfText.left = (float)lWidth - stTextMetrics.width;
-	if(ucTextAlignment & TXA_MITTEHORIZONTAL) rcfText.left = ((float)lWidth - stTextMetrics.width) / 2.0f;
-	if(ucTextAlignment & TXA_UNTEN) rcfText.top = (float)lHeight - stTextMetrics.height;
-	if(ucTextAlignment & TXA_MITTEVERTICAL) rcfText.top = ((float)lHeight - stTextMetrics.height) / 2.0f;
+	if(ucTextAlignment & TXA_RIGHT) rcfText.left = (float)lWidth - stTextMetrics.width;
+	if(ucTextAlignment & TXA_CENTERHORIZONTAL) rcfText.left = ((float)lWidth - stTextMetrics.width) / 2.0f;
+	if(ucTextAlignment & TXA_BOTTOM) rcfText.top = (float)lHeight - stTextMetrics.height;
+	if(ucTextAlignment & TXA_CENTERVERTICAL) rcfText.top = ((float)lHeight - stTextMetrics.height) / 2.0f;
 	rcfText.right = rcfText.left + stTextMetrics.width; rcfText.bottom = rcfText.top + stTextMetrics.height;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,10 +213,10 @@ void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ D2D1_COLOR_F& st
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ unsigned char ucTextAlignment)
+void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ unsigned char ucTextAlignmentA)
 {
 	ThreadSafe_Begin();
-	ucTextAlignment = ucTextAlignment;
+	ucTextAlignment = ucTextAlignmentA;
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

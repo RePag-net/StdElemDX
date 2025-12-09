@@ -74,7 +74,7 @@ namespace RePag
 			COStringA* __vectorcall Content(_Out_ COStringA* vasContentA);
 			void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 			void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
-			void __vectorcall TextAlignment(_In_ unsigned char ucTextAlignment);
+			void __vectorcall TextAlignment(_In_ unsigned char ucTextAlignmentA);
 			void __vectorcall OnPaint(void);
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

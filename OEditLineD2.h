@@ -45,23 +45,22 @@ namespace RePag
 			bool __vectorcall ZeichenMaske_FestRechts(void);
 			bool __vectorcall ZeichenMaske_FestLinks(void);
 			void __vectorcall DeSelect(void);
-			void __vectorcall Select_Loschen();
-			void __vectorcall ScrollRight(SIZE& stZeichengrosse);
-			void __vectorcall ScrollLeft(SIZE& stZeichengrosse);
+			void __vectorcall Select_Loschen(void);
+			void __vectorcall ScrollRight(_In_ D2D_SIZE_F& szfTextPoint);
+			void __vectorcall ScrollLeft(_In_ D2D_SIZE_F& szfTextPoint);
 
 		protected:
 			HMENU hMenu;
-			POINT ptlCaret;
 			HANDLE htCaret;
 			HANDLE heCaret;
+			D2D_POINT_2F ptfCaret;
+			BYTE ucCaretStrength;
 			char cSelect;
-			RECT rclSelect;
-			RECT rclScroll;
-			POINT ptlScrollOffset;
-			long lTextPos;
+			D2D1_RECT_F rcfSelect;
+			float fTextPos;
 			unsigned long ulZeichen_max;
 			unsigned char ucZeichenVorgabe;
-			unsigned long ulZeichenPos;
+			unsigned long ulCharacterPos;
 			unsigned long ulSelectPos;
 			D2D1_COLOR_F crfSelectText;
 			D2D1_COLOR_F crfSelectBack;
@@ -82,8 +81,8 @@ namespace RePag
 			void __vectorcall WM_MouseMove(WPARAM wParam, LPARAM lParam);
 			void __vectorcall WM_LButtonDBClick(WPARAM wParam, LPARAM lParam);
 			bool __vectorcall ZeichenVorgabe(WPARAM wParam);
-			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ SIZE& stTextPoint);
 			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
+			inline long __vectorcall FloatToLong(_In_ float fNumber);
 			void __vectorcall DeleteCaretPos(void);
 			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
@@ -114,6 +113,7 @@ namespace RePag
 			COStringA* __vectorcall Zeichenmaske(COStringA* pasZeichenmaske);
 			void __vectorcall SelectAlles(void);
 			void __vectorcall SelectEntfernen(void);
+			void __vectorcall CaretStrength(BYTE ucCaretStrengthA);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

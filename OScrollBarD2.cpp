@@ -600,7 +600,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb;
 	ThreadSafe_Begin();
 	switch(ucDirty){
-		case ARROW_UP			:	if(siScrollInfo.fPos > 0){
+		case ARROW_UP			:	if(siScrollInfo.fPos > 0.0f){
 													siScrollInfo.fPos -= siScrollInfo.szfCharacter.height;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
@@ -671,7 +671,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												}
 												break;
-		case ARROW_LEFT		:	if(siScrollInfo.fPos > 0){
+		case ARROW_LEFT		:	if(siScrollInfo.fPos > 0.0f){
 													siScrollInfo.fPos -= siScrollInfo.szfCharacter.width;
 													dxgiPresent.DirtyRectsCount = 3;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
@@ -965,19 +965,22 @@ void __vectorcall RePag::DirectX::COScrollBar::Geometry(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 {
+	D2D1_RECT_F rcfThumb_Old;
 	if(!bHorizontal){
 		if(siScrollInfo.szfCharacter.height && siScrollInfo.fPage && siScrollInfo.fMax
-			 && siScrollInfo.fPage < siScrollInfo.fMax && siScrollInfo.fPos <= siScrollInfo.fMax - siScrollInfo.fPage){
+			 && siScrollInfo.fPage < siScrollInfo.fMax/* && siScrollInfo.fPos <= siScrollInfo.fMax - siScrollInfo.fPage*/){
 			fThumb = (float)(lHeight - lWidth * 2) * siScrollInfo.fPage / siScrollInfo.fMax;
 			fStep = siScrollInfo.szfCharacter.height * fThumb / siScrollInfo.fPage;
+			rcfThumb_Old.top = rcfThumb.top; rcfThumb_Old.bottom = rcfThumb.bottom;
 			rcfThumb.left = (float)lWidth - (float)lWidth * fScaleArrowThumb / 100.0f; rcfThumb.right = (float)lWidth * fScaleArrowThumb / 100.0f;
 			rcfThumb.top = siScrollInfo.fPos * fThumb / siScrollInfo.fPage + (float)lWidth; rcfThumb.bottom = rcfThumb.top + fThumb;
 			if(ifThumb) SafeRelease(&ifThumb);
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
 			if(bRender){
-				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
 				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
+				rcfThumb_Old.top < rcfThumb.top ? rclDirty.top = rcfThumb_Old.top : rclDirty.top = rcfThumb.top;
+				rcfThumb_Old.bottom > rcfThumb.bottom ? rclDirty.bottom = rcfThumb_Old.bottom : rclDirty.bottom = rcfThumb.bottom;
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 			}
@@ -985,9 +988,10 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 	}
 	else{
 		if(siScrollInfo.szfCharacter.width && siScrollInfo.fPage && siScrollInfo.fMax
-			 && siScrollInfo.fPage < siScrollInfo.fMax && siScrollInfo.fPos <= siScrollInfo.fMax - siScrollInfo.fPage){
+			 && siScrollInfo.fPage < siScrollInfo.fMax/* && siScrollInfo.fPos <= siScrollInfo.fMax - siScrollInfo.fPage*/){
 			fThumb = (float)(lWidth - lHeight * 2) * siScrollInfo.fPage / siScrollInfo.fMax;
 			fStep = siScrollInfo.szfCharacter.width * fThumb / siScrollInfo.fPage;
+			rcfThumb_Old.left = rcfThumb.left; rcfThumb_Old.right = rcfThumb.right;
 			rcfThumb.top = (float)lHeight - (float)lHeight * fScaleArrowThumb / 100.0f; rcfThumb.bottom = (float)lHeight * fScaleArrowThumb / 100.0f;
 			rcfThumb.left = siScrollInfo.fPos * fThumb / siScrollInfo.fPage + (float)lHeight;	rcfThumb.right = rcfThumb.left + fThumb; 
 			if(ifThumb) SafeRelease(&ifThumb);
@@ -995,7 +999,8 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
 			if(bRender){
 				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
-				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)(rcfThumb.right + 1.0f);
+				rcfThumb_Old.left < rcfThumb.left ? rclDirty.left = rcfThumb_Old.left : rclDirty.left = rcfThumb.left;
+				rcfThumb_Old.right > rcfThumb.right ? rclDirty.right = rcfThumb_Old.right : rclDirty.right = rcfThumb.right;
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 			}
@@ -1027,11 +1032,11 @@ void __vectorcall RePag::DirectX::COScrollBar::SetScrollInfo(_In_ STScrollInfo& 
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::NewSize(_In_ long lHeightA, _In_ long lWidthA)
+void __vectorcall RePag::DirectX::COScrollBar::NewSize(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y)
 {
 	ThreadSafe_Begin();
 	if(hWndElement){
-		NewWindowSize(lHeightA, lWidthA);
+		NewWindow(lHeightA, lWidthA, lPos_x, lPos_y);
 		Geometry();
 		OnRender();
 		rclDirty.top = 0; rclDirty.bottom = lHeight;

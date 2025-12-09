@@ -59,12 +59,12 @@ extern char pcRePag_Datum[];
 extern char pcRePag_EditDatum[];
 extern char pcRePag_Leuchte[];
 
-#define TXA_OBEN 0
-#define TXA_LINKS 1
-#define TXA_RECHTS 2
-#define TXA_UNTEN 4
-#define TXA_MITTEVERTICAL 8
-#define TXA_MITTEHORIZONTAL 16
+#define TXA_TOP 0
+#define TXA_LEFT 1
+#define TXA_RIGHT 2
+#define TXA_BOTTOM 4
+#define TXA_CENTERVERTICAL 8
+#define TXA_CENTERHORIZONTAL 16
 
 #define SHIFTED 0x8000
 #define ZV_KEINE 0

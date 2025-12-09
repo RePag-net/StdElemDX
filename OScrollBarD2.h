@@ -102,7 +102,7 @@ namespace RePag
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall GetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall SetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
-				void __vectorcall NewSize(_In_ long lHeightA, _In_ long lWidthA);
+				void __vectorcall NewSize(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewHeight(_In_ long lHeightA);
 				void __vectorcall NewWidth(_In_ long lWidth);
 				void __vectorcall ScaleArrowThumb(_In_ float fScale);
