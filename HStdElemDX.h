@@ -35,6 +35,14 @@ SOFTWARE.
 #include "Menu.h"
 #include "Fieldsizes.h"
 
+#include <ADT.h>
+#include <d2d1.h>
+#include <d2d1helper.h>
+#include <dcommon.h>
+#include <dwrite.h>
+#include <cstdlib>
+#include <sal.h>
+
 #include "CompSys.h"
 using namespace RePag::System;
 
@@ -59,12 +67,12 @@ extern char pcRePag_Datum[];
 extern char pcRePag_EditDatum[];
 extern char pcRePag_Leuchte[];
 
-#define TXA_TOP 0
-#define TXA_LEFT 1
-#define TXA_RIGHT 2
-#define TXA_BOTTOM 4
-#define TXA_CENTERVERTICAL 8
-#define TXA_CENTERHORIZONTAL 16
+constexpr BYTE  TXA_TOP = 0;
+constexpr BYTE  TXA_LEFT = 1;
+constexpr BYTE  TXA_RIGHT = 2;
+constexpr BYTE  TXA_BOTTOM = 4;
+constexpr BYTE  TXA_CENTERVERTICAL = 8;
+constexpr BYTE  TXA_CENTERHORIZONTAL = 16;
 
 #define SHIFTED 0x8000
 #define ZV_KEINE 0

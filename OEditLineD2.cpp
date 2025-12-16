@@ -29,23 +29,23 @@ SOFTWARE.
 
 #define _EditLine ((RePag::DirectX::COEditLine*)pvParam)
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																		 _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditLine* vEditLine = (COEditLine*)VMBlock(VMDialog(), sizeof(COEditLine));
 	vEditLine->COEditLineV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources);
 	return vEditLine;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																		 _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditLine* vEditLine = (COEditLine*)VMBlock(vmMemory, sizeof(COEditLine));
 	vEditLine->COEditLineV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
 	return vEditLine;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(HWND hWnd, unsigned int uiMessage, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	COEditLine* pEditLine;
 	switch(uiMessage){
@@ -91,7 +91,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(HWND hWnd, unsigned int uiMess
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void CALLBACK RePag::DirectX::Timer_Caret(void* pvParam, bool bTimerOrWaitFired)
+void CALLBACK RePag::DirectX::Timer_Caret(_In_ void* pvParam, _In_ bool bTimerOrWaitFired)
 {
 	WaitForSingleObject(_EditLine->heCaret, INFINITE);
 	static bool bCaret = false;
@@ -106,8 +106,8 @@ void CALLBACK RePag::DirectX::Timer_Caret(void* pvParam, bool bTimerOrWaitFired)
 	_EditLine->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcClassName, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																											_In_ STDeviceResources* pstDeviceResourcesA)
+void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																													_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	 COTextLineV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
@@ -141,7 +141,7 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmM
 	 AppendMenu(hMenu, MF_STRING, IDM_EINFUGEN, "Einfügen		Strg+V");
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																											_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COEditLineV(vmMemory, pcRePag_EditLine, pcWindowName, uiIDElementA, pstDeviceResourcesA);
@@ -177,11 +177,12 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 
+	D2D1::Matrix3x2F tfPrevTransform; ifD2D1Context6->GetTransform(&tfPrevTransform);
 	ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-fTextPos, 0.0f));
 	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		
 	if(!cSelect){
-		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
+		if(bCaret){	D2D1_POINT_2F ptfTop = {}, ptfBottom = {};
 			ptfTop.x = ptfCaret.x + fTextPos;
 			ptfTop.y = ptfCaret.y + szfCharacter.height;
 			ptfBottom.x = ptfCaret.x + fTextPos;
@@ -189,7 +190,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 			ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)ucCaretStrength, nullptr);
 		}
 	}
-	else{	VMBLOCK vbCharacter; ULONG ulZeichen; D2D1_RECT_F rcfSelect_1;
+	else{	VMBLOCK vbCharacter = nullptr; ULONG ulZeichen; D2D1_RECT_F rcfSelect_1;
 		if(cSelect > 0)	ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
 		else ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
 
@@ -203,6 +204,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 		ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 	}
 
+	ifD2D1Context6->SetTransform(tfPrevTransform);
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
 }
@@ -287,9 +289,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KillFocus(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-  D2D_SIZE_F szfTextPoint, szfTextPoint_1; float fScrollOffset; VMBLOCK vbCharacter;
+  D2D_SIZE_F szfTextPoint, szfTextPoint_1; float fScrollOffset; VMBLOCK vbCharacter = nullptr;
 	switch(wParam){
 		case VK_HOME    : ThreadSafe_Begin();
 											DeleteCaretPos();
@@ -610,9 +612,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(WPARAM wParam, LPARAM l
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 {
-  D2D_SIZE_F szfTextPoint, szfTextPoint_1; VMBLOCK vbCharacter;
+  D2D_SIZE_F szfTextPoint, szfTextPoint_1; VMBLOCK vbCharacter = nullptr;
 	switch(wParam){
 		case VK_TAB    : ThreadSafe_Begin();
 										 if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
@@ -915,9 +917,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(WPARAM wParam)
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
+bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 {
-	VMBLOCK vbCharacter; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard;
+	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard;
 	switch(LOWORD(wParam)){
 		case IDM_KOPIEREN			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
@@ -1120,7 +1122,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(WPARAM wParam)
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(_In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
 	if(vasZeichenMaske->Length()){
@@ -1139,7 +1141,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(LPARAM lParam)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
 		ThreadSafe_Begin();
@@ -1149,7 +1151,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_MouseMove(WPARAM wParam, LPARAM
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	SetCapture(hWndElement);
 	ThreadSafe_Begin();
@@ -1197,7 +1199,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(WPARAM wParam, LPAR
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ReleaseCapture();
 	ThreadSafe_Begin();
@@ -1206,7 +1208,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(WPARAM wParam, LPARAM
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDBClick(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
 	SelectAlles();
@@ -1214,7 +1216,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDBClick(WPARAM wParam, L
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(bool bVerfugbar)
+void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(_In_ bool bVerfugbar)
 {
 	if(bVerfugbar){ 
 		if(!IsWindowVisible(hWndElement)) ShowWindow(hWndElement, SW_SHOW);
@@ -1224,7 +1226,7 @@ void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(bool bVerfugbar)
 	else{ if(hWndElement == GetFocus()) SetFocus(GetParent(hWndElement)); EnableWindow(hWndElement, bVerfugbar); }
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenVorgabe(WPARAM wParam)
+bool __vectorcall RePag::DirectX::COEditLine::ZeichenVorgabe(_In_ WPARAM wParam)
 {
 	for(BYTE ucBit = 0; ucBit < 4; ucBit++){
 		switch(ucBit){
@@ -1246,7 +1248,7 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenVorgabe(WPARAM wParam)
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen(WPARAM wParam)
+bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen(_In_ WPARAM wParam)
 {
 	VMBLOCK vbCharacter_Maske; ULONG ulZeichen; BYTE ucFesteZeichen = 1;
 
@@ -1270,7 +1272,7 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen(WPARAM wPara
 	return ZeichenMaske_Einfugen_Prufen(wParam, vbCharacter_Maske);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen_Prufen(WPARAM wParam, VMBLOCK vbCharacter_Maske)
+bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen_Prufen(_In_ WPARAM wParam, _In_ VMBLOCK vbCharacter_Maske)
 {
 	switch(*(PBYTE)vbCharacter_Maske){
 		case 0x41 : if(wParam >= 0x41 && wParam <= 0x5a){ VMFrei(vbCharacter_Maske); return true; }
@@ -1345,7 +1347,7 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Loschen(void)
 	return true;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Text(char* pcText)
+void __vectorcall RePag::DirectX::COEditLine::Text(_In_ char* pcText)
 {
 	ThreadSafe_Begin();
 	*vasContent = NULL; ulCharacterPos = 0;
@@ -1531,7 +1533,7 @@ void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& c
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetzZeichen_Max(unsigned long ulZeichen)
+void __vectorcall RePag::DirectX::COEditLine::SetzZeichen_Max(_In_ unsigned long ulZeichen)
 {
 	ThreadSafe_Begin();
 	ulZeichen_max = ulZeichen;
@@ -1546,14 +1548,14 @@ unsigned long __vectorcall RePag::DirectX::COEditLine::Zeichen_Max(void)
 	return ulMaxZeichen;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Zeichenvorgabe(unsigned char ucZeichenVorgabeA)
+void __vectorcall RePag::DirectX::COEditLine::Zeichenvorgabe(_In_ unsigned char ucZeichenVorgabeA)
 {
 	ThreadSafe_Begin();
 	ucZeichenVorgabe = ucZeichenVorgabeA;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(const char* pcZeichenmaske)
+void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(_In_ const char* pcZeichenmaske)
 {
 	ThreadSafe_Begin();
 	if(!pcZeichenmaske || !StrCompare(pcZeichenmaske, 1, "", 1)){ *vasZeichenMaske = NULL; ulZeichen_max = 0x7fffffff; }
@@ -1577,7 +1579,7 @@ void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(const char* pcZeichen
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-COStringA* __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(COStringA* pasZeichenmaske)
+COStringA* __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(_In_ COStringA* pasZeichenmaske)
 {
 	ThreadSafe_Begin();
 	*pasZeichenmaske = *vasZeichenMaske;
@@ -1645,7 +1647,7 @@ void __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _I
 	szfTextPoint.height = stTextMetrics.height;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::CaretStrength(BYTE ucCaretStrengthA)
+void __vectorcall RePag::DirectX::COEditLine::CaretStrength(_In_ BYTE ucCaretStrengthA)
 {
 	ThreadSafe_Begin();
 	ucCaretStrength = ucCaretStrengthA;

@@ -29,6 +29,7 @@ SOFTWARE.
 #include "OEditLineD2.h"
 #include "OTextBoxD2.h"
 #include "OScrollBarD2.h"
+#include "OListBoxD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -38,6 +39,7 @@ char pcRePag_TextLine[] = "RePag_TextLine";
 char pcRePag_EditLine[] = "RePag_EditLine";
 char pcRePag_TextBox[] = "RePag_TextBox";
 char pcRePag_ScrollBar[] = "RePag_ScrollBar";
+char pcRePag_ListBox[] = "RePag_ListBox";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterKlassenName(void)
@@ -81,6 +83,14 @@ void __vectorcall RegisterKlassenName(void)
   wndKlasse.hbrBackground = NULL;
   RegisterClassEx(&wndKlasse);
   wndKlasse.style = CS_OWNDC;
+
+  wndKlasse.lpszClassName = pcRePag_ListBox;
+  wndKlasse.lpfnWndProc = WndProc_ListBox;
+  wndKlasse.style |= CS_DBLCLKS;
+  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndKlasse.hbrBackground = NULL;
+  RegisterClassEx(&wndKlasse);
+  wndKlasse.style = CS_OWNDC;
 }
 //---------------------------------------------------------------------------
 void __vectorcall UnRegisterKlassenName(void)
@@ -104,5 +114,6 @@ void __vectorcall UnRegisterKlassenName(void)
   UnregisterClass(pcRePag_EditLine, wndKlasse.hInstance);
   UnregisterClass(pcRePag_TextBox, wndKlasse.hInstance);
   UnregisterClass(pcRePag_ScrollBar, wndKlasse.hInstance);
+  UnregisterClass(pcRePag_ListBox, wndKlasse.hInstance);
 }
 //---------------------------------------------------------------------------

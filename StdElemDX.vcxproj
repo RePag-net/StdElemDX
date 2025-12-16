@@ -30,18 +30,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <PreferredToolArchitecture>x86</PreferredToolArchitecture>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <PreferredToolArchitecture>x86</PreferredToolArchitecture>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
     <SpectreMitigation>Spectre</SpectreMitigation>
@@ -49,7 +49,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <SpectreMitigation>Spectre</SpectreMitigation>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
@@ -127,6 +127,7 @@
   <ItemGroup>
     <ClInclude Include="HStdElemDX.h" />
     <ClInclude Include="OEditLineD2.h" />
+    <ClInclude Include="OListBoxD2.h" />
     <ClInclude Include="OScrollBarD2.h" />
     <ClInclude Include="OTextBoxD2.h" />
     <ClInclude Include="OTextLineD2.h" />
@@ -139,6 +140,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OEditLineD2.cpp" />
+    <ClCompile Include="OListBoxD2.cpp" />
     <ClCompile Include="OScrollBarD2.cpp" />
     <ClCompile Include="OTextBoxD2.cpp" />
     <ClCompile Include="OTextLineD2.cpp" />

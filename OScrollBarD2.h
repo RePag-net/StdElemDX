@@ -128,9 +128,9 @@ namespace RePag
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal);
+																																 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal);
 		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal);
+																																 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

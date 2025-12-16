@@ -40,21 +40,21 @@ namespace RePag
 			private:
 				COScrollBar* sbHorizontal;
 				COScrollBar* sbVertical;
-				BYTE ucScrollBarSize;
 				void __vectorcall CreateText(void);
-				void __vectorcall OnRender(void);
 				void __vectorcall ChangeSizeVisibleScrollBars(void);
 
 			protected:
 				COList* vliText;
+				BYTE ucScrollBarSize;
+				void __vectorcall OnRender(void);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
 				void __vectorcall WM_LButtonDown(void);
-				void __vectorcall WM_RButtonDown(void);
 				void __vectorcall WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam);
-				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& stScrollInfo);
+				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _Out_ STScrollInfo& stScrollInfo);
+				void __vectorcall SetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& stScrollInfo);
 				void __vectorcall DeSelect(void);
 				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars !!!

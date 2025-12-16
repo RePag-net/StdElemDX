@@ -28,7 +28,7 @@ SOFTWARE.
 #include "OTextLineD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResourcesA)
+																																		 _In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COTextLine* vTextZeile = (COTextLine*)VMBlock(VMDialog(), sizeof(COTextLine));
 	vTextZeile->COTextLineV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResourcesA);
@@ -36,7 +36,7 @@ RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_z_ cons
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResourcesA)
+																																		 _In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COTextLine* vTextZeile = (COTextLine*)VMBlock(vmMemory, sizeof(COTextLine));
 	vTextZeile->COTextLineV(vmMemory, pcWindowName, uiIDElement, pstDeviceResourcesA);
@@ -66,22 +66,6 @@ void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmM
 																											_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COGraphicV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
-
-	//hFont = nullptr;
-	//lfSchrift.lfHeight = -13;
-	//lfSchrift.lfWidth = 0;
-	//lfSchrift.lfFaceName[0] = '\0';
-	//lfSchrift.lfEscapement = GM_COMPATIBLE;
-	//lfSchrift.lfOrientation = GM_COMPATIBLE;
-	//lfSchrift.lfItalic = FALSE;
-	//lfSchrift.lfUnderline = FALSE;
-	//lfSchrift.lfStrikeOut = FALSE;
-	//lfSchrift.lfWeight = FW_DONTCARE;
-	//lfSchrift.lfCharSet = DEFAULT_CHARSET;
-	//lfSchrift.lfOutPrecision = OUT_DEVICE_PRECIS;
-	//lfSchrift.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-	//lfSchrift.lfQuality = DEFAULT_QUALITY;
-	//lfSchrift.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
 	vasContent = COStringAV(vmMemory);
 	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);

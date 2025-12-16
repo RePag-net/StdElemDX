@@ -64,8 +64,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 													return NULL;
 		case WM_LBUTTONDOWN	: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDown();
 													return NULL;
-		case WM_RBUTTONDOWN	: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_RButtonDown();
-													return NULL;
 		case WM_MOUSEWHEEL	: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 													return NULL;
 		case WM_NCDESTROY		: pTextBox = (COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
@@ -124,28 +122,36 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(void)
 	void* pvIterator = vliText->IteratorToBegin();
 	if(pvIterator){
 		float fLine = 0; D2D1_RECT_F rcfText; size_t szBytes_Text; WCHAR wcInhalt[255];
-		STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
-		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_MAX | SBI_CHARACTER_WIDTH;
+		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
+		STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS | SBI_MAX | SBI_CHARACTER_WIDTH;
 		sbVertical->GetScrollInfo(siLine); sbHorizontal->GetScrollInfo(siCharacter);
 
 		while(pvIterator && fLine < siLine.fPos){	vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
 		rcfText.left = rcfText.top = rcfText.bottom = 0; rcfText.right = siCharacter.fMax;
+		D2D1::Matrix3x2F tfPrevTransform; ifD2D1Context6->GetTransform(&tfPrevTransform);
 		ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-siCharacter.fPos, 0.0f));
 
-		if(!cSelect){
-			do{
-				rcfText.bottom += siLine.szfCharacter.height;
-				mbstowcs_s(&szBytes_Text, wcInhalt, _Line->c_Str(), _Line->Length());
-				ifD2D1Context6->DrawText(wcInhalt, (UINT)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-				vliText->NextElement(pvIterator);
-				rcfText.top += siLine.szfCharacter.height;
-			}
-			while(pvIterator && rcfText.top < siLine.fPage);
+		do{
+			rcfText.bottom += siLine.szfCharacter.height;
+			mbstowcs_s(&szBytes_Text, wcInhalt, _Line->c_Str(), _Line->Length());
+			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+			vliText->NextElement(pvIterator);
+			rcfText.top += siLine.szfCharacter.height;
 		}
-		else{
+		while(pvIterator && rcfText.top < siLine.fPage);
 
+		if(cSelect){
+			pvIterator = vliText->IteratorToBegin(); fLine = 0;
+			while(pvIterator && fLine < siLine.fPos){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
+      fLine = 0;
+			while(pvIterator && fLine < rcfSelect.top){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
 
+			ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+			ifTextColor->SetColor(crfSelectText);
+			mbstowcs_s(&szBytes_Text, wcInhalt, _Line->c_Str(), _Line->Length());
+			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		}
+		ifD2D1Context6->SetTransform(tfPrevTransform);
 	}
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
@@ -172,6 +178,8 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	siScrollInfo.fPage = (float)lWidth - 20;
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
+
+	rcfSelect.left = 0; rcfSelect.right = lWidth;
 
 	if(vasContent->Length()) CreateText();
 
@@ -215,12 +223,6 @@ void __vectorcall RePag::DirectX::COTextBox::WM_KeyDown(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COTextBox::WM_LButtonDown(void)
 {
 	SetFocus(hWndElement);
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::WM_RButtonDown(void)
-{
-	Text_NewLine("Test A", true);
-	//Scroll_Line(SB_LINEUP);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -380,17 +382,14 @@ void __vectorcall RePag::DirectX::COTextBox::Text_NewLine(_In_ char* pcText, _In
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::GetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& siScrollInfo)
+void __vectorcall RePag::DirectX::COTextBox::GetScrollBar(_In_ BYTE ucBar, _Out_ STScrollInfo& siScrollInfo)
 {
 	ucBar == SB_HORZ ? sbHorizontal->GetScrollInfo(siScrollInfo) : sbVertical->GetScrollInfo(siScrollInfo);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
+void __vectorcall RePag::DirectX::COTextBox::SetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& siScrollInfo)
 {
-	/*
-	if(cSelect == 2 || cSelect == -2){ rcSelect.left = 0; rcSelect.right = lEdge_right; }
-	cSelect = 0; UpdateFenster(&rcSelect, true, false); ShowCaret(hWndElement);
-	*/
+	ucBar == SB_HORZ ? sbHorizontal->SetScrollInfo(siScrollInfo) : sbVertical->SetScrollInfo(siScrollInfo);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 unsigned long __vectorcall RePag::DirectX::COTextBox::LineNumbers(void)
@@ -441,6 +440,7 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 	if(ucDown_UP == SB_LINEDOWN){
 		if(siLine.fPos + siLine.fPage < siLine.fMax){
 			siLine.fPos += siLine.szfCharacter.height;
+			if(cSelect){ rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height;	}
 			sbVertical->SetScrollInfo(siLine);	
 			OnRender();
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -449,6 +449,7 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 	else if(ucDown_UP == SB_LINEUP){
 		if(siLine.fPos){ 
 			siLine.fPos -= siLine.szfCharacter.height;
+			if(cSelect){ rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; }
 			sbVertical->SetScrollInfo(siLine); 
 			OnRender();
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);

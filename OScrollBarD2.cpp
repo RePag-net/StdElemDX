@@ -41,16 +41,16 @@ constexpr CHAR THUMB_DOWN = 1;
 constexpr CHAR THUMB_LEFT = -1;
 constexpr CHAR THUMB_RIGHT = -1;
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																			 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																			 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(VMDialog(), sizeof(COScrollBar));
 	vScrollBar->COScrollBarV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources, bHorizontal);
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																			 _In_ STDeviceResources* pstDeviceResources, bool bHorizontal)
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																			 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(vmMemory, sizeof(COScrollBar));
 	vScrollBar->COScrollBarV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources, bHorizontal);
@@ -89,8 +89,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(_In_ HWND hWnd, _In_ unsigned
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcClassName, _In_ const char* pcWindowName, 
-																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
+void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
+																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, _In_ bool bHorizontalA)
 {
 	COGraphicV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
@@ -118,8 +118,8 @@ void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY v
 	bHorizontal = bHorizontalA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																														_In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA)
+void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																														_In_ STDeviceResources* pstDeviceResourcesA, _In_ bool bHorizontalA)
 {
 	COScrollBarV(vmMemory, pcRePag_ScrollBar, pcWindowName, uiIDElementA, pstDeviceResourcesA, bHorizontalA);
 }
@@ -183,7 +183,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl2Dirty[2];	D2D1_ROUNDED_RECT rrcfThumb;
 	static char cCursor_Move = 0; static long lCursor = 0; static char cThumbDirection = 0;
@@ -426,7 +426,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(WPARAM wParam, LPARA
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::WM_MouseOver(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COScrollBar::WM_MouseOver(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSafe_Begin();
@@ -535,7 +535,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseLeave(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSafe_Begin();
@@ -595,9 +595,9 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(WPARAM wParam, LPA
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARAM lParam)
+void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb;
+	POINTS ptlCursor = MAKEPOINTS(lParam); RECT rcl3Dirty[3]; D2D1_ROUNDED_RECT rrcfThumb; BYTE ucLines, ucCharacters; float fPage;
 	ThreadSafe_Begin();
 	switch(ucDirty){
 		case ARROW_UP			:	if(siScrollInfo.fPos > 0.0f){
@@ -750,8 +750,17 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 												break;
 		case SLIDER_VERT:		if(ptlCursor.y > (long)rcfThumb.bottom && ptlCursor.y < lHeight - lWidth){
-													if(siScrollInfo.fPos + siScrollInfo.fPage * 2 < siScrollInfo.fMax) siScrollInfo.fPos += siScrollInfo.fPage;
-													else siScrollInfo.fPos = siScrollInfo.fMax - siScrollInfo.fPage;
+													if(siScrollInfo.fPos + siScrollInfo.fPage * 2 < siScrollInfo.fMax){
+														ucLines = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.height) + 1;
+														siScrollInfo.fPos += (float)ucLines * siScrollInfo.szfCharacter.height;
+														//siScrollInfo.fPos += siScrollInfo.fPage;
+													}
+													else{
+														ucLines = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.height);
+														fPage = (float)ucLines * siScrollInfo.szfCharacter.height;
+														siScrollInfo.fPos = siScrollInfo.fMax - fPage;
+														//siScrollInfo.fPos = siScrollInfo.fMax - siScrollInfo.fPage;
+													}
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
@@ -774,7 +783,11 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEDOWN, NULL);
 												}
 												else if(ptlCursor.y < (long)rcfThumb.top && ptlCursor.y > lWidth){
-													if(siScrollInfo.fPos > siScrollInfo.fPage) siScrollInfo.fPos -= siScrollInfo.fPage;
+													if(siScrollInfo.fPos > siScrollInfo.fPage){
+														ucLines = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.height) + 1;
+														siScrollInfo.fPos -= (float)ucLines * siScrollInfo.szfCharacter.height;
+														//siScrollInfo.fPos -= siScrollInfo.fPage;
+													}
 													else siScrollInfo.fPos = 0;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
@@ -798,8 +811,17 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 												}
 												break;
 		case SLIDER_HORZ	:	if(ptlCursor.x > (long)rcfThumb.right && ptlCursor.x < lWidth - lHeight){
-													if(siScrollInfo.fPos + siScrollInfo.fPage * 2 < siScrollInfo.fMax) siScrollInfo.fPos += siScrollInfo.fPage;
-													else siScrollInfo.fPos = siScrollInfo.fMax - siScrollInfo.fPage;
+													if(siScrollInfo.fPos + siScrollInfo.fPage * 2 < siScrollInfo.fMax){
+                            ucCharacters = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.width) + 1;
+														siScrollInfo.fPos += (float)ucCharacters * siScrollInfo.szfCharacter.width;
+														//siScrollInfo.fPos += siScrollInfo.fPage;
+													}
+													else{
+														ucCharacters = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.height);
+														fPage = (float)ucCharacters * siScrollInfo.szfCharacter.height;
+														siScrollInfo.fPos = siScrollInfo.fMax - fPage;
+														//siScrollInfo.fPos = siScrollInfo.fMax - siScrollInfo.fPage;
+													}
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
 
@@ -822,7 +844,11 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(WPARAM wParam, LPARA
 													SendMessage(GetParent(hWndElement), WM_HSCROLL, SB_PAGERIGHT, NULL);
 												}
 												else if(ptlCursor.x < (long)rcfThumb.left && ptlCursor.x > lHeight){
-													if(siScrollInfo.fPos > siScrollInfo.fPage) siScrollInfo.fPos -= siScrollInfo.fPage;
+													if(siScrollInfo.fPos > siScrollInfo.fPage){
+														ucCharacters = (BYTE)(siScrollInfo.fPage / siScrollInfo.szfCharacter.width) + 1;
+														siScrollInfo.fPos -= (float)ucCharacters * siScrollInfo.szfCharacter.width;
+														//siScrollInfo.fPos -= siScrollInfo.fPage;
+													}
 													else siScrollInfo.fPos = 0;
 													dxgiPresent.DirtyRectsCount = 2;
 													dxgiPresent.pDirtyRects = rcl3Dirty;
@@ -877,7 +903,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_HScroll(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COScrollBar::Geometry(void)
 {
 	D2D1_POINT_2F ptf3Arrow[3]; D2D1_RECT_F rcfButton; ID2D1GeometrySink* ifSink;
-	float fWidth = lWidth; float fHeight = lHeight;
+	float fWidth = (float)lWidth; float fHeight = (float)lHeight;
 	if(!bHorizontal){
 		ptf3Arrow[0] = D2D1::Point2F(fWidth - fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
 		ptf3Arrow[1] = D2D1::Point2F(fWidth * fScaleArrowThumb / 100.0f, fWidth * fScaleArrowThumb / 100.0f);
@@ -963,7 +989,7 @@ void __vectorcall RePag::DirectX::COScrollBar::Geometry(void)
 	CreateThumb(false);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(bool bRender)
+void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(_In_ bool bRender)
 {
 	D2D1_RECT_F rcfThumb_Old;
 	if(!bHorizontal){

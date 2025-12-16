@@ -66,7 +66,7 @@ namespace RePag
 																		_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 
 		public:
-			void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_z_ unsigned int uiIDElementA,
+			void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
 			void __vectorcall Text(_In_z_ char* pcText);
@@ -79,7 +79,7 @@ namespace RePag
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, unsigned int uiIDElement,
+		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																															 _In_ STDeviceResources* pstDeviceResourcesA);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
