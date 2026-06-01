@@ -264,7 +264,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, 
 															dxgiPresent.DirtyRectsCount = 1;
 															dxgiPresent.pDirtyRects = &rclDirty;
 
-															SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+															SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, (LPARAM)hWndElement);
 														}
 														else if(cCursor_Move < (char)fStep * -1 && siScrollInfo.fPos > 0){
 															cCursor_Move = 0;
@@ -288,7 +288,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, 
 															dxgiPresent.DirtyRectsCount = 1;
 															dxgiPresent.pDirtyRects = &rclDirty;
 
-															SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, NULL);
+															SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, (LPARAM)hWndElement);
 														}
 													}
 													else if(ptlCursor.y < (long)rcfThumb.top || ptlCursor.y > (long)rcfThumb.bottom){
@@ -624,7 +624,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, 
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEUP, (LPARAM)hWndElement);
 												}
 												else{
 													ifButtonColor_Up->SetColor(crfButton_Move);
@@ -660,7 +660,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, 
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_LINEDOWN, (LPARAM)hWndElement);
 												}
 												else{
 													ifButtonColor_Down->SetColor(crfButton_Move);
@@ -780,7 +780,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, 
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEDOWN, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEDOWN, (LPARAM)hWndElement);
 												}
 												else if(ptlCursor.y < (long)rcfThumb.top && ptlCursor.y > lWidth){
 													if(siScrollInfo.fPos > siScrollInfo.fPage){
@@ -807,7 +807,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, 
 													dxgiPresent.DirtyRectsCount = 1;
 													dxgiPresent.pDirtyRects = &rclDirty;
 
-													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEUP, NULL);
+													SendMessage(GetParent(hWndElement), WM_VSCROLL, SB_PAGEUP, (LPARAM)hWndElement);
 												}
 												break;
 		case SLIDER_HORZ	:	if(ptlCursor.x > (long)rcfThumb.right && ptlCursor.x < lWidth - lHeight){

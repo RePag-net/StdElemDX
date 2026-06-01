@@ -41,7 +41,7 @@ namespace RePag
 			long lLine;
 			void* pvLine;
 			void __vectorcall WM_SetFocus(void);
-			void __vectorcall WM_VScroll(_In_ WPARAM wParam);
+			void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
 			void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
