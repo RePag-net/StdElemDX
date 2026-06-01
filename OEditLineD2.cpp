@@ -91,7 +91,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned 
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void CALLBACK RePag::DirectX::Timer_Caret(_In_ void* pvParam, _In_ bool bTimerOrWaitFired)
+void CALLBACK RePag::DirectX::Timer_Caret_EditLine(_In_ void* pvParam, _In_ bool bTimerOrWaitFired)
 {
 	WaitForSingleObject(_EditLine->heCaret, INFINITE);
 	static bool bCaret = false;
@@ -182,7 +182,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		
 	if(!cSelect){
-		if(bCaret){	D2D1_POINT_2F ptfTop = {}, ptfBottom = {};
+		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
 			ptfTop.x = ptfCaret.x + fTextPos;
 			ptfTop.y = ptfCaret.y + szfCharacter.height;
 			ptfBottom.x = ptfCaret.x + fTextPos;
@@ -271,7 +271,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	}
 
 	if(!cSelect){
-		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret, this, 0, 500, 0);
+		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret_EditLine, this, 0, 500, 0);
 	}
 	ThreadSafe_End();
 }

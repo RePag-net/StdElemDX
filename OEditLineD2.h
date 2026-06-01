@@ -35,10 +35,11 @@ namespace RePag
 		class __declspec(dllexport) COEditLine : public COTextLine
 		{
 			friend LRESULT CALLBACK WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
-			friend void CALLBACK Timer_Caret(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
+			friend void CALLBACK Timer_Caret_EditLine(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
 
 		private:
 			COStringA* vasZeichenMaske;
+			float fTextPos;
 			bool __vectorcall ZeichenMaske_Einfugen(_In_ WPARAM wParam);
 			bool __vectorcall ZeichenMaske_Einfugen_Prufen(_In_ WPARAM wParam, _In_ VMBLOCK vbZeichen_Maske);
 			bool __vectorcall ZeichenMaske_Loschen(void);
@@ -55,7 +56,6 @@ namespace RePag
 			BYTE ucCaretStrength;
 			char cSelect;
 			D2D1_RECT_F rcfSelect;
-			float fTextPos;
 			unsigned long ulZeichen_max;
 			unsigned char ucZeichenVorgabe;
 			unsigned long ulCharacterPos;

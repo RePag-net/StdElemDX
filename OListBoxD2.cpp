@@ -29,19 +29,19 @@ SOFTWARE.
 //#include "OKlappBox.h"
 #define _Line ((COStringA*)vliText->Element(pvIterator))
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COListBox* __vectorcall RePag::DirectX::COListBoxV(_In_z_ const char* pcFensterName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COListBox* __vectorcall RePag::DirectX::COListBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																																	 _In_ STDeviceResources* pstDeviceResources)
 {
 	COListBox* vListBox = (COListBox*)VMBlock(VMDialog(), sizeof(COListBox));
-	vListBox->COListBoxV(VMDialog(), pcFensterName, uiIDElement, pstDeviceResources);
+	vListBox->COListBoxV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources);
 	return vListBox;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COListBox* __vectorcall RePag::DirectX::COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcFensterName,
+RePag::DirectX::COListBox* __vectorcall RePag::DirectX::COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
 																																	 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
-	COListBox* vListBox = (COListBox*)VMBlock(vmSpeicher, sizeof(COListBox));
-	vListBox->COListBoxV(vmSpeicher, pcFensterName, uiIDElement, pstDeviceResources);
+	COListBox* vListBox = (COListBox*)VMBlock(vmMemory, sizeof(COListBox));
+	vListBox->COListBoxV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
 	return vListBox;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,11 +97,11 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcKlassenName, _In_z_ const char* pcFensterName,
+void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																												_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
-	COTextBoxV(vmSpeicher, pcKlassenName, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	COTextBoxV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 	ucIndex = 0;
  
 	pfnWM_Command = nullptr;
@@ -111,10 +111,10 @@ void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmSpeicher,
 	pfnWM_Char_Escape = nullptr;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
+void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																												_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COListBoxV(vmSpeicher, pcRePag_ListBox, pcFensterName, uiIDElementA, pstDeviceResourcesA);
+	COListBoxV(vmMemory, pcRePag_ListBox, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COListBox::COFreiV(void)
@@ -127,7 +127,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 	ThreadSafe_Begin();
 	rclDirty.left = rclDirty.top = 0;
 	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -135,8 +135,8 @@ void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COListBox::WM_VScroll(_In_ WPARAM wParam)
 {
 	ThreadSafe_Begin();
-	if(cSelect){ STScrollInfo siLine; siLine.ucMask = SIF_PAGE | SIF_POS; GetScrollBar(SB_VERT, siLine); BYTE ucLines;
-		switch(LOWORD(wParam)){
+	if(cSelect){ STScrollInfo siLine; siLine.ucMask = SIF_PAGE | SIF_POS; GetScrollBar(SB_VERT, siLine);
+	switch(LOWORD(wParam)){
 			case SB_LINEUP		: rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; break;
 			case SB_LINEDOWN	: rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height; break;
 			case SB_PAGEUP		:	
@@ -146,7 +146,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_VScroll(_In_ WPARAM wParam)
 	}
   rclDirty.left = rclDirty.top = 0;
 	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -212,7 +212,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 		rcl2Dirty[0].left = 0; rcl2Dirty[0].right = lWidth;
 		rcl2Dirty[0].top = FloatToLong(((float)ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height);
 		rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		dxgiPresent.DirtyRectsCount = 1;
 		dxgiPresent.pDirtyRects = &rclDirty;
@@ -232,7 +232,7 @@ void __vectorcall RePag::DirectX::COListBox::Test(void)
 	//SetSelectIndex(5);
 	//DeSelectEnum();
   BYTE ucIndexA;
-  SearchAndSetEnum(COStringAV("Hallo TextBox Zeile 33 "), ucIndexA);
+  SearchAndSetEnum(COStringAV("Hallo ListBox Zeile 33 "), ucIndexA);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char ucIndexA)
@@ -258,7 +258,7 @@ bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char u
 
 		rclDirty.left = rclDirty.top = 0;
 		rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		ThreadSafe_End();
 		return true;
@@ -332,7 +332,7 @@ void __vectorcall RePag::DirectX::COListBox::DeSelectEnum(void)
 	rclDirty.left = 0; rclDirty.right = lWidth;
 	!rcfSelect.top ? rclDirty.top = 0 : rclDirty.top = FloatToLong(rcfSelect.top) - 1;
 	rclDirty.bottom = FloatToLong(rcfSelect.bottom) + 1;
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
