@@ -39,7 +39,6 @@ namespace RePag
 
 		private:
 			COStringA* vasZeichenMaske;
-			float fTextPos;
 			bool __vectorcall ZeichenMaske_Einfugen(_In_ WPARAM wParam);
 			bool __vectorcall ZeichenMaske_Einfugen_Prufen(_In_ WPARAM wParam, _In_ VMBLOCK vbZeichen_Maske);
 			bool __vectorcall ZeichenMaske_Loschen(void);
@@ -49,6 +48,7 @@ namespace RePag
 			void __vectorcall Select_Loschen(void);
 
 		protected:
+			float fTextPos;
 			HMENU hMenu;
 			HANDLE htCaret;
 			HANDLE heCaret;
@@ -79,7 +79,7 @@ namespace RePag
 			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			bool __vectorcall ZeichenVorgabe(_In_ WPARAM wParam);
-			void __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
+			bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 			inline long __vectorcall FloatToLong(_In_ float fNumber);
 			void __vectorcall DeleteCaretPos(void);
 			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);

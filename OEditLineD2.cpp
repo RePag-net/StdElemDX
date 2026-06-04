@@ -152,7 +152,7 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	SafeRelease(&ifSelectBackColor);
 	SafeRelease(&ifCaretColor);
 	CloseHandle(heCaret);
-	if(htCaret) DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL);
+	if(htCaret){ CloseHandle(htCaret); DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); }
 	VMFreiV(vasZeichenMaske);
 	DestroyMenu(hMenu);
 	return ((COTextLine*)this)->COFreiV();
@@ -160,12 +160,12 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 {
-	IDWriteTextLayout* ifTextLayout; D2D1_RECT_F rcfText; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; 
+	IDWriteTextLayout* ifTextLayout; D2D1_RECT_F rcfText; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1::Matrix3x2F tfPrevTransform;
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
-	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -177,7 +177,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 
-	D2D1::Matrix3x2F tfPrevTransform; ifD2D1Context6->GetTransform(&tfPrevTransform);
+  ifD2D1Context6->GetTransform(&tfPrevTransform);
 	ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-fTextPos, 0.0f));
 	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		
@@ -200,12 +200,14 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
 
 		ifTextColor->SetColor(crfSelectText);
-		mbstowcs_s(&szBytes_Text, wcInhalt, vbCharacter, ulZeichen); VMFrei(vbCharacter);
+		mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
 		ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 	}
 
 	ifD2D1Context6->SetTransform(tfPrevTransform);
 	ifD2D1Context6->EndDraw();
+
+Error:
 	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -249,7 +251,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	ThreadSafe_Begin();
 	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
 
-	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
+	mbstowcs_s(&szBytes_Text, wcInhalt, 255,vasContent->c_Str(), vasContent->Length());
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 
 	TextAlignment(ifTextLayout, fTextWidth, ptfText);
@@ -1635,16 +1637,18 @@ inline long __vectorcall RePag::DirectX::COEditLine::FloatToLong(_In_ float fNum
 	return lZahl;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint)
+bool __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint)
 {
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
-	size_t szBytes_Text; WCHAR wcInhalt[255]; mbstowcs_s(&szBytes_Text, wcInhalt, pcText, ulTextLength);
+	size_t szBytes_Text; WCHAR wcInhalt[255];		
+	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, pcText, ulTextLength)) return false;
 	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT)szBytes_Text, ifText, fTextLine_maxwidth, (float)lHeight, &ifTextLayout);
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	SafeRelease(&ifTextLayout);
 
 	szfTextPoint.width = stTextMetrics.width;
 	szfTextPoint.height = stTextMetrics.height;
+	return true;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::CaretStrength(_In_ BYTE ucCaretStrengthA)

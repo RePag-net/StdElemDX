@@ -93,8 +93,8 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 	IDWriteTextLayout* ifTextLayout; float fTextWidth; D2D1_RECT_F rcfText;	size_t szBytes_Text; WCHAR wcInhalt[255];
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
-	mbstowcs_s(&szBytes_Text, wcInhalt, vasContent->c_Str(), vasContent->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -102,6 +102,8 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 	ifD2D1Context6->Clear(crfBackground);
 	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 	ifD2D1Context6->EndDraw();
+
+Error:
 	SetEvent(heRender);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

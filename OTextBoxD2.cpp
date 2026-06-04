@@ -28,7 +28,6 @@ SOFTWARE.
 #include "OTextBoxD2.h"
 
 #define _Line ((COStringA*)vliText->Element(pvIterator))
-#define _Zeile ((COStringA*)pvZeile)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COTextBox* __vectorcall RePag::DirectX::COTextBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources)
@@ -133,9 +132,9 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 
 		do{
 			rcfText.bottom += siLine.szfCharacter.height;
-			mbstowcs_s(&szBytes_Text, wcInhalt, _Line->c_Str(), _Line->Length());
+			if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length())) goto Error;
 			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-			vliText->NextElement(pvIterator);
+			vliText->NextElement(pvIterator);	
 			rcfText.top += siLine.szfCharacter.height;
 		}
 		while(pvIterator && rcfText.top < siLine.fPage);
@@ -158,11 +157,13 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 
 			ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
 			ifTextColor->SetColor(crfSelectText);
-			mbstowcs_s(&szBytes_Text, wcInhalt, _Line->c_Str(), _Line->Length());
+			mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length());
 			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		}
 		ifD2D1Context6->SetTransform(tfPrevTransform);
 	}
+
+Error:
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
 }
