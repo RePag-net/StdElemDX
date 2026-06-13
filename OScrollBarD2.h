@@ -82,6 +82,7 @@ namespace RePag
 				float fStep;
 				void __vectorcall Geometry(void);
 				void __vectorcall CreateThumb(_In_ bool bRender);
+				inline long __vectorcall FloatToLong(_In_ float fNumber);
 
 			protected:
 				void __vectorcall OnRender(void);

@@ -67,7 +67,7 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
 		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources);
+																																						 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

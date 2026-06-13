@@ -39,6 +39,7 @@ namespace RePag
 
 		private:
 			COStringA* vasZeichenMaske;
+			float fTextPos;
 			bool __vectorcall ZeichenMaske_Einfugen(_In_ WPARAM wParam);
 			bool __vectorcall ZeichenMaske_Einfugen_Prufen(_In_ WPARAM wParam, _In_ VMBLOCK vbZeichen_Maske);
 			bool __vectorcall ZeichenMaske_Loschen(void);
@@ -48,7 +49,6 @@ namespace RePag
 			void __vectorcall Select_Loschen(void);
 
 		protected:
-			float fTextPos;
 			HMENU hMenu;
 			HANDLE htCaret;
 			HANDLE heCaret;

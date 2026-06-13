@@ -190,7 +190,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
-	rcfSelect.left = 0; rcfSelect.right = lWidth;
+	rcfSelect.left = 0; rcfSelect.right =	(float)lWidth;
 
 	if(vasContent->Length()) CreateText();
 
