@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2025 Renï¿½ Pagel
 
 Filename: OTextBoxD2.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -56,7 +56,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 													if(pTextBox) pTextBox->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_VSCROLL			: 
+		case WM_VSCROLL			:
 		case WM_HSCROLL			: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VHScroll(wParam);
 													return NULL;
 		case WM_KEYDOWN			: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KeyDown(wParam);
@@ -73,7 +73,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
+void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																												_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	// Note: three numbers uiIDElement !!!
@@ -134,7 +134,7 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 			rcfText.bottom += siLine.szfCharacter.height;
 			if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length())) goto Error;
 			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-			vliText->NextElement(pvIterator);	
+			vliText->NextElement(pvIterator);
 			rcfText.top += siLine.szfCharacter.height;
 		}
 		while(pvIterator && rcfText.top < siLine.fPage);
@@ -149,16 +149,30 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 				ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)ucCaretStrength, nullptr);
 			}
 		}
-		else{
+		else if(ulSelectPos != ulCharacterPos){
 			pvIterator = vliText->IteratorToBegin(); fLine = 0;
 			while(pvIterator && fLine < siLine.fPos){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
-      fLine = 0;
+			fLine = 0;
 			while(pvIterator && fLine < rcfSelect.top){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
+
+			VMBLOCK vbCharacter = nullptr; ULONG ulZeichen; D2D1_RECT_F rcfSelect_1;
+			rcfSelect_1.top = rcfSelect.top; rcfSelect_1.bottom = rcfSelect_1.top + siLine.szfCharacter.height;
+			rcfSelect_1.left = rcfSelect.left; rcfSelect_1.right = rcfSelect.right;
 
 			ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
 			ifTextColor->SetColor(crfSelectText);
-			mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length());
-			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+
+			do{
+				if(ulSelectPos < ulCharacterPos)	ulZeichen = ((COStringA*)vliText->Element(pvIterator))->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
+				else ulZeichen = ((COStringA*)vliText->Element(pvIterator))->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
+
+				mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
+				ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+
+        vliText->NextElement(pvIterator);
+        rcfSelect_1.top += siLine.szfCharacter.height; rcfSelect_1.bottom += siLine.szfCharacter.height;
+			}
+			while(rcfSelect_1.top < rcfSelect.bottom);
 		}
 		ifD2D1Context6->SetTransform(tfPrevTransform);
 	}
@@ -289,7 +303,7 @@ void __vectorcall RePag::DirectX::COTextBox::ChangeSizeVisibleScrollBars(void)
 void __vectorcall RePag::DirectX::COTextBox::CreateText(void)
 {
 	D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0;
-	cSelect = 0; 
+	cSelect = 0;
 	ULONG ulWidth = vasContent->Length(), ulSign = 0, ulSign_right = 1;
 	do{
 		ulSign_right++;
@@ -319,7 +333,7 @@ void __vectorcall RePag::DirectX::COTextBox::Text(_In_ char* pcText)
 	ThreadSafe_Begin();
 	void* pvIterator = vliText->IteratorToBegin();
 	while(pvIterator){ VMFreiV((COStringA*)vliText->Element(pvIterator)); vliText->DeleteFirstElement(pvIterator, false); }
-	
+
 	//if(cSelect) DeSelect();
 
 	if(pcText && StrLength(pcText)){
@@ -452,16 +466,16 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 		if(siLine.fPos + siLine.fPage < siLine.fMax){
 			siLine.fPos += siLine.szfCharacter.height;
 			if(cSelect){ rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height;	}
-			sbVertical->SetScrollInfo(siLine);	
+			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
 	}
 	else if(ucDown_UP == SB_LINEUP){
-		if(siLine.fPos){ 
+		if(siLine.fPos){
 			siLine.fPos -= siLine.szfCharacter.height;
 			if(cSelect){ rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; }
-			sbVertical->SetScrollInfo(siLine); 
+			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
@@ -512,6 +526,11 @@ BYTE __vectorcall RePag::DirectX::COTextBox::GetScrollBarSize(_In_ BYTE ucBar, _
 void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
 	if(cSelect == 2 || cSelect == -2){ rcfSelect.left = 0; /*rcfSelect.right = lRand_rechts;*/ }
-	cSelect = 0; /*UpdateFenster(&rfSelect, true, false); ShowCaret(hWndElement);*/
+  cSelect = 0; SetEvent(heCaret); ulSelectPos = ulCharacterPos;
+
+	rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
+	rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
+	OnRender(true);
+	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
