@@ -50,8 +50,7 @@ namespace RePag
 			bool __vectorcall WM_Command(_In_ WPARAM wParam);
 			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall BreitesteZeile(_In_ HDC hdc);
-			void __vectorcall Select_Loschen(void);
+			void __vectorcall Select_Delete(void);
 
 		protected:
 

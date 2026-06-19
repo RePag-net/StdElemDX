@@ -688,7 +688,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 		case VK_DELETE	: ThreadSafe_Begin();
 											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 											if(ulCharacterPos == _Line->Length() && lLine == vliText->Number() - 1){ ThreadSafe_End(); break; }
-											if(cSelect) Select_Loschen();
+											if(cSelect) Select_Delete();
 											else{
 												siCharacter.ucMask = SBI_MAX | SBI_PAGE | SBI_POS;
 												GetScrollBar(SB_HORZ, siCharacter);
@@ -766,7 +766,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												break;
 		case VK_BACK			: ThreadSafe_Begin();
 												if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
-												if(cSelect){ Select_Loschen(); ThreadSafe_End(); break; }
+												if(cSelect){ Select_Delete(); ThreadSafe_End(); break; }
 												else if(ulCharacterPos){
 													_Line->SubString(vbZeichen, ulCharacterPos, ulCharacterPos);
 													GetTextPoint(vbZeichen, 1, szfTextPoint); VMFrei(vbZeichen);
@@ -846,7 +846,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												if(pfnWM_Char_ShiftReturn && GetKeyState(VK_SHIFT) & SHIFTED) pfnWM_Char_ShiftReturn(this);
 												else if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 												else{
-													if(cSelect) Select_Loschen();
+													if(cSelect) Select_Delete();
 													vasZeile = COStringAV(vmMemory);
 													pvLine = vliText->IteratorToBegin();
 													if(pvLine){
@@ -899,7 +899,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												break;
 		default					  : ThreadSafe_Begin();
 												if(ZeichenVorgabe(wParam)){
-													if(cSelect){ Select_Loschen(); ThreadSafe_End(); break; }
+													if(cSelect){ Select_Delete(); ThreadSafe_End(); break; }
 													(ulCharacterPos == _Line->Length() ? *_Line += (char*)&wParam : _Line->Insert((char*)&wParam, ulCharacterPos));
 
 													ulCharacterPos++;
@@ -1330,143 +1330,77 @@ COStringA* __vectorcall RePag::DirectX::COEditBox::Content(_Out_ COStringA* vasI
 	return vasInhaltA;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::Select_Loschen(void)
+void __vectorcall RePag::DirectX::COEditBox::Select_Delete(void)
 {
-	//VMBLOCK vbZeichen; SIZE stZeichengrosse; RECT rcZeichnen; void* pvLineAktuell = nullptr; void* pvLineErste = nullptr;
-	//SCROLLINFO stScrollInfo; stScrollInfo.cbSize = sizeof(SCROLLINFO); ULONG ulZeichen; long lLinen; COStringA* vasZeile = nullptr;
-	//*vasInhalt = NULL;
+	D2D_SIZE_F szfTextPoint; STScrollInfo siCharacter, siLine;
+	long lStartLine = lLine, lEndLine = lSelectLine; ULONG ulStartPos = ulCharacterPos, ulEndPos = ulSelectPos;
 
-	//switch(cSelect){
-	//	case  1 : GetTextExtentPoint32(hdc, _Zeile->c_Str(), _Zeile->Length(), &stZeichengrosse);
-	//						_Zeile->SubString(vasInhalt, ulSelectPos + 1, ulCharacterPos);
-	//						ulZeichen = vasInhalt->Length();
-	//						_Zeile->Delete(ulSelectPos, ulZeichen);
-	//						ulCharacterPos -= ulZeichen;
+	if(lStartLine > lEndLine || lStartLine == lEndLine && ulStartPos > ulEndPos){
+		long lLineTemp = lStartLine; lStartLine = lEndLine; lEndLine = lLineTemp;
+		ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
+	}
 
-	//						if(stZeichengrosse.cx == lBreitesteZeile) BreitesteZeile(hdc);
+	if(lStartLine == lEndLine){
+		pvLine = vliText->Element(lStartLine);
+		if(ulEndPos > ulStartPos) _Line->Delete(ulStartPos, ulEndPos - ulStartPos);
+	}
+	else{
+		COStringA* pStartLine = (COStringA*)vliText->Element(lStartLine);
+		COStringA* pEndLine = (COStringA*)vliText->Element(lEndLine);
 
-	//						rcZeichnen.top = rcSelect.top; rcZeichnen.bottom = rcSelect.bottom;
-	//						rcZeichnen.left = rcSelect.right; rcZeichnen.right = lRand_rechts;
+		VMBLOCK vbRest = nullptr;
+		if(ulEndPos < pEndLine->Length()) pEndLine->SubString(vbRest, ulEndPos + 1, pEndLine->Length());
+		pStartLine->Delete(ulStartPos, pStartLine->Length() - ulStartPos);
+		if(vbRest){ *pStartLine += vbRest; VMFrei(vbRest); }
 
-	//						if(stZeichengrosse.cx - lTextPos < rcZeichnen.right) rcZeichnen.right = stZeichengrosse.cx - lTextPos;
-	//						GetTextExtentPoint32(hdc, vasInhalt->c_Str(), ulZeichen, &stZeichengrosse);
-	//						ScrollWindow(hWndElement, stZeichengrosse.cx *-1, 0, &rcZeichnen, nullptr);
-	//						rcZeichnen.left = rcSelect.left + rcZeichnen.right - rcZeichnen.left;
-	//						cSelect = 0; ShowCaret(hWndElement);
-	//						UpdateFenster(&rcZeichnen, true, false);
-	//						ptfCaret.x -= stZeichengrosse.cx;
-	//						SetCaretPos(ptfCaret.x, ptfCaret.y);
-	//						break;
-	//	case -1 : GetTextExtentPoint32(hdc, _Zeile->c_Str(), _Zeile->Length(), &stZeichengrosse);
-	//						_Zeile->SubString(vasInhalt, ulCharacterPos + 1, ulSelectPos);
-	//						ulZeichen = vasInhalt->Length();
-	//						_Zeile->Delete(ulCharacterPos, ulZeichen);
+		void* pvDelete = vliText->IteratorToBegin(); void* pvPrevious = nullptr;
+		for(long lLines = 0; lLines <= lStartLine; lLines++) vliText->NextElement(pvDelete, pvPrevious);
+		for(long lLines = lStartLine + 1; pvDelete && lLines <= lEndLine; lLines++){
+			VMFreiV((COStringA*)vliText->Element(pvDelete));
+			vliText->DeleteElement(pvDelete, pvPrevious, false);
+			vliText->NextElement(pvDelete);
+		}
+	}
 
-	//						if(stZeichengrosse.cx == lBreitesteZeile) BreitesteZeile(hdc);
+	lLine = lSelectLine = lStartLine;
+	ulCharacterPos = ulSelectPos = ulStartPos;
+	pvLine = vliText->Element(lLine);
+	cSelect = 0;
+	rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 
-	//						rcZeichnen.top = rcSelect.top; rcZeichnen.bottom = rcSelect.bottom;
-	//						rcZeichnen.left = rcSelect.right;	rcZeichnen.right = lRand_rechts;
+	siCharacter.ucMask = SBI_ALL; GetScrollBar(SB_HORZ, siCharacter);
+	siCharacter.fMax = 0.0f;
+	void* pvIterator = vliText->IteratorToBegin();
+	while(pvIterator){
+		COStringA* pLine = (COStringA*)vliText->Element(pvIterator);
+		GetTextPoint(pLine->c_Str(), pLine->Length(), szfTextPoint);
+		if(szfTextPoint.width > siCharacter.fMax) siCharacter.fMax = szfTextPoint.width;
+		vliText->NextElement(pvIterator);
+	}
+	if(siCharacter.fPos + siCharacter.fPage > siCharacter.fMax) siCharacter.fPos = siCharacter.fMax - siCharacter.fPage;
+	if(siCharacter.fPos < 0.0f) siCharacter.fPos = 0.0f;
 
-	//						if(stZeichengrosse.cx - lTextPos < rcZeichnen.right) rcZeichnen.right = stZeichengrosse.cx - lTextPos;
-	//						GetTextExtentPoint32(hdc, vasInhalt->c_Str(), ulZeichen, &stZeichengrosse);
-	//						ScrollWindow(hWndElement, stZeichengrosse.cx *-1, 0, &rcZeichnen, nullptr);
-	//						rcZeichnen.left = rcSelect.left + rcZeichnen.right - rcZeichnen.left;
-	//						cSelect = 0; ShowCaret(hWndElement);
-	//						UpdateFenster(&rcZeichnen, true, false);
-	//						break;
-	//	case  2 : rcZeichnen.top = lLine - (rcSelect.bottom - rcSelect.top) / szfCharacter.height + 1;
-	//						rcZeichnen.bottom = rcSelect.top + szfCharacter.height;
-	//						pvLineAktuell = vliText->IteratorToBegin();
-	//						for(lLinen = 0; lLinen < rcZeichnen.top; lLinen++) vliText->NextElement(pvLineAktuell, pvLineErste);
-	//						ulZeichen = _ZeileAktuell->SubString(vbZeichen, ulSelectPos + 1, _ZeileAktuell->Length());
-	//						*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//						_ZeileAktuell->Delete(ulSelectPos, ulZeichen);
-	//						rcZeichnen.bottom += szfCharacter.height;
-	//						*vasInhalt += "\n"; ulZeichen++;
-	//						vliText->NextElement(pvLineAktuell, pvLineErste);
-	//						while(pvLineAktuell && rcZeichnen.bottom < rcSelect.bottom){
-	//							ulZeichen += _ZeileAktuell->SubString(vbZeichen, 1, _ZeileAktuell->Length());
-	//							*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//							VMFreiV((COStringA*)vliText->Element(pvLineAktuell));
-	//							vliText->DeleteElement(pvLineAktuell, pvLineErste, false);
-	//							vliText->NextElement(pvLineAktuell);
-	//							rcZeichnen.bottom += szfCharacter.height;
-	//							*vasInhalt += "\n"; ulZeichen++;
-	//						}
-	//						ulZeichen += _ZeileAktuell->SubString(vbZeichen, 1, ulCharacterPos);
-	//						*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//						_ZeileAktuell->SubString(vbZeichen, ulCharacterPos + 1, _ZeileAktuell->Length());
-	//						*((COStringA*)vliText->Element(pvLineErste)) += vbZeichen; VMFrei(vbZeichen);
-	//						vliText->DeleteElement(pvLineAktuell, pvLineErste, false);
+	siLine.ucMask = SBI_ALL; GetScrollBar(SB_VERT, siLine);
+	siLine.fMax = (float)vliText->Number() * szfCharacter.height;
+	if(siLine.fPos + siLine.fPage > siLine.fMax) siLine.fPos = siLine.fMax - siLine.fPage;
+	if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
 
-	//						pvLine = vliText->Element(pvLineErste);
-	//						lLinen = (rcSelect.bottom - rcSelect.top) / szfCharacter.height - 1;
-	//						lLine -= lLinen;
-	//						ptfCaret.y -= szfCharacter.height * lLinen;
-	//						SetzScrollVert(stScrollInfo);
+	GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+	ptfCaret.x = szfTextPoint.width;
+	ptfCaret.y = (float)lLine * szfCharacter.height - siLine.fPos;
+	if(ptfCaret.x < siCharacter.fPos) siCharacter.fPos = ptfCaret.x;
+	else if(ptfCaret.x - siCharacter.fPos >= siCharacter.fPage){
+		siCharacter.fPos = ptfCaret.x - siCharacter.fPage + (float)ucCaretStrength;
+		if(siCharacter.fPos + siCharacter.fPage > siCharacter.fMax) siCharacter.fPos = siCharacter.fMax - siCharacter.fPage;
+		if(siCharacter.fPos < 0.0f) siCharacter.fPos = 0.0f;
+	}
+	SetScrollBar(SB_HORZ, siCharacter);
+	SetScrollBar(SB_VERT, siLine);
 
-	//						GetTextExtentPoint32(hdc, _Zeile->c_Str(), _Zeile->Length(), &stZeichengrosse);
-	//						if(stZeichengrosse.cx > lBreitesteZeile){ lBreitesteZeile = stZeichengrosse.cx; SetzScrollHorz(stScrollInfo); }
-	//						else BreitesteZeile(hdc);
-
-	//						ulCharacterPos = ulSelectPos;
-	//						GetTextExtentPoint32(hdc, _Zeile->c_Str(), ulCharacterPos, &stZeichengrosse);
-	//						ptfCaret.x = stZeichengrosse.cx;
-	//						SetCaretPos(ptfCaret.x, ptfCaret.y);
- //
-	//						GetClientRect(hWndElement, &rcZeichnen);
-	//						rcZeichnen.top = rcSelect.top;
-	//						cSelect = 0; ShowCaret(hWndElement);
-	//						UpdateFenster(&rcZeichnen, true, false);
-	//						break;
-	//	case -2 : rcZeichnen.bottom = rcSelect.top + szfCharacter.height;
-	//						pvLineAktuell = vliText->IteratorToBegin();
-	//						for(lLinen = 0; lLinen < lLine; lLinen++) vliText->NextElement(pvLineAktuell, pvLineErste);
-	//						ulZeichen = _ZeileAktuell->SubString(vbZeichen, ulCharacterPos + 1, _ZeileAktuell->Length());
-	//						*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//						_ZeileAktuell->Delete(ulCharacterPos, ulZeichen);
-	//						rcZeichnen.bottom += szfCharacter.height;
-	//						*vasInhalt += "\n"; ulZeichen++;
-	//						vliText->NextElement(pvLineAktuell, pvLineErste);
-	//						while(pvLineAktuell && rcZeichnen.bottom < rcSelect.bottom){
-	//							ulZeichen += _ZeileAktuell->SubString(vbZeichen, 1, _ZeileAktuell->Length());
-	//							*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//							VMFreiV((COStringA*)vliText->Element(pvLineAktuell));
-	//							vliText->DeleteElement(pvLineAktuell, pvLineErste, false);
-	//							vliText->NextElement(pvLineAktuell);
-	//							rcZeichnen.bottom += szfCharacter.height;
-	//							*vasInhalt += "\n"; ulZeichen++;
-	//						}
-	//						ulZeichen += _ZeileAktuell->SubString(vbZeichen, 1, ulSelectPos);
-	//						*vasInhalt += vbZeichen; VMFrei(vbZeichen);
-	//						_ZeileAktuell->SubString(vbZeichen, ulSelectPos + 1, _ZeileAktuell->Length());
-	//						*((COStringA*)vliText->Element(pvLineErste)) += vbZeichen; VMFrei(vbZeichen);
-	//						vliText->DeleteElement(pvLineAktuell, pvLineErste, false);
-
-	//						lLinen = (rcSelect.bottom - rcSelect.top) / szfCharacter.height - 1;
-	//						SetzScrollVert(stScrollInfo);
-
-	//						GetTextExtentPoint32(hdc, _Zeile->c_Str(), _Zeile->Length(), &stZeichengrosse);
-	//						if(stZeichengrosse.cx > lBreitesteZeile){ lBreitesteZeile = stZeichengrosse.cx; SetzScrollHorz(stScrollInfo); }
-	//						else BreitesteZeile(hdc);
- //
-	//						GetClientRect(hWndElement, &rcZeichnen);
-	//						rcZeichnen.top = rcSelect.top;
-	//						cSelect = 0; ShowCaret(hWndElement);
-	//						UpdateFenster(&rcZeichnen, true, false);
-	//						break;
-	//}
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::BreitesteZeile(_In_ HDC hdc)
-{
-	//void* pvLinen = vliText->IteratorToBegin(); long lLinenbreite = 0; SIZE stZeichengrosse;
-	//while(pvLinen){
-	//	GetTextExtentPoint32(hdc, ((COStringA*)vliText->Element(pvLinen))->c_Str(), ((COStringA*)vliText->Element(pvLinen))->Length(), &stZeichengrosse);
-	//	if(stZeichengrosse.cx == lBreitesteZeile) break;
-	//	else if(stZeichengrosse.cx > lLinenbreite) lLinenbreite = stZeichengrosse.cx;
-	//	vliText->NextElement(pvLinen);
-	//}
-	//if(!pvLinen){ SCROLLINFO stScrollHorz; stScrollHorz.cbSize = sizeof(SCROLLINFO); lBreitesteZeile = lLinenbreite; SetzScrollHorz(stScrollHorz); }
+	rclDirty.left = rclDirty.top = 0;
+	rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
+	SetEvent(heCaret);
+	OnRender(true);
+	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
