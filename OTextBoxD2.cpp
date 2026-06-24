@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2025 Ren� Pagel
 
 Filename: OTextBoxD2.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -56,7 +56,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 													if(pTextBox) pTextBox->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_VSCROLL			: 
+		case WM_VSCROLL			:
 		case WM_HSCROLL			: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VHScroll(wParam);
 													return NULL;
 		case WM_KEYDOWN			: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KeyDown(wParam);
@@ -73,7 +73,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
+void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																												_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	// Note: three numbers uiIDElement !!!
@@ -110,31 +110,37 @@ VMEMORY __vectorcall RePag::DirectX::COTextBox::COFreiV(void)
 	return ((COEditLine*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
+void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ long lCaretLine, _In_ long lAnchorLine)
 {
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
+	bool bTextClip = false, bTextTransform = false;
+	D2D1::Matrix3x2F tfPrevTransform;
 
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 
 	void* pvIterator = vliText->IteratorToBegin();
 	if(pvIterator){
-		float fLine = 0; D2D1_RECT_F rcfText; size_t szBytes_Text; WCHAR wcInhalt[255];
+		float fLine = 0; size_t szBytes_Text; WCHAR wcInhalt[255];
 		STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
-		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_MAX | SBI_CHARACTER_WIDTH;
+		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_PAGE | SBI_MAX | SBI_CHARACTER_WIDTH;
 		sbVertical->GetScrollInfo(siLine); sbHorizontal->GetScrollInfo(siCharacter);
 
 		while(pvIterator && fLine < siLine.fPos){	vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
-		rcfText.left = rcfText.top = rcfText.bottom = 0; rcfText.right = siCharacter.fMax;
-		D2D1::Matrix3x2F tfPrevTransform; ifD2D1Context6->GetTransform(&tfPrevTransform);
+		D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, siCharacter.fMax, 0.0f);
+		D2D1_RECT_F rcfViewport = D2D1::RectF(0.0f, 0.0f, siCharacter.fPage, siLine.fPage);
+		ifD2D1Context6->PushAxisAlignedClip(&rcfViewport, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		bTextClip = true;
+		ifD2D1Context6->GetTransform(&tfPrevTransform);
 		ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-siCharacter.fPos, 0.0f));
+		bTextTransform = true;
 
 		do{
 			rcfText.bottom += siLine.szfCharacter.height;
 			if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length())) goto Error;
 			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-			vliText->NextElement(pvIterator);	
+			vliText->NextElement(pvIterator);
 			rcfText.top += siLine.szfCharacter.height;
 		}
 		while(pvIterator && rcfText.top < siLine.fPage);
@@ -150,20 +156,54 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 			}
 		}
 		else{
-			pvIterator = vliText->IteratorToBegin(); fLine = 0;
-			while(pvIterator && fLine < siLine.fPos){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
-      fLine = 0;
-			while(pvIterator && fLine < rcfSelect.top){ vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
+			long lStartLine = lAnchorLine, lEndLine = lCaretLine;
+			ULONG ulStartPos = ulSelectPos, ulEndPos = ulCharacterPos;
+			if(lStartLine > lEndLine){
+				long lLineTemp = lStartLine; lStartLine = lEndLine; lEndLine = lLineTemp;
+				ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
+			}
+			else if(lStartLine == lEndLine && ulStartPos > ulEndPos){
+				ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
+			}
 
-			ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+			if(lStartLine < 0) lStartLine = 0;
+			if(lEndLine >= (long)vliText->Number()) lEndLine = (long)vliText->Number() - 1;
 			ifTextColor->SetColor(crfSelectText);
-			mbstowcs_s(&szBytes_Text, wcInhalt, 255, _Line->c_Str(), _Line->Length());
-			ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+
+			for(long lSelectLine = lStartLine; lSelectLine <= lEndLine; lSelectLine++){
+				COStringA* pSelectLine = (COStringA*)vliText->Element(lSelectLine);
+				ULONG ulLineLength = pSelectLine->Length();
+				ULONG ulLineStart = 0, ulLineEnd = ulLineLength;
+				if(lStartLine == lEndLine){ ulLineStart = ulStartPos; ulLineEnd = ulEndPos; }
+				else if(lSelectLine == lStartLine) ulLineStart = ulStartPos;
+				else if(lSelectLine == lEndLine) ulLineEnd = ulEndPos;
+
+				if(ulLineStart > ulLineLength) ulLineStart = ulLineLength;
+				if(ulLineEnd > ulLineLength) ulLineEnd = ulLineLength;
+				if(ulLineStart >= ulLineEnd) continue;
+
+				float fTop = (float)lSelectLine * siLine.szfCharacter.height - siLine.fPos;
+				if(fTop + siLine.szfCharacter.height <= 0.0f) continue;
+				if(fTop >= siLine.fPage) break;
+
+				D2D_SIZE_F szfLeft = {0}, szfRight = {0};
+				if(ulLineStart) GetTextPoint(pSelectLine->c_Str(), ulLineStart, szfLeft);
+				GetTextPoint(pSelectLine->c_Str(), ulLineEnd, szfRight);
+				D2D1_RECT_F rcfSelectLine = D2D1::RectF(szfLeft.width, fTop, szfRight.width, fTop + siLine.szfCharacter.height);
+				ifD2D1Context6->FillRectangle(&rcfSelectLine, ifSelectBackColor);
+
+				VMBLOCK vbCharacter = nullptr;
+				ULONG ulCharacters = pSelectLine->SubString(vbCharacter, ulLineStart + 1, ulLineEnd);
+				if(ulCharacters && !mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulCharacters))
+					ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelectLine, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+				if(vbCharacter) VMFrei(vbCharacter);
+			}
 		}
-		ifD2D1Context6->SetTransform(tfPrevTransform);
 	}
 
 Error:
+	if(bTextTransform) ifD2D1Context6->SetTransform(tfPrevTransform);
+	if(bTextClip) ifD2D1Context6->PopAxisAlignedClip();
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
 }
@@ -289,7 +329,7 @@ void __vectorcall RePag::DirectX::COTextBox::ChangeSizeVisibleScrollBars(void)
 void __vectorcall RePag::DirectX::COTextBox::CreateText(void)
 {
 	D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0;
-	cSelect = 0; 
+	cSelect = 0;
 	ULONG ulWidth = vasContent->Length(), ulSign = 0, ulSign_right = 1;
 	do{
 		ulSign_right++;
@@ -319,7 +359,7 @@ void __vectorcall RePag::DirectX::COTextBox::Text(_In_ char* pcText)
 	ThreadSafe_Begin();
 	void* pvIterator = vliText->IteratorToBegin();
 	while(pvIterator){ VMFreiV((COStringA*)vliText->Element(pvIterator)); vliText->DeleteFirstElement(pvIterator, false); }
-	
+
 	//if(cSelect) DeSelect();
 
 	if(pcText && StrLength(pcText)){
@@ -452,16 +492,16 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 		if(siLine.fPos + siLine.fPage < siLine.fMax){
 			siLine.fPos += siLine.szfCharacter.height;
 			if(cSelect){ rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height;	}
-			sbVertical->SetScrollInfo(siLine);	
+			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
 	}
 	else if(ucDown_UP == SB_LINEUP){
-		if(siLine.fPos){ 
+		if(siLine.fPos){
 			siLine.fPos -= siLine.szfCharacter.height;
 			if(cSelect){ rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; }
-			sbVertical->SetScrollInfo(siLine); 
+			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
@@ -511,7 +551,11 @@ BYTE __vectorcall RePag::DirectX::COTextBox::GetScrollBarSize(_In_ BYTE ucBar, _
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
-	if(cSelect == 2 || cSelect == -2){ rcfSelect.left = 0; /*rcfSelect.right = lRand_rechts;*/ }
-	cSelect = 0; /*UpdateFenster(&rfSelect, true, false); ShowCaret(hWndElement);*/
+  cSelect = 0; SetEvent(heCaret); ulSelectPos = ulCharacterPos;
+
+	rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
+	rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
+	OnRender(true);
+	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

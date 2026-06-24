@@ -110,7 +110,7 @@ void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY v
 
 	fScaleArrowThumb = 75.0f;
 	siScrollInfo = {0};
-	rcfThumb = {0};
+	rcfThumb = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 	fThumb = 0;
 	fStep = 0;
 	bMouseTracking = false;
@@ -234,11 +234,11 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, 
 													break;
 			case THUMB_VERT		:	if(wParam == MK_LBUTTON){
 														if(ptlCursor.y < lCursor){
-															if(cThumbDirection == THUMB_UP) cCursor_Move -= lCursor - ptlCursor.y;
+															if(cThumbDirection == THUMB_UP) cCursor_Move -= (char)(lCursor - ptlCursor.y);
 															else{ cThumbDirection = THUMB_UP; cCursor_Move = 0; }
 														}
 														else if(ptlCursor.y > lCursor){
-															if(cThumbDirection == THUMB_DOWN) cCursor_Move += ptlCursor.y - lCursor;
+															if(cThumbDirection == THUMB_DOWN) cCursor_Move +=	(char)(ptlCursor.y - lCursor);
 															else{ cThumbDirection = THUMB_DOWN; cCursor_Move = 0; }
 														}
 														lCursor = ptlCursor.y;
@@ -302,11 +302,11 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, 
 													break;
 			case THUMB_HORZ		:	if(wParam == MK_LBUTTON){
 														if(ptlCursor.x < lCursor){
-															if(cThumbDirection == THUMB_LEFT) cCursor_Move -= lCursor - ptlCursor.x;
+															if(cThumbDirection == THUMB_LEFT) cCursor_Move -= (char)(lCursor - ptlCursor.x);
 															else{ cThumbDirection = THUMB_LEFT; cCursor_Move = 0; }
 														}
 														else if(ptlCursor.x > lCursor){
-															if(cThumbDirection == THUMB_RIGHT) cCursor_Move += ptlCursor.x - lCursor;
+															if(cThumbDirection == THUMB_RIGHT) cCursor_Move += (char)(ptlCursor.x - lCursor);
 															else{ cThumbDirection = THUMB_RIGHT; cCursor_Move = 0; }
 														}
 														lCursor = ptlCursor.x;
@@ -1004,9 +1004,9 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(_In_ bool bRender)
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
 			if(bRender){
-				rclDirty.left = (long)rcfThumb.left; rclDirty.right = (long)rcfThumb.right;
-				rcfThumb_Old.top < rcfThumb.top ? rclDirty.top = rcfThumb_Old.top : rclDirty.top = rcfThumb.top;
-				rcfThumb_Old.bottom > rcfThumb.bottom ? rclDirty.bottom = rcfThumb_Old.bottom : rclDirty.bottom = rcfThumb.bottom;
+				rclDirty.left = FloatToLong(rcfThumb.left); rclDirty.right = FloatToLong(rcfThumb.right);
+				rcfThumb_Old.top < rcfThumb.top ? rclDirty.top = FloatToLong(rcfThumb_Old.top) : rclDirty.top = FloatToLong(rcfThumb.top);
+				rcfThumb_Old.bottom > rcfThumb.bottom ? rclDirty.bottom = FloatToLong(rcfThumb_Old.bottom) : rclDirty.bottom = FloatToLong(rcfThumb.bottom);
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 			}
@@ -1024,9 +1024,9 @@ void __vectorcall RePag::DirectX::COScrollBar::CreateThumb(_In_ bool bRender)
 			D2D1_ROUNDED_RECT rrcfThumb = {rcfThumb, 2.0f, 2.0f};
 			pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfThumb, &ifThumb);
 			if(bRender){
-				rclDirty.top = (long)rcfThumb.top; rclDirty.bottom = (long)rcfThumb.bottom;
-				rcfThumb_Old.left < rcfThumb.left ? rclDirty.left = rcfThumb_Old.left : rclDirty.left = rcfThumb.left;
-				rcfThumb_Old.right > rcfThumb.right ? rclDirty.right = rcfThumb_Old.right : rclDirty.right = rcfThumb.right;
+				rclDirty.top = FloatToLong(rcfThumb.top); rclDirty.bottom = FloatToLong(rcfThumb.bottom);
+				rcfThumb_Old.left < rcfThumb.left ? rclDirty.left = FloatToLong(rcfThumb_Old.left) : rclDirty.left = FloatToLong(rcfThumb.left);
+				rcfThumb_Old.right > rcfThumb.right ? rclDirty.right = FloatToLong(rcfThumb_Old.right) : rclDirty.right = FloatToLong(rcfThumb.right);
 				OnRender();
 				ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 			}
@@ -1244,3 +1244,11 @@ void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Click(_In_ D2D1_COL
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+inline long __vectorcall RePag::DirectX::COScrollBar::FloatToLong(_In_ float fNumber)
+{
+	long lZahl = (long)fNumber;
+	fNumber -= (float)lZahl;
+	if(fNumber >= 0.5f) lZahl++;
+	return lZahl;
+}
+//---------------------------------------------------------------------------------------------------------------------------------------

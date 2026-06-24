@@ -160,10 +160,11 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 {
-	IDWriteTextLayout* ifTextLayout; D2D1_RECT_F rcfText; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1::Matrix3x2F tfPrevTransform;
+	IDWriteTextLayout* ifTextLayout; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1::Matrix3x2F tfPrevTransform;
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
+	D2D1_RECT_F rcfText =  D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
 	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
@@ -190,12 +191,11 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 			ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)ucCaretStrength, nullptr);
 		}
 	}
-	else{	VMBLOCK vbCharacter = nullptr; ULONG ulZeichen; D2D1_RECT_F rcfSelect_1;
+	else{	VMBLOCK vbCharacter = nullptr; ULONG ulZeichen; 
 		if(cSelect > 0)	ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
 		else ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
 
-		rcfSelect_1.top = rcfSelect.top; rcfSelect_1.bottom = rcfSelect.bottom;
-		rcfSelect_1.left = rcfSelect.left + fTextPos; rcfSelect_1.right = rcfSelect.right + fTextPos;
+		D2D1_RECT_F rcfSelect_1 = D2D1::RectF(rcfSelect.left + fTextPos, rcfSelect.top, rcfSelect.right + fTextPos, rcfSelect.bottom);
 
 		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
 

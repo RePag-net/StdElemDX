@@ -38,8 +38,10 @@ namespace RePag
 			friend void CALLBACK Timer_Caret_EditBox(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
 
 		private:
+			long lSelectLine;
 			long lLine;
 			void* pvLine;
+			void __vectorcall OnRender(_In_ bool bCaret);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
@@ -49,8 +51,7 @@ namespace RePag
 			bool __vectorcall WM_Command(_In_ WPARAM wParam);
 			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall BreitesteZeile(_In_ HDC hdc);
-			void __vectorcall Select_Loschen(_In_ HDC hdc);
+			void __vectorcall Select_Delete(void);
 
 		protected:
 
@@ -67,7 +68,7 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
 		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																														 _In_ STDeviceResources* pstDeviceResources);
+																																						 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }
