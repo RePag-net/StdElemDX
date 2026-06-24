@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2025 RenÃ© Pagel
 
 Filename: OTextBoxD2.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -190,7 +190,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
-	rcfSelect.left = 0; rcfSelect.right = lWidth;
+	rcfSelect.left = rcfSelect.top = 	rcfSelect.bottom = 0.0f; rcfSelect.right = (float)lWidth;
 
 	if(vasContent->Length()) CreateText();
 

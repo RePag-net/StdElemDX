@@ -121,7 +121,7 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmM
 	 ptfCaret = {0};
 	 ucCaretStrength = 1;
 	 cSelect = 0;
-	 rcfSelect = {0};
+	 rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 	 fTextPos = 0.0f;
 	 ulCharacterPos = 0;
 	 ulSelectPos = 0;
@@ -472,32 +472,17 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												}
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){ 
-													if(cSelect > 0){
-														rcfSelect.right = ptfCaret.x;// +(float)ucCaretStrength;
-														rclDirty.right = FloatToLong(rcfSelect.right);
-													}
+													if(cSelect > 0){ rcfSelect.right = ptfCaret.x; rclDirty.right = FloatToLong(rcfSelect.right); }
 													else if(cSelect < 0){
-														if(ulSelectPos > ulCharacterPos){
-															rcfSelect.left = ptfCaret.x;
-															//if(ptfCaret.x > (float)rclDirty.right){
-															//	rclDirty.left = rclDirty.right;
-															//	rclDirty.right = FloatToLong(ptfCaret.x);
-															//}
-														}
+														if(ulSelectPos > ulCharacterPos) rcfSelect.left = ptfCaret.x;
 														else{ cSelect = 0; SetEvent(heCaret); }
 													}
 													else{ 
 														cSelect = 1;
 														ulSelectPos = ulCharacterPos - 1;
-														//if(szfTextPoint.width - fTextPos == (float)lWidth){
-														//	rclDirty.left = FloatToLong(rcfSelect.left);
-														//	rcfSelect.right = (float)lWidth;
-														//}
-														//else{
-															rcfSelect.left = (float)rclDirty.left;
-															rcfSelect.right = ptfCaret.x - (float)ucCaretStrength;
-															rclDirty.right = FloatToLong(rcfSelect.right);
-														//}
+														rcfSelect.left = (float)rclDirty.left;
+														rcfSelect.right = ptfCaret.x - (float)ucCaretStrength;
+														rclDirty.right = FloatToLong(rcfSelect.right);
 														ResetEvent(heCaret);
 													}											 
 												}
