@@ -110,7 +110,7 @@ void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY v
 
 	fScaleArrowThumb = 75.0f;
 	siScrollInfo = {0};
-	rcfThumb = {0};
+	rcfThumb = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 	fThumb = 0;
 	fStep = 0;
 	bMouseTracking = false;

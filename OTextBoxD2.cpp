@@ -114,21 +114,27 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 {
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
+	bool bTextClip = false, bTextTransform = false;
+	D2D1::Matrix3x2F tfPrevTransform;
 
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 
 	void* pvIterator = vliText->IteratorToBegin();
 	if(pvIterator){
-		float fLine = 0; D2D1_RECT_F rcfText; size_t szBytes_Text; WCHAR wcInhalt[255];
+		float fLine = 0; size_t szBytes_Text; WCHAR wcInhalt[255];
 		STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
-		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_MAX | SBI_CHARACTER_WIDTH;
+		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_PAGE | SBI_MAX | SBI_CHARACTER_WIDTH;
 		sbVertical->GetScrollInfo(siLine); sbHorizontal->GetScrollInfo(siCharacter);
 
 		while(pvIterator && fLine < siLine.fPos){	vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
-		rcfText.left = rcfText.top = rcfText.bottom = 0; rcfText.right = siCharacter.fMax;
-		D2D1::Matrix3x2F tfPrevTransform; ifD2D1Context6->GetTransform(&tfPrevTransform);
+		D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, siCharacter.fMax, 0.0f);
+		D2D1_RECT_F rcfViewport = D2D1::RectF(0.0f, 0.0f, siCharacter.fPage, siLine.fPage);
+		ifD2D1Context6->PushAxisAlignedClip(&rcfViewport, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		bTextClip = true;
+		ifD2D1Context6->GetTransform(&tfPrevTransform);
 		ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-siCharacter.fPos, 0.0f));
+		bTextTransform = true;
 
 		do{
 			rcfText.bottom += siLine.szfCharacter.height;
@@ -193,10 +199,11 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 				if(vbCharacter) VMFrei(vbCharacter);
 			}
 		}
-		ifD2D1Context6->SetTransform(tfPrevTransform);
 	}
 
 Error:
+	if(bTextTransform) ifD2D1Context6->SetTransform(tfPrevTransform);
+	if(bTextClip) ifD2D1Context6->PopAxisAlignedClip();
 	ifD2D1Context6->EndDraw();
 	SetEvent(heRender);
 }
@@ -223,7 +230,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
-	rcfSelect.left = 0; rcfSelect.right =	(float)lWidth;
+	rcfSelect = D2D1::RectF(0.0f, 0.0f, (float)lWidth, 0.0f);
 
 	if(vasContent->Length()) CreateText();
 
@@ -544,7 +551,6 @@ BYTE __vectorcall RePag::DirectX::COTextBox::GetScrollBarSize(_In_ BYTE ucBar, _
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
-	//if(cSelect == 2 || cSelect == -2){ rcfSelect.left = 0; rcfSelect.right = lWidth; }
   cSelect = 0; SetEvent(heCaret); ulSelectPos = ulCharacterPos;
 
 	rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);

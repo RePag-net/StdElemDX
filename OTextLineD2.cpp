@@ -90,7 +90,8 @@ VMEMORY __vectorcall RePag::DirectX::COTextLine::COFreiV(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 {
-	IDWriteTextLayout* ifTextLayout; float fTextWidth; D2D1_RECT_F rcfText;	size_t szBytes_Text; WCHAR wcInhalt[255];
+	IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wcInhalt[255];
+	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
