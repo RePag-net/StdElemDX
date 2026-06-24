@@ -46,7 +46,7 @@ namespace RePag
 			protected:
 				COList* vliText;
 				BYTE ucScrollBarSize;
-				void __vectorcall OnRender(_In_ bool bCaret);
+				void __vectorcall OnRender(_In_ bool bCaret, _In_ long lCaretLine = 0, _In_ long lAnchorLine = 0);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);

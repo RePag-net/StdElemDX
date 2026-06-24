@@ -129,6 +129,11 @@ void __vectorcall RePag::DirectX::COEditBox::COEditBoxV(_In_ VMEMORY vmMemory, _
 	pfnWM_Char_ShiftReturn = nullptr;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditBox::OnRender(_In_ bool bCaret)
+{
+	COTextBox::OnRender(bCaret, lLine, lSelectLine);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
@@ -228,7 +233,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-  VMBLOCK vbZeichen = nullptr; D2D_SIZE_F szfTextPoint; STScrollInfo siLine, siCharacter; siCharacter.ucMask = SBI_POS; siLine.ucMask = SBI_PAGE; RECT rcl2Dirty[2];
+  D2D_SIZE_F szfTextPoint; STScrollInfo siLine, siCharacter; siCharacter.ucMask = SBI_POS; siLine.ucMask = SBI_PAGE; RECT rcl2Dirty[2];
 	void* pvLineTemp = nullptr; float fCharacterPos_old; D2D_POINT_2F ptfCaret_old; long lLines;
 	unsigned long ulCharacterPos_old; long lLine_old;
 
@@ -430,8 +435,8 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 														rclDirty.left =	FloatToLong(rcfSelect.left);
 														OnRender(false);
 													}
-													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 													rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
 											}
@@ -519,6 +524,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 														rclDirty.right = FloatToLong(rcfSelect.right); rclDirty.left = FloatToLong(rcfSelect.left);
 														OnRender(false);
 													}
+													rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
@@ -750,7 +756,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 {
-	VMBLOCK vbZeichen = nullptr; ULONG ulTab; D2D_SIZE_F szfTextPoint; long lLines; void* pvLineTemp = nullptr; COStringA* vasZeile;
+	VMBLOCK vbCharacter = nullptr; ULONG ulTab; D2D_SIZE_F szfTextPoint; long lLines; void* pvLineTemp = nullptr; COStringA* vasLine;
 	STScrollInfo siCharacter, siLine; siCharacter.ucMask = SBI_ALL; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_MAX; GetScrollBar(SB_HORZ, siCharacter);
 	switch(wParam){
 		case VK_ESCAPE		: ThreadSafe_Begin();
@@ -768,8 +774,8 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 												if(cSelect){ Select_Delete(); ThreadSafe_End(); break; }
 												else if(ulCharacterPos){
-													_Line->SubString(vbZeichen, ulCharacterPos, ulCharacterPos);
-													GetTextPoint(vbZeichen, 1, szfTextPoint); VMFrei(vbZeichen);
+													_Line->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
+													GetTextPoint(vbCharacter, 1, szfTextPoint); VMFrei(vbCharacter);
 													if(ptfCaret.x < szfTextPoint.width){ ThreadSafe_End(); break; }
 
 													pvLine = vliText->IteratorToBegin();
@@ -847,19 +853,19 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												else if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
 												else{
 													if(cSelect) Select_Delete();
-													vasZeile = COStringAV(vmMemory);
+													vasLine = COStringAV(vmMemory);
 													pvLine = vliText->IteratorToBegin();
 													if(pvLine){
 														for(lLines = 0; lLines <= lLine; lLines++) vliText->NextElement(pvLine, pvLineTemp);
 														if(ulCharacterPos != ((COStringA*)vliText->Element(pvLineTemp))->Length()){
-															((COStringA*)vliText->Element(pvLineTemp))->SubString(vbZeichen, ulCharacterPos + 1, ((COStringA*)vliText->Element(pvLineTemp))->Length());
-															*vasZeile = vbZeichen; VMFrei(vbZeichen);
+															((COStringA*)vliText->Element(pvLineTemp))->SubString(vbCharacter, ulCharacterPos + 1, ((COStringA*)vliText->Element(pvLineTemp))->Length());
+															*vasLine = vbCharacter; VMFrei(vbCharacter);
 															((COStringA*)vliText->Element(pvLineTemp))->Delete(ulCharacterPos, ((COStringA*)vliText->Element(pvLineTemp))->Length() - ulCharacterPos);
 														}
 													}
-													if(!pvLine) pvLine = vliText->ToEnd(vasZeile);
-													else vliText->Insert(pvLine, pvLineTemp, vasZeile);
-													pvLine = vasZeile;
+													if(!pvLine) pvLine = vliText->ToEnd(vasLine);
+													else vliText->Insert(pvLine, pvLineTemp, vasLine);
+													pvLine = vasLine;
 
 													lLine++; ulCharacterPos = 0;
 
@@ -1120,11 +1126,11 @@ void __vectorcall RePag::DirectX::COEditBox::WM_MouseMove(_In_ WPARAM wParam, _I
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
 		ThreadSafe_Begin();
-		//if((short)LOWORD(lParam) < ptfCaret.x - lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
-		//else if((short)LOWORD(lParam) > ptfCaret.x + lZeichen_mittel) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
+		if((short)GET_X_LPARAM(lParam) < ptfCaret.x - szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
+		else if((short)GET_X_LPARAM(lParam) > ptfCaret.x + szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
 
-		//if((short)HIWORD(lParam) < ptfCaret.y - szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_UP, NULL);
-		//else if((short)HIWORD(lParam) > ptfCaret.y + szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_DOWN, NULL);
+		if((short)GET_Y_LPARAM(lParam) < ptfCaret.y - szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_UP, NULL);
+		else if((short)GET_Y_LPARAM(lParam) > ptfCaret.y + szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_DOWN, NULL);
 		ThreadSafe_End();
 	}
 }
