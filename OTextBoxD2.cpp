@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 Ren� Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: OTextBoxD2.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -360,7 +360,7 @@ void __vectorcall RePag::DirectX::COTextBox::Text(_In_ char* pcText)
 	void* pvIterator = vliText->IteratorToBegin();
 	while(pvIterator){ VMFreiV((COStringA*)vliText->Element(pvIterator)); vliText->DeleteFirstElement(pvIterator, false); }
 
-	//if(cSelect) DeSelect();
+	if(cSelect) DeSelect();
 
 	if(pcText && StrLength(pcText)){
 		*vasContent = pcText;

@@ -30,15 +30,15 @@ SOFTWARE.
 #pragma comment(lib, "ADT")
 #pragma comment(lib, "ProgDlgDX")
 
-void __vectorcall RegisterKlassenName(void);
-void __vectorcall UnRegisterKlassenName(void);
+void __vectorcall RegisterClassName(void);
+void __vectorcall UnRegisterClassName(void);
 BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
     switch(ul_reason_for_call){
-      case DLL_PROCESS_ATTACH : RegisterKlassenName(); break;
+      case DLL_PROCESS_ATTACH : RegisterClassName(); break;
       case DLL_THREAD_ATTACH  :
       case DLL_THREAD_DETACH  : break;
-      case DLL_PROCESS_DETACH : UnRegisterKlassenName(); break;
+      case DLL_PROCESS_DETACH : UnRegisterClassName(); break;
                                 
     }
     return TRUE;

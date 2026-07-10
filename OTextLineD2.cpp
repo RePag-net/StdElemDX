@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: OTextLineD2.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -163,7 +163,12 @@ void __vectorcall RePag::DirectX::COTextLine::TextAlignment(_In_ IDWriteTextLayo
 void __vectorcall RePag::DirectX::COTextLine::Text(_In_z_ char* pcText)
 {
 	ThreadSafe_Begin();
-	*vasContent = pcText; 
+	if(hWndElement){
+    rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	else *vasContent = pcText; 
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

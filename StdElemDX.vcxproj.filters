@@ -39,6 +39,9 @@
     <ClInclude Include="OEditBoxD2.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="OPasswordD2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HStdElemDX.cpp">
@@ -63,6 +66,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="OEditBoxD2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="OPasswordD2.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

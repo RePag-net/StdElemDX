@@ -1,10 +1,10 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 Ren� Pagel
+Copyright(c) 2026 René Pagel
 
-Filename: OEditBox.cpp
-For more information see https://github.com/RePag-net/StdElem
+Filename: OEditBoxD2.cpp
+For more information see https://github.com/RePag-net/StdElemDX
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -90,8 +90,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditBox(_In_ HWND hWnd, _In_ unsigned i
 														return NULL;
 		case WM_MOUSEWHEEL    : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 														return NULL;
-		//case WM_PAINT         : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_Paint();
-		//												return NULL;
 		case WM_NCDESTROY     : pEditBox = (COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 														if(pEditBox->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditBox->htEffect_Timer, INVALID_HANDLE_VALUE);
 														VMFreiV(pEditBox);
@@ -692,7 +690,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 											ThreadSafe_End();
 											break;
 		case VK_DELETE	: ThreadSafe_Begin();
-											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+											if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 											if(ulCharacterPos == _Line->Length() && lLine == vliText->Number() - 1){ ThreadSafe_End(); break; }
 											if(cSelect) Select_Delete();
 											else{
@@ -764,14 +762,14 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												ThreadSafe_End();
 												break;
 		case VK_TAB				: ThreadSafe_Begin();
-												if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+												if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 												ulTab = 0;
 												do{ SendMessage(hWndElement, WM_CHAR, ' ', NULL); }
 												while(++ulTab < 4);
 												ThreadSafe_End();
 												break;
 		case VK_BACK			: ThreadSafe_Begin();
-												if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+												if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 												if(cSelect){ Select_Delete(); ThreadSafe_End(); break; }
 												else if(ulCharacterPos){
 													_Line->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
@@ -850,7 +848,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												break;
 		case VK_RETURN		: ThreadSafe_Begin();
 												if(pfnWM_Char_ShiftReturn && GetKeyState(VK_SHIFT) & SHIFTED) pfnWM_Char_ShiftReturn(this);
-												else if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+												else if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 												else{
 													if(cSelect) Select_Delete();
 													vasLine = COStringAV(vmMemory);
@@ -904,7 +902,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 												ThreadSafe_End();
 												break;
 		default					  : ThreadSafe_Begin();
-												if(ZeichenVorgabe(wParam)){
+												if(CharacterCheck(wParam)){
 													if(cSelect){ Select_Delete(); ThreadSafe_End(); break; }
 													(ulCharacterPos == _Line->Length() ? *_Line += (char*)&wParam : _Line->Insert((char*)&wParam, ulCharacterPos));
 
@@ -1037,16 +1035,16 @@ bool __vectorcall RePag::DirectX::COEditBox::WM_Command(_In_ WPARAM wParam)
 	};
 
 	switch(LOWORD(wParam)){
-		case IDM_KOPIEREN     : ThreadSafe_Begin();
+		case IDM_COPY   			: ThreadSafe_Begin();
 														if(!CopySelection()){ ThreadSafe_End(); return true; }
 														ThreadSafe_End(); return false;
-		case IDM_AUSSCHNEIDEN : ThreadSafe_Begin();
-														if(!ucZeichenVorgabe){ ThreadSafe_End(); return false; }
+		case IDM_CUT				  : ThreadSafe_Begin();
+														if(!ucCharacterSpecification){ ThreadSafe_End(); return false; }
 														if(!CopySelection()){ ThreadSafe_End(); return true; }
 														Select_Delete();
 														ThreadSafe_End(); return false;
-		case IDM_EINFUGEN     : ThreadSafe_Begin();
-														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
+		case IDM_PASTE	      : ThreadSafe_Begin();
+														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
 														if(cSelect) Select_Delete();
 														if(!vliText->Number()){
 															COStringA* vasLine = COStringAV(vmMemory);

@@ -54,7 +54,7 @@ extern char pcRePag_ScrollBar[];
 extern char pcRePag_TextBox[];
 extern char pcRePag_EditBox[];
 extern char pcRePag_ListBox[];
-extern char pcRePag_Passwort[];
+extern char pcRePag_Password[];
 extern char pcRePag_Knopf[];
 extern char pcRePag_KlappBox[];
 extern char pcRePag_KlappBoxEintrage[];

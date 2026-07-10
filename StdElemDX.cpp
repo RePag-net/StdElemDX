@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: StdElemDX.cpp
 For more information see https://github.com/RePag-net/StdElemDX
@@ -31,6 +31,7 @@ SOFTWARE.
 #include "OScrollBarD2.h"
 #include "OListBoxD2.h"
 #include "OEditBoxD2.h"
+#include "OPasswordD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -42,89 +43,96 @@ char pcRePag_TextBox[] = "RePag_TextBox";
 char pcRePag_ScrollBar[] = "RePag_ScrollBar";
 char pcRePag_ListBox[] = "RePag_ListBox";
 char pcRePag_EditBox[] = "RePag_EditBox";
+char pcRePag_Password[] = "RePag_Password";
 
 //---------------------------------------------------------------------------
-void __vectorcall RegisterKlassenName(void)
+void __vectorcall RegisterClassName(void)
 {
-  WNDCLASSEX wndKlasse;
-  wndKlasse.cbSize = sizeof(WNDCLASSEX);
-  wndKlasse.style = CS_OWNDC;
-  wndKlasse.cbClsExtra = 0;
-  wndKlasse.cbWndExtra = 16;
-  wndKlasse.hInstance = NULL;
-  wndKlasse.hIcon = NULL;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndKlasse.hbrBackground = NULL;
-  wndKlasse.lpszMenuName = NULL;
-  wndKlasse.hIconSm = NULL;
+  WNDCLASSEX wndClass;
+  wndClass.cbSize = sizeof(WNDCLASSEX);
+  wndClass.style = CS_OWNDC;
+  wndClass.cbClsExtra = 0;
+  wndClass.cbWndExtra = 16;
+  wndClass.hInstance = NULL;
+  wndClass.hIcon = NULL;
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndClass.hbrBackground = NULL;
+  wndClass.lpszMenuName = NULL;
+  wndClass.hIconSm = NULL;
 
-  wndKlasse.lpszClassName = pcRePag_TextLine;
-  wndKlasse.lpfnWndProc = WndProc_TextLine;
-  RegisterClassEx(&wndKlasse);
+  wndClass.lpszClassName = pcRePag_TextLine;
+  wndClass.lpfnWndProc = WndProc_TextLine;
+  RegisterClassEx(&wndClass);
 
-  wndKlasse.lpszClassName = pcRePag_EditLine;
-  wndKlasse.lpfnWndProc = WndProc_EditLine;
-  wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_IBEAM);
-  wndKlasse.hbrBackground = NULL;
-  RegisterClassEx(&wndKlasse);
-  wndKlasse.style = CS_OWNDC;
+  wndClass.lpszClassName = pcRePag_EditLine;
+  wndClass.lpfnWndProc = WndProc_EditLine;
+  wndClass.style |= CS_DBLCLKS;
+  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
+  wndClass.hbrBackground = NULL;
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
 
-  wndKlasse.lpszClassName = pcRePag_TextBox;
-  wndKlasse.lpfnWndProc = WndProc_TextBox;
-  wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_IBEAM);
-  wndKlasse.hbrBackground = NULL;
-  RegisterClassEx(&wndKlasse);
-  wndKlasse.style = CS_OWNDC;
+  wndClass.lpszClassName = pcRePag_TextBox;
+  wndClass.lpfnWndProc = WndProc_TextBox;
+  wndClass.style |= CS_DBLCLKS;
+  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
+  wndClass.hbrBackground = NULL;
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
 
-  wndKlasse.lpszClassName = pcRePag_ScrollBar;
-  wndKlasse.lpfnWndProc = WndProc_ScrollBar;
-  wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndKlasse.hbrBackground = NULL;
-  RegisterClassEx(&wndKlasse);
-  wndKlasse.style = CS_OWNDC;
+  wndClass.lpszClassName = pcRePag_ScrollBar;
+  wndClass.lpfnWndProc = WndProc_ScrollBar;
+  wndClass.style |= CS_DBLCLKS;
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndClass.hbrBackground = NULL;
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
 
-  wndKlasse.lpszClassName = pcRePag_ListBox;
-  wndKlasse.lpfnWndProc = WndProc_ListBox;
-  wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndKlasse.hbrBackground = NULL;
-  RegisterClassEx(&wndKlasse);
-  wndKlasse.style = CS_OWNDC;
+  wndClass.lpszClassName = pcRePag_ListBox;
+  wndClass.lpfnWndProc = WndProc_ListBox;
+  wndClass.style |= CS_DBLCLKS;
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndClass.hbrBackground = NULL;
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
 
-  wndKlasse.lpszClassName = pcRePag_EditBox;
-  wndKlasse.lpfnWndProc = WndProc_EditBox;
-  wndKlasse.style |= CS_DBLCLKS;
-  wndKlasse.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndKlasse.hbrBackground = NULL;
-  RegisterClassEx(&wndKlasse);
-  wndKlasse.style = CS_OWNDC;
+  wndClass.lpszClassName = pcRePag_EditBox;
+  wndClass.lpfnWndProc = WndProc_EditBox;
+  wndClass.style |= CS_DBLCLKS;
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndClass.hbrBackground = NULL;
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
+
+  wndClass.lpszClassName = pcRePag_Password;
+  wndClass.lpfnWndProc = WndProc_Password;
+  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
+  RegisterClassEx(&wndClass);
 }
 //---------------------------------------------------------------------------
-void __vectorcall UnRegisterKlassenName(void)
+void __vectorcall UnRegisterClassName(void)
 {
-  WNDCLASSEX wndKlasse; char pcUnregister[] = "Unregister";
-  wndKlasse.cbSize = sizeof(WNDCLASSEX);
-  wndKlasse.style = CS_OWNDC;
-  wndKlasse.cbClsExtra = 0;
-  wndKlasse.cbWndExtra = 0;
-  wndKlasse.hInstance = NULL;
-  wndKlasse.hIcon = NULL;
-  wndKlasse.hCursor = NULL;
-  wndKlasse.hbrBackground = NULL;
-  wndKlasse.lpszMenuName = NULL;
-  wndKlasse.hIconSm = NULL;
-  wndKlasse.lpszClassName = pcUnregister;
-  wndKlasse.lpfnWndProc = NULL;
-  RegisterClassEx(&wndKlasse);
+  WNDCLASSEX wndClass; char pcUnregister[] = "Unregister";
+  wndClass.cbSize = sizeof(WNDCLASSEX);
+  wndClass.style = CS_OWNDC;
+  wndClass.cbClsExtra = 0;
+  wndClass.cbWndExtra = 0;
+  wndClass.hInstance = NULL;
+  wndClass.hIcon = NULL;
+  wndClass.hCursor = NULL;
+  wndClass.hbrBackground = NULL;
+  wndClass.lpszMenuName = NULL;
+  wndClass.hIconSm = NULL;
+  wndClass.lpszClassName = pcUnregister;
+  wndClass.lpfnWndProc = NULL;
+  RegisterClassEx(&wndClass);
 
-  UnregisterClass(pcRePag_TextLine, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_EditLine, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_TextBox, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_ScrollBar, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_ListBox, wndKlasse.hInstance);
-  UnregisterClass(pcRePag_EditBox, wndKlasse.hInstance);
+  UnregisterClass(pcRePag_TextLine, wndClass.hInstance);
+  UnregisterClass(pcRePag_EditLine, wndClass.hInstance);
+  UnregisterClass(pcRePag_TextBox, wndClass.hInstance);
+  UnregisterClass(pcRePag_ScrollBar, wndClass.hInstance);
+  UnregisterClass(pcRePag_ListBox, wndClass.hInstance);
+  UnregisterClass(pcRePag_EditBox, wndClass.hInstance);
+  UnregisterClass(pcRePag_Password, wndClass.hInstance);
 }
 //---------------------------------------------------------------------------

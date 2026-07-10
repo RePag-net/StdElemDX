@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename : OEditLineD2.cpp
 For more information see https ://github.com/RePag-net/StdElemDX
@@ -125,20 +125,20 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmM
 	 fTextPos = 0.0f;
 	 ulCharacterPos = 0;
 	 ulSelectPos = 0;
-	 ulZeichen_max = 0x7fffffff;
-	 ucZeichenVorgabe = ZV_ALLE; 
+	 ulCharacter_max = 0x7fffffff;
+	 ucCharacterSpecification = ZV_ALLE;
 	 crfSelectText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
 	 crfSelectBack = D2D1::ColorF(RGB(215, 215, 0), 1.0f);
 	 crfCaret = D2D1::ColorF(RGB(255, 255, 255), 1.0f);
 	 htCaret = nullptr;
 	 heCaret = CreateEvent(nullptr, true, true, nullptr);
 
-	 vasZeichenMaske = COStringAV(vmMemory);
+	 vasCharacterMask = COStringAV(vmMemory);
 
 	 hMenu = CreatePopupMenu();
-	 AppendMenu(hMenu, MF_STRING, IDM_AUSSCHNEIDEN, "Ausschneiden		Strg+X");
-	 AppendMenu(hMenu, MF_STRING, IDM_KOPIEREN, "Kopieren		Strg+C");
-	 AppendMenu(hMenu, MF_STRING, IDM_EINFUGEN, "Einfügen		Strg+V");
+	 AppendMenu(hMenu, MF_STRING, IDM_CUT, "Cut		Crtl+X");
+	 AppendMenu(hMenu, MF_STRING, IDM_COPY, "Copy		Crtl+C");
+	 AppendMenu(hMenu, MF_STRING, IDM_PASTE, "Paste		Crtl+V");
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
@@ -153,7 +153,7 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	SafeRelease(&ifCaretColor);
 	CloseHandle(heCaret);
 	if(htCaret){ CloseHandle(htCaret); DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); }
-	VMFreiV(vasZeichenMaske);
+	VMFreiV(vasCharacterMask);
 	DestroyMenu(hMenu);
 	return ((COTextLine*)this)->COFreiV();
 }
@@ -262,11 +262,11 @@ void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 	rcfSelect.bottom = (float)lHeight - ptfCaret.y;
 	rclDirty.bottom = FloatToLong(rcfSelect.bottom);
 
-	if(vasZeichenMaske->Length()){
+	if(vasCharacterMask->Length()){
 		ptfCaret.x = ptfText.x;
 		if(!cSelect) ulCharacterPos = 0;
-		EnableMenuItem(hMenu, IDM_AUSSCHNEIDEN, MF_BYCOMMAND | MF_GRAYED);
-		EnableMenuItem(hMenu, IDM_EINFUGEN, MF_BYCOMMAND | MF_GRAYED);
+		EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_GRAYED);
+		EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_GRAYED);
 	}
 	else{	ptfCaret.x = ptfText.x + fTextWidth;
 		if(!cSelect) ulCharacterPos = vasContent->Length();
@@ -350,27 +350,23 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 													ptfCaret.x = 0.0f;
 												}
 												else if(ucTextAlignment & TXA_LEFT){
-													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestLinks()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+													if(vasCharacterMask->Length()){
+														if(CharacterMask_FixLeft()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 													}
 													ptfCaret.x = szfTextPoint.width - fTextPos;
-													rclDirty.left = FloatToLong(ptfCaret.x);
-													rclDirty.right += ucCaretStrength;
+													rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
 												}
 												else{
-													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestLinks()){
-															GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-															ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
-																: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-															GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-															ptfCaret.x += szfTextPoint.width;
-														}
-														else{
-															vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulCharacterPos + 1);
-															GetTextPoint(vbCharacter, 1, szfTextPoint); VMFrei(vbCharacter);
-															ptfCaret.x -= szfTextPoint.width;
-														}
+													if(vasCharacterMask->Length()){
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+														CharacterMask_FixLeft();
+														rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
+
+														ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
+															: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
+
+														GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+														ptfCaret.x += szfTextPoint.width;
 													}
 													else{
 														szfTextPoint_1 = szfTextPoint;
@@ -435,27 +431,24 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												}
 												else if(szfTextPoint.width - fTextPos == (float)lWidth)	ptfCaret.x = (float)(lWidth - ucCaretStrength);
 												else if(ucTextAlignment & TXA_LEFT){
-													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestRechts()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+													if(vasCharacterMask->Length()){
+														if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 													}
 													rclDirty.left -= ucCaretStrength;
 													ptfCaret.x = szfTextPoint.width - fTextPos;
 													rclDirty.right = FloatToLong(ptfCaret.x);
 												}
 												else{
- 													if(vasZeichenMaske->Length()){
-														if(ZeichenMaske_FestRechts()){
-															GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-															ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
-																: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-															GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-															ptfCaret.x += szfTextPoint.width;
-														}
-	 													else{
-															vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
-															GetTextPoint(vbCharacter, 1, szfTextPoint); VMFrei(vbCharacter);
-															ptfCaret.x = (float)lWidth - szfTextPoint.width;
-														}
+ 													if(vasCharacterMask->Length()){
+														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+														CharacterMask_FixRight();
+														rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
+
+														ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
+															: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
+
+														GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+														ptfCaret.x += szfTextPoint.width;
 													}
 													else{
 														szfTextPoint_1 = szfTextPoint;
@@ -493,8 +486,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 											ThreadSafe_End();
 											break;
 		case VK_DELETE	: ThreadSafe_Begin();
-											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
-											if(!vasZeichenMaske->Length()){	
+											if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
+											if(!vasCharacterMask->Length()){
 												if(cSelect) Select_Loschen();
 												else if(ulCharacterPos < vasContent->Length()){
 													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
@@ -604,7 +597,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
   D2D_SIZE_F szfTextPoint, szfTextPoint_1; VMBLOCK vbCharacter = nullptr;
 	switch(wParam){
 		case VK_TAB    : ThreadSafe_Begin();
-										 if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+										 if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 										 rclDirty.right = 0;
 										 do{ SendMessage(hWndElement, WM_CHAR, ' ', NULL); }
 										 while(++rclDirty.right < 4);
@@ -620,9 +613,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 										 ThreadSafe_End();
 										 break;
 		case VK_BACK   : ThreadSafe_Begin();
-											if(!ucZeichenVorgabe){ ThreadSafe_End(); break; }
+											if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 											if(ulCharacterPos || !ulCharacterPos && cSelect){ 
-												if(!vasZeichenMaske->Length()){
+												if(!vasCharacterMask->Length()){
 													if(cSelect) Select_Loschen();
 													else{
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
@@ -727,9 +720,9 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 														ptfCaret.x = szfTextPoint.width;
 													}
 
-													if(ZeichenMaske_Loschen()){
+													if(CharacterMask_Delete()){
 														vasContent->Delete(--ulCharacterPos, 1);
-														(ucZeichenVorgabe & ZV_SICHTBAR ? vasContent->Insert("_", ulCharacterPos) : vasContent->Insert(" ", ulCharacterPos));
+														(ucCharacterSpecification & ZV_SICHTBAR ? vasContent->Insert("_", ulCharacterPos) : vasContent->Insert(" ", ulCharacterPos));
 														rclDirty.right = 1;
 													}
 													else rclDirty.right = 0;
@@ -757,8 +750,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 											PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_CHAR);
 											break;
 		default        :  ThreadSafe_Begin();
-											if(ZeichenVorgabe(wParam) && ulCharacterPos < ulZeichen_max){
-												if(!vasZeichenMaske->Length()){
+											if(CharacterCheck(wParam) && ulCharacterPos < ulCharacter_max){
+												if(!vasCharacterMask->Length()){
 													if(cSelect) Select_Loschen();
 													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 													if(ucTextAlignment & TXA_LEFT){
@@ -783,7 +776,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 																ptfCaret.x = (float)(lWidth - ucCaretStrength);
 															}
 														}
-														else if(ucZeichenVorgabe & ZV_UBERLANGE){
+														else if(ucCharacterSpecification & ZV_UBERLANGE){
 															vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
 															GetTextPoint(vbCharacter, 1, szfTextPoint_1); VMFrei(vbCharacter);
 															if((float)lWidth - ptfCaret.x > szfTextPoint_1.width){
@@ -827,7 +820,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 																fTextPos = szfTextPoint.width - ptfCaret.x;
 															}
 														}
-														else if(ucZeichenVorgabe & ZV_UBERLANGE){
+														else if(ucCharacterSpecification & ZV_UBERLANGE){
 															vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
 															GetTextPoint(vbCharacter, 1, szfTextPoint_1); VMFrei(vbCharacter);
 															rclDirty.right = FloatToLong(ptfCaret.x);
@@ -852,7 +845,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 															OnRender(true);
 															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 														}
-														else if(ucZeichenVorgabe & ZV_UBERLANGE){
+														else if(ucCharacterSpecification & ZV_UBERLANGE){
 															rclDirty.left = 0; rclDirty.right = lWidth;
 															fTextPos = (szfTextPoint.width - (float)lWidth) / 2.0f;
 															GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
@@ -877,21 +870,24 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 														DeSelect();
 													}
 													else{
-														if(ZeichenMaske_Einfugen(wParam)){
+														if(CharacterMask_Insert(wParam)){
 															vasContent->Delete(ulCharacterPos, 1); vasContent->Insert((char*)&wParam, ulCharacterPos++);
-															if(ucTextAlignment & TXA_LEFT) ptfCaret.x = 0.0f;
+															GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+															GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_1);
+
+															if(ucTextAlignment & TXA_LEFT){
+																ptfCaret.x = szfTextPoint_1.width;
+																rclDirty.left = 0; rclDirty.right = FloatToLong(szfTextPoint.width);
+															}
 															else if(ucTextAlignment & TXA_RIGHT){
-																GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-																ptfCaret.x = (float)lWidth - szfTextPoint.width;
+																ptfCaret.x = (float)lWidth - szfTextPoint.width + szfTextPoint_1.width;
+																rclDirty.left = lWidth - FloatToLong(szfTextPoint.width); rclDirty.right = lWidth;
 															}
 															else{ // TXA_MITTE
-																GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-																ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
+																rclDirty.left = FloatToLong(((float)lWidth - szfTextPoint.width) / 2.0f);
+                                rclDirty.right = rclDirty.left + FloatToLong(szfTextPoint.width);
+																ptfCaret.x = (float)rclDirty.left + szfTextPoint_1.width;
 															}
-
-															GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-															ptfCaret.x += szfTextPoint.width;
-															rclDirty.left = 0; rclDirty.right = FloatToLong(ptfCaret.x);
 															OnRender(true);
 															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 														}
@@ -908,7 +904,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 {
 	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard;
 	switch(LOWORD(wParam)){
-		case IDM_KOPIEREN			: ThreadSafe_Begin();
+		case IDM_COPY   			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
 														if(cSelect > 0) ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
 														else ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
@@ -920,8 +916,8 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 														SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
 														ThreadSafe_End();
 														return false;
-		case IDM_AUSSCHNEIDEN : ThreadSafe_Begin();
-														if(vasZeichenMaske->Length() || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
+		case IDM_CUT				  : ThreadSafe_Begin();
+														if(vasCharacterMask->Length() || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
 														OpenClipboard(hWndElement); EmptyClipboard();
 														DeSelect();
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_Inhalt);
@@ -1011,9 +1007,9 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 														}
 														ThreadSafe_End();
 														return false;
-		case IDM_EINFUGEN	:			ThreadSafe_Begin();
-														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucZeichenVorgabe){ ThreadSafe_End(); return false; }
-														if(vasZeichenMaske->Length()){ ThreadSafe_End(); return false; }
+		case IDM_PASTE		:			ThreadSafe_Begin();
+														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
+														if(vasCharacterMask->Length()){ ThreadSafe_End(); return false; }
 														if(cSelect) Select_Loschen();
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_Inhalt);
 
@@ -1036,7 +1032,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
-															else if(ucZeichenVorgabe & ZV_UBERLANGE){
+															else if(ucCharacterSpecification & ZV_UBERLANGE){
 																ulCharacterPos == vasContent->Length() ? *vasContent += pcAblage : vasContent->Insert(pcAblage, ulCharacterPos);
 																ulCharacterPos += ulZeichen;
 																GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
@@ -1062,7 +1058,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
-															else if(ucZeichenVorgabe & ZV_UBERLANGE){
+															else if(ucCharacterSpecification & ZV_UBERLANGE){
 																if(ulCharacterPos == vasContent->Length()){
 																	*vasContent += pcAblage;
 																	ptfCaret.x = (float)(lWidth - ucCaretStrength);
@@ -1085,7 +1081,7 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
-															else if(ucZeichenVorgabe & ZV_UBERLANGE){
+															else if(ucCharacterSpecification & ZV_UBERLANGE){
 																if(ulCharacterPos == vasContent->Length()){
 																	*vasContent += pcAblage;
 																	fTextPos = (szfTextPoint_Inhalt.width + szfTextPoint_Clipboard.width) - (float)lWidth;
@@ -1112,13 +1108,13 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(_In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	if(vasZeichenMaske->Length()){
-		EnableMenuItem(hMenu, IDM_AUSSCHNEIDEN, MF_BYCOMMAND | MF_GRAYED);
-		EnableMenuItem(hMenu, IDM_EINFUGEN, MF_BYCOMMAND | MF_GRAYED);
+	if(vasCharacterMask->Length()){
+		EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_GRAYED);
+		EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_GRAYED);
 	}
 	else{
-		EnableMenuItem(hMenu, IDM_AUSSCHNEIDEN, MF_BYCOMMAND | MF_ENABLED);
-		EnableMenuItem(hMenu, IDM_EINFUGEN, MF_BYCOMMAND | MF_ENABLED);
+		EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_ENABLED);
+		EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_ENABLED);
 	}
 
 	POINT ptPosition;
@@ -1153,8 +1149,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 			while(szfTextPoint.width - fTextPos < (float)LOWORD(lParam) && ulCharacterPos < vasContent->Length());
 			ptfCaret.x = szfTextPoint.width - fTextPos;
 
-			if(vasZeichenMaske->Length()){
-				if(ZeichenMaske_FestRechts()){
+			if(vasCharacterMask->Length()){
+				if(CharacterMask_FixRight()){
 					GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 					ptfCaret.x = szfTextPoint.width;
 				}
@@ -1174,8 +1170,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 				do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);}
 				while(szfTextPoint.width + ptfCaret.x < (float)LOWORD(lParam) && ulCharacterPos < vasContent->Length());
 			 
-				if(vasZeichenMaske->Length()){
-					if(ZeichenMaske_FestRechts()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				if(vasCharacterMask->Length()){
+					if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 				}
 				ptfCaret.x += szfTextPoint.width;
 			} 
@@ -1213,20 +1209,20 @@ void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(_In_ bool bVerfugbar
 	else{ if(hWndElement == GetFocus()) SetFocus(GetParent(hWndElement)); EnableWindow(hWndElement, bVerfugbar); }
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenVorgabe(_In_ WPARAM wParam)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterCheck(_In_ WPARAM wParam)
 {
 	for(BYTE ucBit = 0; ucBit < 4; ucBit++){
 		switch(ucBit){
-			case 0   : if(ucZeichenVorgabe & (1 << ucBit)){
+			case 0   : if(ucCharacterSpecification & (1 << ucBit)){
 										if(wParam >= 0x41 && wParam <= 0x5a || wParam >= 0x61 && wParam <= 0x7a || wParam == 0x20) return true;
 									} break;
-			case 1   : if(ucZeichenVorgabe & (1 << ucBit)){ 
+			case 1   : if(ucCharacterSpecification & (1 << ucBit)){
 										if(wParam >= 0x30 && wParam <= 0x39) return true;
 									} break;
-			case 2   : if(ucZeichenVorgabe & (1 << ucBit)){
+			case 2   : if(ucCharacterSpecification & (1 << ucBit)){
 										if(wParam >= 0x80 && wParam <= 0xff) return true;
 									} break;
-			case 3   : if(ucZeichenVorgabe & (1 << ucBit)){ 
+			case 3   : if(ucCharacterSpecification & (1 << ucBit)){
 										if(wParam >= 0x20 && wParam <= 0x2f || wParam >= 0x3a && wParam <= 0x40 || 
 											wParam >= 0x5b && wParam <= 0x60 || wParam >= 0x7b && wParam <= 0x7f) return true;
 									} break;
@@ -1235,99 +1231,99 @@ bool __vectorcall RePag::DirectX::COEditLine::ZeichenVorgabe(_In_ WPARAM wParam)
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen(_In_ WPARAM wParam)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Insert(_In_ WPARAM wParam)
 {
-	VMBLOCK vbCharacter_Maske; ULONG ulZeichen; BYTE ucFesteZeichen = 1;
+	VMBLOCK vbCharacter_Mask; ULONG ulCharacter; BYTE ucFixedCharacter = 1;
 
-	for(ulZeichen = 1; ulZeichen <= ulCharacterPos + ucFesteZeichen; ulZeichen++){
-		vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
-		if(*(PBYTE)vbCharacter_Maske == 0x27){ VMFrei(vbCharacter_Maske);
-			if(ulZeichen == ulCharacterPos + ucFesteZeichen){
-				ucFesteZeichen = (BYTE)vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
-				vasZeichenMaske->SubString(vbCharacter_Maske, ++ucFesteZeichen, ucFesteZeichen);
-				if(!ZeichenMaske_Einfugen_Prufen(wParam, vbCharacter_Maske)) return false;
-				ulCharacterPos += ucFesteZeichen - ulZeichen - 2;
+	for(ulCharacter = 1; ulCharacter <= ulCharacterPos + ucFixedCharacter; ulCharacter++){
+		vasCharacterMask->SubString(vbCharacter_Mask, ulCharacter, ulCharacter);
+		if(*(PBYTE)vbCharacter_Mask == 0x27){ VMFrei(vbCharacter_Mask);
+			if(ulCharacter == ulCharacterPos + ucFixedCharacter){
+				ucFixedCharacter = (BYTE)vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
+				vasCharacterMask->SubString(vbCharacter_Mask, ++ucFixedCharacter, ucFixedCharacter);
+				if(!CharacterMask_Insert_Check(wParam, vbCharacter_Mask)) return false;
+				ulCharacterPos += ucFixedCharacter - ulCharacter - 2;
 				return true;
 			}
-			ucFesteZeichen += 2;
-			ulZeichen = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
+			ucFixedCharacter += 2;
+			ulCharacter = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
 		}
-		else VMFrei(vbCharacter_Maske);
+		else VMFrei(vbCharacter_Mask);
 	}
-	vasZeichenMaske->SubString(vbCharacter_Maske, --ulZeichen, ulZeichen);
+	vasCharacterMask->SubString(vbCharacter_Mask, --ulCharacter, ulCharacter);
 
-	return ZeichenMaske_Einfugen_Prufen(wParam, vbCharacter_Maske);
+	return CharacterMask_Insert_Check(wParam, vbCharacter_Mask);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Einfugen_Prufen(_In_ WPARAM wParam, _In_ VMBLOCK vbCharacter_Maske)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Insert_Check(_In_ WPARAM wParam, _In_ VMBLOCK vbCharacter_Mask)
 {
-	switch(*(PBYTE)vbCharacter_Maske){
-		case 0x41 : if(wParam >= 0x41 && wParam <= 0x5a){ VMFrei(vbCharacter_Maske); return true; }
+	switch(*(PBYTE)vbCharacter_Mask){
+		case 0x41 : if(wParam >= 0x41 && wParam <= 0x5a){ VMFrei(vbCharacter_Mask); return true; }
 								break;
-		case 0x61 : if(wParam >= 0x61 && wParam <= 0x7a){ VMFrei(vbCharacter_Maske); return true; }
+		case 0x61 : if(wParam >= 0x61 && wParam <= 0x7a){ VMFrei(vbCharacter_Mask); return true; }
 								break;
-		case 0x42 : if(wParam >= 0x20 && wParam <= 0x2f || wParam >= 0x3a && wParam <= 0x7d){	VMFrei(vbCharacter_Maske); return true; }
+		case 0x42 : if(wParam >= 0x20 && wParam <= 0x2f || wParam >= 0x3a && wParam <= 0x7d){	VMFrei(vbCharacter_Mask); return true; }
 								break;
 		case 0x62 : if(wParam >= 0x20 && wParam <= 0x2f || wParam >= 0x3a && wParam <= 0x40 ||
-										wParam >= 0x5b && wParam <= 0x60 || wParam >= 0x7b && wParam <= 0x7e){ VMFrei(vbCharacter_Maske); return true; }
+										wParam >= 0x5b && wParam <= 0x60 || wParam >= 0x7b && wParam <= 0x7e){ VMFrei(vbCharacter_Mask); return true; }
 								break;
-		case 0x5a : VMFrei(vbCharacter_Maske); return true;
-		case 0x39 : if(wParam >= 0x30 && wParam <= 0x39){ VMFrei(vbCharacter_Maske); return true; }
+		case 0x5a : VMFrei(vbCharacter_Mask); return true;
+		case 0x39 : if(wParam >= 0x30 && wParam <= 0x39){ VMFrei(vbCharacter_Mask); return true; }
 								break;
-		case 0x38 : if(wParam >= 0x30 && wParam <= 0x39  || wParam >= 0x2b && wParam <= 0x2e){ VMFrei(vbCharacter_Maske); return true; }
+		case 0x38 : if(wParam >= 0x30 && wParam <= 0x39  || wParam >= 0x2b && wParam <= 0x2e){ VMFrei(vbCharacter_Mask); return true; }
 								break;
 		case 0x58	: if(wParam >= 0x30 && wParam <= 0x39 || wParam >= 0x41 && wParam <= 0x46 ||
-								wParam >= 0x61 && wParam <= 0x66){ VMFrei(vbCharacter_Maske); return true; }
+								wParam >= 0x61 && wParam <= 0x66){ VMFrei(vbCharacter_Mask); return true; }
 								break;
 	}
-	VMFrei(vbCharacter_Maske);
+	VMFrei(vbCharacter_Mask);
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_FestRechts(void)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_FixRight(void)
 {
-	VMBLOCK vbCharacter_Maske; ULONG ulZeichen; BYTE ucFesteZeichen = 1;
-	for(ulZeichen = 1; ulZeichen < ulCharacterPos + ucFesteZeichen; ulZeichen++){
-		vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
+	VMBLOCK vbCharacter_Maske; ULONG ulCharacter; BYTE ucFixCharacter = 1;
+	for(ulCharacter = 1; ulCharacter < ulCharacterPos + ucFixCharacter; ulCharacter++){
+		vasCharacterMask->SubString(vbCharacter_Maske, ulCharacter, ulCharacter);
 		if(*(PBYTE)vbCharacter_Maske == 0x27){
 			VMFrei(vbCharacter_Maske);
-			ucFesteZeichen += 2;
-			ulZeichen = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
+			ucFixCharacter += 2;
+			ulCharacter = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
 		}
 		else VMFrei(vbCharacter_Maske);
 	}
-	if(ulCharacterPos < ulZeichen - ucFesteZeichen){ ulCharacterPos = ulZeichen - ucFesteZeichen; return true; }
+	if(ulCharacterPos < ulCharacter - ucFixCharacter){ ulCharacterPos = ulCharacter - ucFixCharacter; return true; }
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_FestLinks(void)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_FixLeft(void)
 {
-	VMBLOCK vbCharacter_Maske; BYTE ucFesteZeichen = 1;
+	VMBLOCK vbCharacter_Maske; BYTE ucFixCharacter = 1;
 
-	for(ULONG ulZeichen = 1; ulZeichen <= ulCharacterPos + ucFesteZeichen; ulZeichen++){
-		vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
+	for(ULONG ulCharacter = 1; ulCharacter <= ulCharacterPos + ucFixCharacter; ulCharacter++){
+		vasCharacterMask->SubString(vbCharacter_Maske, ulCharacter, ulCharacter);
 		if(*(PBYTE)vbCharacter_Maske == 0x27){ VMFrei(vbCharacter_Maske);
-			ucFesteZeichen += 2;
-			ULONG ulSprungZeichen = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
-			if(ulSprungZeichen == ulCharacterPos + ucFesteZeichen){ ulCharacterPos -= ulSprungZeichen - ulZeichen - 2; return true; }
-			ulZeichen = ulSprungZeichen;
+		ucFixCharacter += 2;
+			ULONG ulSprungZeichen = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
+			if(ulSprungZeichen == ulCharacterPos + ucFixCharacter){ ulCharacterPos -= ulSprungZeichen - ulCharacter - 2; return true; }
+			ulCharacter = ulSprungZeichen;
 		}
 		else VMFrei(vbCharacter_Maske);
 	}
 	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::ZeichenMaske_Loschen(void)
+bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Delete(void)
 {
-	VMBLOCK vbCharacter_Maske; BYTE ucFesteZeichen = 1;
+	VMBLOCK vbCharacter_Maske; BYTE ucFixCharacter = 1;
 
-	for(ULONG ulZeichen = 1; ulZeichen <= ulCharacterPos + ucFesteZeichen; ulZeichen++){
-		vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
+	for(ULONG ulCharacter = 1; ulCharacter <= ulCharacterPos + ucFixCharacter; ulCharacter++){
+		vasCharacterMask->SubString(vbCharacter_Maske, ulCharacter, ulCharacter);
 		if(*(PBYTE)vbCharacter_Maske == 0x27){ VMFrei(vbCharacter_Maske);
-			ucFesteZeichen += 2;
-			ULONG ulSprungZeichen = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
-			if(ulSprungZeichen == ulCharacterPos + ucFesteZeichen - 1){ ulCharacterPos -= --ulSprungZeichen - ulZeichen; return false; }
-			ulZeichen = ulSprungZeichen;
+		ucFixCharacter += 2;
+			ULONG ulSprungZeichen = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
+			if(ulSprungZeichen == ulCharacterPos + ucFixCharacter - 1){ ulCharacterPos -= --ulSprungZeichen - ulCharacter; return false; }
+			ulCharacter = ulSprungZeichen;
 		}
 		else VMFrei(vbCharacter_Maske);
 	}
@@ -1339,63 +1335,67 @@ void __vectorcall RePag::DirectX::COEditLine::Text(_In_ char* pcText)
 	ThreadSafe_Begin();
 	*vasContent = NULL; ulCharacterPos = 0;
 	if(pcText){
-		if(vasZeichenMaske->Length() && StrLength(pcText)){ VMBLOCK vbCharacter_Maske, vbCharacter_Text; BYTE ucFesteZeichen = 0, ucZeichen; COStringA asText = pcText;
-			for(ULONG ulZeichen = 1; ulZeichen <= vasZeichenMaske->Length(); ulZeichen++){
-				vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
+		if(vasCharacterMask->Length() && StrLength(pcText)){ VMBLOCK vbCharacter_Maske, vbCharacter_Text; BYTE ucFesteZeichen = 0, ucZeichen; COStringA asText = pcText;
+			for(ULONG ulZeichen = 1; ulZeichen <= vasCharacterMask->Length(); ulZeichen++){
+				vasCharacterMask->SubString(vbCharacter_Maske, ulZeichen, ulZeichen);
 				if(asText.Length() >= ulZeichen - ucFesteZeichen){
 					asText.SubString(vbCharacter_Text, ulZeichen - ucFesteZeichen, ulZeichen - ucFesteZeichen);
 					switch(*(PBYTE)vbCharacter_Maske){
 						case 0x41	: if(*(PBYTE)vbCharacter_Text >= 0x41 && *(PBYTE)vbCharacter_Text <= 0x5a) *vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 						case 0x61	: if(*(PBYTE)vbCharacter_Text >= 0x61 && *(PBYTE)vbCharacter_Text <= 0x7a) *vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 						case 0x42	: if(*(PBYTE)vbCharacter_Text >= 0x20 && *(PBYTE)vbCharacter_Text <= 0x2f || *(PBYTE)vbCharacter_Text >= 0x3a && *(PBYTE)vbCharacter_Text <= 0x7d)
 												*vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 						case 0x62	: if(*(PBYTE)vbCharacter_Text >= 0x20 && *(PBYTE)vbCharacter_Text <= 0x2f || *(PBYTE)vbCharacter_Text >= 0x3a && *(PBYTE)vbCharacter_Text <= 0x40 ||
 														*(PBYTE)vbCharacter_Text >= 0x5b && *(PBYTE)vbCharacter_Text <= 0x60 || *(PBYTE)vbCharacter_Text >= 0x7b && *(PBYTE)vbCharacter_Text <= 0x7e)
 												*vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 						case 0x5a	: *vasContent += vbCharacter_Text;
 												break;
 						case 0x39	: if(*(PBYTE)vbCharacter_Text >= 0x30 && *(PBYTE)vbCharacter_Text <= 0x39) *vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 						case 0x38	: if(*(PBYTE)vbCharacter_Text >= 0x30 && *(PBYTE)vbCharacter_Text <= 0x39 || *(PBYTE)vbCharacter_Text >= 0x2b && *(PBYTE)vbCharacter_Text <= 0x2e) *vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
-						case 0x27	: ucZeichen = (BYTE)(vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length()) - ulZeichen++);
-												vasZeichenMaske->SubString(vbCharacter_Maske, ulZeichen, ulZeichen + ucZeichen - 2);
+						case 0x27	: ucZeichen = (BYTE)(vasCharacterMask->SearchCharacters("'", ulZeichen, vasCharacterMask->Length()) - ulZeichen++);
+												vasCharacterMask->SubString(vbCharacter_Maske, ulZeichen, ulZeichen + ucZeichen - 2);
 												*vasContent += vbCharacter_Maske;
 												ucFesteZeichen += 2;
 												ulZeichen += ucZeichen - 1;
 												break;
 						case 0x58	: if(*(PBYTE)vbCharacter_Text >= 0x30 && *(PBYTE)vbCharacter_Text <= 0x39 || *(PBYTE)vbCharacter_Text >= 0x41 && *(PBYTE)vbCharacter_Text <= 0x46 ||
 														*(PBYTE)vbCharacter_Text >= 0x61 && *(PBYTE)vbCharacter_Text <= 0x66)	*vasContent += vbCharacter_Text;
-												else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+												else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 												else *vasContent += " ";
 												break;
 					}
 					VMFrei(vbCharacter_Text);
 				}
-				else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+				else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 				else *vasContent += " ";
 				VMFrei(vbCharacter_Maske); 
 			}
 		}		
 		else *vasContent = pcText;
 	}
-	//UpdateFenster(nullptr, true, false);
+	if(hWndElement){
+		rclDirty.left = 0; rclDirty.right = lWidth;
+		OnRender(true);
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -1520,58 +1520,58 @@ void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& c
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetzZeichen_Max(_In_ unsigned long ulZeichen)
+void __vectorcall RePag::DirectX::COEditLine::SetCharacter_Max(_In_ unsigned long ulCharacter)
 {
 	ThreadSafe_Begin();
-	ulZeichen_max = ulZeichen;
+	ulCharacter_max = ulCharacter;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-unsigned long __vectorcall RePag::DirectX::COEditLine::Zeichen_Max(void)
+unsigned long __vectorcall RePag::DirectX::COEditLine::Character_Max(void)
 {
 	ThreadSafe_Begin();
-	ULONG ulMaxZeichen = ulZeichen_max;
+	ULONG ulMaxCharacter = ulCharacter_max;
 	ThreadSafe_End();
-	return ulMaxZeichen;
+	return ulMaxCharacter;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Zeichenvorgabe(_In_ unsigned char ucZeichenVorgabeA)
+void __vectorcall RePag::DirectX::COEditLine::CharacterSpecification(_In_ unsigned char	ucCharacterSpecificationA)
 {
 	ThreadSafe_Begin();
-	ucZeichenVorgabe = ucZeichenVorgabeA;
+	ucCharacterSpecification = ucCharacterSpecificationA;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(_In_ const char* pcZeichenmaske)
+void __vectorcall RePag::DirectX::COEditLine::CharacterMask(_In_ const char* pcCharacterMask)
 {
 	ThreadSafe_Begin();
-	if(!pcZeichenmaske || !StrCompare(pcZeichenmaske, 1, "", 1)){ *vasZeichenMaske = NULL; ulZeichen_max = 0x7fffffff; }
-	else if(*vasZeichenMaske != pcZeichenmaske){ VMBLOCK vbCharacter; ULONG ulZeichenLange;
-		*vasZeichenMaske = pcZeichenmaske; *vasContent = NULL;
+	if(!pcCharacterMask || !StrCompare(pcCharacterMask, 1, "", 1)){ *vasCharacterMask = NULL; ulCharacter_max = 0x7fffffff; }
+	else if(*vasCharacterMask != pcCharacterMask){ VMBLOCK vbCharacter; ULONG ulCharacterLange;
+		*vasCharacterMask = pcCharacterMask; *vasContent = NULL;
 
-		for(ULONG ulZeichen = 1; ulZeichen <= vasZeichenMaske->Length(); ulZeichen++){
-			vasZeichenMaske->SubString(vbCharacter, ulZeichen, ulZeichen);
-			if(*(PBYTE)vbCharacter == 0x27){ VMFrei(vbCharacter); ulZeichen++;
-				ulZeichenLange = vasZeichenMaske->SearchCharacters("'", ulZeichen, vasZeichenMaske->Length());
-				vasZeichenMaske->SubString(vbCharacter, ulZeichen, ulZeichenLange - 1);
+		for(ULONG ulCharacter = 1; ulCharacter <= vasCharacterMask->Length(); ulCharacter++){
+			vasCharacterMask->SubString(vbCharacter, ulCharacter, ulCharacter);
+			if(*(PBYTE)vbCharacter == 0x27){ VMFrei(vbCharacter); ulCharacter++;
+			ulCharacterLange = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
+				vasCharacterMask->SubString(vbCharacter, ulCharacter, ulCharacterLange - 1);
 				*vasContent += vbCharacter;
-				ulZeichen += ulZeichenLange - ulZeichen;
+				ulCharacter += ulCharacterLange - ulCharacter;
 			}
-			else if(ucZeichenVorgabe & 1 << 5) *vasContent += "_";
+			else if(ucCharacterSpecification & 1 << 5) *vasContent += "_";
 			else *vasContent += " ";
 			VMFrei(vbCharacter);
 		}
-		ulZeichen_max = vasContent->Length();
+		ulCharacter_max = vasContent->Length();
 	}
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-COStringA* __vectorcall RePag::DirectX::COEditLine::Zeichenmaske(_In_ COStringA* pasZeichenmaske)
+COStringA* __vectorcall RePag::DirectX::COEditLine::CharacterMask(_Out_ COStringA* pasCharacterMask)
 {
 	ThreadSafe_Begin();
-	*pasZeichenmaske = *vasZeichenMaske;
+	*pasCharacterMask = *vasCharacterMask;
 	ThreadSafe_End();
-	return pasZeichenmaske;
+	return pasCharacterMask;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)

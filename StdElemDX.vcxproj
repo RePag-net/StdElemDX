@@ -129,6 +129,7 @@
     <ClInclude Include="OEditBoxD2.h" />
     <ClInclude Include="OEditLineD2.h" />
     <ClInclude Include="OListBoxD2.h" />
+    <ClInclude Include="OPasswordD2.h" />
     <ClInclude Include="OScrollBarD2.h" />
     <ClInclude Include="OTextBoxD2.h" />
     <ClInclude Include="OTextLineD2.h" />
@@ -143,6 +144,7 @@
     <ClCompile Include="OEditBoxD2.cpp" />
     <ClCompile Include="OEditLineD2.cpp" />
     <ClCompile Include="OListBoxD2.cpp" />
+    <ClCompile Include="OPasswordD2.cpp" />
     <ClCompile Include="OScrollBarD2.cpp" />
     <ClCompile Include="OTextBoxD2.cpp" />
     <ClCompile Include="OTextLineD2.cpp" />
