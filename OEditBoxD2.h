@@ -1,10 +1,10 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
-Filename: OEditBox.h
-For more information see https://github.com/RePag-net/StdElem
+Filename: OEditBoxD2.h
+For more information see https://github.com/RePag-net/StdElemDX
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal

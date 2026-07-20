@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: OEditLineD2.h
 For more information see https://github.com/RePag-net/StdElemDX

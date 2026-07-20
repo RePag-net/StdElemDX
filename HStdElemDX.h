@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: HStdElemDX.h
 For more information see https://github.com/RePag-net/StdElemDX
@@ -55,7 +55,7 @@ extern char pcRePag_TextBox[];
 extern char pcRePag_EditBox[];
 extern char pcRePag_ListBox[];
 extern char pcRePag_Password[];
-extern char pcRePag_Knopf[];
+extern char pcRePag_Button[];
 extern char pcRePag_KlappBox[];
 extern char pcRePag_KlappBoxEintrage[];
 extern char pcRePag_Schalter[];

@@ -32,6 +32,7 @@ SOFTWARE.
 #include "OListBoxD2.h"
 #include "OEditBoxD2.h"
 #include "OPasswordD2.h"
+#include "OButtonD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ char pcRePag_ScrollBar[] = "RePag_ScrollBar";
 char pcRePag_ListBox[] = "RePag_ListBox";
 char pcRePag_EditBox[] = "RePag_EditBox";
 char pcRePag_Password[] = "RePag_Password";
+char pcRePag_Button[] = "RePag_Button";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -108,6 +110,11 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpfnWndProc = WndProc_Password;
   wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
   RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_Button;
+  wndClass.lpfnWndProc = WndProc_Button; 
+  wndClass.hCursor = LoadCursor(NULL, IDC_HAND);
+  RegisterClassEx(&wndClass);
 }
 //---------------------------------------------------------------------------
 void __vectorcall UnRegisterClassName(void)
@@ -134,5 +141,6 @@ void __vectorcall UnRegisterClassName(void)
   UnregisterClass(pcRePag_ListBox, wndClass.hInstance);
   UnregisterClass(pcRePag_EditBox, wndClass.hInstance);
   UnregisterClass(pcRePag_Password, wndClass.hInstance);
+  UnregisterClass(pcRePag_Button, wndClass.hInstance);
 }
 //---------------------------------------------------------------------------

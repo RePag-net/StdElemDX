@@ -1,7 +1,7 @@
 /******************************************************************************
 MIT License
 
-Copyright(c) 2025 René Pagel
+Copyright(c) 2026 René Pagel
 
 Filename: OTextLineD2.h
 For more information see https://github.com/RePag-net/StdElemDX
@@ -47,7 +47,6 @@ namespace RePag
 			friend LRESULT CALLBACK WndProc_TextLine(HWND hWnd, unsigned int uiMessage, WPARAM wParam, LPARAM lParam);
 
 		private:			
-			void __vectorcall OnRender(void);
 
 		protected:
 			COStringA* vasContent;
@@ -58,6 +57,7 @@ namespace RePag
 			D2D_SIZE_F szfCharacter;
 			float fTextLine_maxwidth;
 			unsigned char ucTextAlignment;
+			void __vectorcall OnRender(void);
 			void __vectorcall WM_Create(void);
 			void __vectorcall CharacterMetric(void);
 			void __vectorcall TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_POINT_2F& ptfText);
