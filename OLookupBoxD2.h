@@ -88,7 +88,7 @@ namespace RePag
 			public:
 				void __vectorcall COLookupBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																			 _In_ STDeviceResources* pstDeviceResourcesA);
-																			 // Note: four numbers uiIDElement, because COScrollBars by COTextBox and COEnum !!!
+																			 // Note: four numbers uiIDElement, because COScrollBars by COTextBox and COEntry !!!
 				VMEMORY __vectorcall COFreiV(void);
 				long& __vectorcall GetHeight(_Out_ long& lHeightA);
 				RECT& __vectorcall GetWindow(_Out_ RECT& rcWindow);

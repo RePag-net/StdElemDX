@@ -133,6 +133,7 @@
     <ClInclude Include="OLookupBoxD2.h" />
     <ClInclude Include="OPasswordD2.h" />
     <ClInclude Include="OScrollBarD2.h" />
+    <ClInclude Include="OSwitchD2.h" />
     <ClInclude Include="OTextBoxD2.h" />
     <ClInclude Include="OTextLineD2.h" />
     <ClInclude Include="resource.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="OLookupBoxD2.cpp" />
     <ClCompile Include="OPasswordD2.cpp" />
     <ClCompile Include="OScrollBarD2.cpp" />
+    <ClCompile Include="OSwitchD2.cpp" />
     <ClCompile Include="OTextBoxD2.cpp" />
     <ClCompile Include="OTextLineD2.cpp" />
     <ClCompile Include="StdElemDX.cpp" />

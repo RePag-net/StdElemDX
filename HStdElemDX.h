@@ -58,14 +58,7 @@ extern char pcRePag_Password[];
 extern char pcRePag_Button[];
 extern char pcRePag_LookupBox[];
 extern char pcRePag_LookupEntry[];
-extern char pcRePag_Schalter[];
-extern char pcRePag_SchalterGruppe[];
-extern char pcRePag_WechselSchalter[];
-extern char pcRePag_TabellenKopf[];
-extern char pcRePag_Balken[];
-extern char pcRePag_Datum[];
-extern char pcRePag_EditDatum[];
-extern char pcRePag_Leuchte[];
+extern char pcRePag_Switch[];
 
 constexpr BYTE  TXA_TOP = 0;
 constexpr BYTE  TXA_LEFT = 1;
