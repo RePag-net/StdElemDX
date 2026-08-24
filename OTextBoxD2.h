@@ -41,7 +41,6 @@ namespace RePag
 				COScrollBar* sbHorizontal;
 				COScrollBar* sbVertical;
 				void __vectorcall CreateText(void);
-				void __vectorcall ChangeSizeVisibleScrollBars(void);
 
 			protected:
 				COList* vliText;
@@ -53,6 +52,8 @@ namespace RePag
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
 				void __vectorcall WM_LButtonDown(void);
 				void __vectorcall WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall ChangeSizeVisibleScrollBars(void);
+				void __vectorcall SetScrollBarPos(_In_ BYTE ucBar, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _Out_ STScrollInfo& stScrollInfo);
 				void __vectorcall SetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& stScrollInfo);
 				void __vectorcall DeSelect(void);

@@ -50,7 +50,6 @@ namespace RePag
 
 		protected:
 			COStringA* vasContent;
-			STFont stFont;
 			IDWriteTextFormat* ifText;
 			D2D1_COLOR_F crfText;
 			ID2D1SolidColorBrush* ifTextColor;
@@ -70,7 +69,7 @@ namespace RePag
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
 			void __vectorcall Text(_In_z_ char* pcText);
-			void __vectorcall Font(STFont& stFont);
+			void __vectorcall SetFont(STFont& stFont);
 			COStringA* __vectorcall Content(_Out_ COStringA* vasContentA);
 			void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
 			void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);

@@ -33,6 +33,7 @@ SOFTWARE.
 #include "OEditBoxD2.h"
 #include "OPasswordD2.h"
 #include "OButtonD2.h"
+#include "OLookupBoxD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -46,6 +47,8 @@ char pcRePag_ListBox[] = "RePag_ListBox";
 char pcRePag_EditBox[] = "RePag_EditBox";
 char pcRePag_Password[] = "RePag_Password";
 char pcRePag_Button[] = "RePag_Button";
+char pcRePag_LookupBox[] = "RePag_LookupBox";
+char pcRePag_LookupEntry[] = "RePag_LookupEntry";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -113,7 +116,18 @@ void __vectorcall RegisterClassName(void)
 
   wndClass.lpszClassName = pcRePag_Button;
   wndClass.lpfnWndProc = WndProc_Button; 
-  wndClass.hCursor = LoadCursor(NULL, IDC_HAND);
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_LookupBox;
+  wndClass.lpfnWndProc = WndProc_LookupBox;
+  wndClass.style |= CS_HREDRAW | CS_VREDRAW;
+  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  RegisterClassEx(&wndClass);
+  wndClass.style = CS_OWNDC;
+
+  wndClass.lpszClassName = pcRePag_LookupEntry;
+  wndClass.lpfnWndProc = WndProc_Entry;
   RegisterClassEx(&wndClass);
 }
 //---------------------------------------------------------------------------

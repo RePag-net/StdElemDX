@@ -78,8 +78,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 		case WM_LBUTTONDOWN : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pListBox->pfnWM_LButtonDown){ pListBox->ThreadSafe_Begin(); pListBox->pfnWM_LButtonDown(pListBox); pListBox->ThreadSafe_End(); }
 													return NULL;
-		case WM_RBUTTONDOWN	: ((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->Test();
-													return NULL;
 		case WM_LBUTTONUP   : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													pListBox->ThreadSafe_Begin();
 													pListBox->WM_LButtonUp(lParam);
@@ -127,7 +125,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 	ThreadSafe_Begin();
 	rclDirty.left = rclDirty.top = 0;
 	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender(false);
+	OnRender(false, ucIndex, ucIndex);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -146,7 +144,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_VScroll(_In_ WPARAM wParam)
 	}
   rclDirty.left = rclDirty.top = 0;
 	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender(false);
+	OnRender(false, ucIndex, ucIndex);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -203,7 +201,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 		else dxgiPresent.DirtyRectsCount = 1;
 
 		cSelect = 1;
-		if(ucIndex == vliText->Number()) ucIndex--;
+		if(ucIndex >= vliText->Number()) ucIndex = vliText->Number() - 1;
 		ulCharacterPos = ((COStringA*)vliText->Element(ucIndex))->Length();
 		rcfSelect.top = (ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height;
 		rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
@@ -212,29 +210,13 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 		rcl2Dirty[0].left = 0; rcl2Dirty[0].right = lWidth;
 		rcl2Dirty[0].top = FloatToLong(((float)ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height);
 		rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
-		OnRender(false);
+		OnRender(false, ucIndex, ucIndex);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		dxgiPresent.DirtyRectsCount = 1;
 		dxgiPresent.pDirtyRects = &rclDirty;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COListBox::DeSelect(void)
-{
-	/*
-	if(cSelect == 2 || cSelect == -2){ rcSelect.left = 0; rcSelect.right = lEdge_right; }
-	cSelect = 0; UpdateFenster(&rcSelect, true, false); ShowCaret(hWndElement);
-	*/
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COListBox::Test(void)
-{
-	//SetSelectIndex(5);
-	//DeSelectEnum();
-  BYTE ucIndexA;
-  SearchAndSetEnum(COStringAV("Hallo ListBox Zeile 33 "), ucIndexA);
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char ucIndexA)
 {
 	ThreadSafe_Begin();
@@ -258,7 +240,7 @@ bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char u
 
 		rclDirty.left = rclDirty.top = 0;
 		rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-		OnRender(false);
+		OnRender(false, ucIndex, ucIndex);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		ThreadSafe_End();
 		return true;
@@ -332,7 +314,7 @@ void __vectorcall RePag::DirectX::COListBox::DeSelectEnum(void)
 	rclDirty.left = 0; rclDirty.right = lWidth;
 	!rcfSelect.top ? rclDirty.top = 0 : rclDirty.top = FloatToLong(rcfSelect.top) - 1;
 	rclDirty.bottom = FloatToLong(rcfSelect.bottom) + 1;
-	OnRender(false);
+	OnRender(false, ucIndex, ucIndex);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }

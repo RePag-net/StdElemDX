@@ -221,12 +221,12 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	STScrollInfo siScrollInfo;
 	siScrollInfo.ucMask = SBI_ALL;
 	siScrollInfo.fMax = siScrollInfo.fPos = 0;
-	siScrollInfo.fPage = (float)lHeight - 20;
+	siScrollInfo.fPage = (float)lHeight - ucScrollBarSize;
 	siScrollInfo.szfCharacter = szfCharacter;
 	sbVertical->SetVisible(false);
 	sbVertical->SetScrollInfo(siScrollInfo);
 
-	siScrollInfo.fPage = (float)lWidth - 20;
+	siScrollInfo.fPage = (float)lWidth - ucScrollBarSize;
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
@@ -549,9 +549,14 @@ BYTE __vectorcall RePag::DirectX::COTextBox::GetScrollBarSize(_In_ BYTE ucBar, _
   return ucWidth_Height;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COTextBox::SetScrollBarPos(_In_ BYTE ucBar, _In_ long lPos_x, _In_ long lPos_y)
+{
+	ucBar == SB_HORZ ? sbHorizontal->NewWindowPosition(lPos_x, lPos_y) : sbVertical->NewWindowPosition(lPos_x, lPos_y);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
-  cSelect = 0; SetEvent(heCaret); ulSelectPos = ulCharacterPos;
+  cSelect = 0; SetEvent(heCaret); //ulSelectPos = ulCharacterPos;
 
 	rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
 	rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);

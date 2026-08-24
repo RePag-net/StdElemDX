@@ -172,7 +172,7 @@ void __vectorcall RePag::DirectX::COTextLine::Text(_In_z_ char* pcText)
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::Font(STFont& stFont)
+void __vectorcall RePag::DirectX::COTextLine::SetFont(STFont& stFont)
 {
 	ThreadSafe_Begin();
 	SafeRelease(&ifText);

@@ -45,7 +45,6 @@ namespace RePag
 			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
 			void __vectorcall WM_Char(_In_ WPARAM wParam);
-			void __vectorcall DeSelect(void);
 			void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																	 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 
@@ -66,7 +65,6 @@ namespace RePag
 			bool __vectorcall SearchAndSetEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
 			unsigned long __vectorcall NumberEnum(void);
 			void __vectorcall DeSelectEnum(void);
-			void __vectorcall Test(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

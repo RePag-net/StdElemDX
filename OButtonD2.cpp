@@ -90,7 +90,7 @@ void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In
 	stFont.fontStretch = DWRITE_FONT_STRETCH_EXPANDED;
 	stFont.fontSize = 15.0f;
 	stFont.localeName = L"en-en";
-  Font(stFont);
+  SetFont(stFont);
 
 	crfBackground = {RGB(210, 100, 20), 1.0f};
   crfBackground_1 = D2D1::ColorF(RGB(210, 100, 20), 1.0f);
