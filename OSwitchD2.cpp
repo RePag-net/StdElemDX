@@ -89,6 +89,7 @@ void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In
 void __vectorcall RePag::DirectX::COSwitch::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
+	SetFocus(hWndElement);
 	Switch(!bOn);
 	if(pfnWM_LButtonUp) pfnWM_LButtonUp(this);
 	else PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), lParam);

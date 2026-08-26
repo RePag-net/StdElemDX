@@ -59,6 +59,8 @@ extern char pcRePag_Button[];
 extern char pcRePag_LookupBox[];
 extern char pcRePag_LookupEntry[];
 extern char pcRePag_Switch[];
+extern char pcRePag_SwitchGroup[]; 
+extern char pcRePag_Two_waySwitch[];
 
 constexpr BYTE  TXA_TOP = 0;
 constexpr BYTE  TXA_LEFT = 1;

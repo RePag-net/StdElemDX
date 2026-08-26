@@ -191,12 +191,12 @@ void __vectorcall RePag::DirectX::COButton::WM_LButtonUp(WPARAM wParam, LPARAM l
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																												 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																												 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfText_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfText_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifTextColor_1) ifTextColor_1->SetColor(crfText_1);
-	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifTextColor) ifTextColor->SetColor(crfText);
 	ThreadSafe_End();
 }
@@ -211,10 +211,10 @@ void __vectorcall RePag::DirectX::COButton::SetTextColor(_In_ D2D1_COLOR_F& crfT
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetTextColor_Focus(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																															 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																															 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfText_Focus = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfText_Focus = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifTextColor_Focus) ifTextColor_Focus->SetColor(crfText_Focus);
 	ThreadSafe_End();
 }
@@ -228,12 +228,12 @@ void __vectorcall RePag::DirectX::COButton::SetTextColor_Focus(_In_ D2D1_COLOR_F
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, 
-																															 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																															 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfBackground_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifBackgroundColor_1) ifBackgroundColor_1->SetColor(crfBackground_1);
-	crfBackground = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifBackColor) ifBackColor->SetColor(crfBackground);
 	ThreadSafe_End();
 }
@@ -247,10 +247,10 @@ void __vectorcall RePag::DirectX::COButton::SetBackgroundColor(_In_ D2D1_COLOR_F
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfBackground_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifBackgroundColor_1) ifBackgroundColor_1->SetColor(crfBackground_1);
 	ThreadSafe_End();
 }
@@ -264,10 +264,10 @@ void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_1(_In_ D2D1_COLOR
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_2(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfBackground_2 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground_2 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifBackgroundColor_2) ifBackgroundColor_2->SetColor(crfBackground_2);
 	ThreadSafe_End();
 }
@@ -281,10 +281,10 @@ void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_2(_In_ D2D1_COLOR
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_3(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfBackground_3 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground_3 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifBackgroundColor_3) ifBackgroundColor_3->SetColor(crfBackground_3);
 	ThreadSafe_End();
 }

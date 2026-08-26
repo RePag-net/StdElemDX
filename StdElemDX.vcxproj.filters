@@ -51,6 +51,9 @@
     <ClInclude Include="OSwitchD2.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="OSwitchGroupD2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HStdElemDX.cpp">
@@ -87,6 +90,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="OSwitchD2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="OSwitchGroupD2.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1464,10 +1464,10 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen(void)
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfSelectText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfSelectText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -1479,10 +1479,10 @@ void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ D2D1_COLOR
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																			 _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																																			 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfSelectBack = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfSelectBack = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
 	ThreadSafe_End();
 }
@@ -1496,10 +1496,10 @@ void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ D2D1
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																														_In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+																														_In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfCaret = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfCaret = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
 
 	rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;

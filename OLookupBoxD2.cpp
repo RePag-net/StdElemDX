@@ -592,26 +592,26 @@ void __vectorcall RePag::DirectX::COLookupBox::SetHeight_Entry(_In_ unsigned cha
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	eEntry->SetTextColor(crfText);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfBackground = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfBackground = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	eEntry->SetBackgroundColor(crfBackground);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfButton = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfButton = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -622,10 +622,10 @@ void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor(_In_ D2D1_COLOR_F&
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfButton_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfButton_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -636,10 +636,10 @@ void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Move(_In_ D2D1_COL
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfButton_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfButton_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -650,10 +650,10 @@ void __vectorcall RePag::DirectX::COLookupBox::SetButtonColor_Click(_In_ D2D1_CO
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfArrow = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfArrow = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -664,10 +664,10 @@ void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor(_In_ D2D1_COLOR_F& 
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfArrow_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfArrow_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -678,10 +678,10 @@ void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Move(_In_ D2D1_COLO
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	eEntry->crfArrow_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	eEntry->crfArrow_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

@@ -178,6 +178,7 @@ void __vectorcall RePag::DirectX::COTextLine::SetFont(STFont& stFont)
 	SafeRelease(&ifText);
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(stFont.fontFamilyName, stFont.fontCollection, stFont.fontWeight, stFont.fontSytle,
 																												 stFont.fontStretch, stFont.fontSize, stFont.localeName, &ifText);
+	CharacterMetric();
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,10 +190,10 @@ COStringA* __vectorcall RePag::DirectX::COTextLine::Content(_Out_ COStringA* vas
 	return vasContentA;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COTextLine::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifTextColor) ifTextColor->SetColor(crfText);
 	ThreadSafe_End();
 }

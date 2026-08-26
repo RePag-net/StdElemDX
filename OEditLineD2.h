@@ -82,7 +82,7 @@ namespace RePag
 			bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 			inline long __vectorcall FloatToLong(_In_ float fNumber);
 			void __vectorcall DeleteCaretPos(void);
-			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
 			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
@@ -100,9 +100,9 @@ namespace RePag
 			void(__vectorcall* pfnWM_LButtonDBClick)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void __vectorcall SetzVerfugbar(_In_ bool bVerfugbar);
 			void __vectorcall Text(_In_ char* pcText);
-			void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 			void __vectorcall SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA);
-			void __vectorcall SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha);
+			void __vectorcall SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 			void __vectorcall SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA);
 			void __vectorcall SetCharacter_Max(_In_ unsigned long ulCharacter);
 			unsigned long __vectorcall Character_Max(void);

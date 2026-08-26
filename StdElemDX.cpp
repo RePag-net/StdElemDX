@@ -35,6 +35,7 @@ SOFTWARE.
 #include "OButtonD2.h"
 #include "OLookupBoxD2.h"
 #include "OSwitchD2.h"
+#include "OSwitchGroupD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -51,6 +52,8 @@ char pcRePag_Button[] = "RePag_Button";
 char pcRePag_LookupBox[] = "RePag_LookupBox";
 char pcRePag_LookupEntry[] = "RePag_LookupEntry";
 char pcRePag_Switch[] = "RePag_Switch";
+char pcRePag_SwitchGroup[] = "RePag_SwitchGroup";
+char pcRePag_Two_waySwitch[] = "RePag_Two_waySwitch";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -125,6 +128,14 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpszClassName = pcRePag_Switch;
   wndClass.lpfnWndProc = WndProc_Switch;
   wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_SwitchGroup;
+  wndClass.lpfnWndProc = WndProc_SwitchGroup;
+  RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_Two_waySwitch;
+  wndClass.lpfnWndProc = WndProc_Two_waySwitch;
   RegisterClassEx(&wndClass);
 }
 //---------------------------------------------------------------------------

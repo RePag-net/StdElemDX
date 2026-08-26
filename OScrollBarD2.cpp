@@ -1108,10 +1108,10 @@ void __vectorcall RePag::DirectX::COScrollBar::ScaleArrowThumb(_In_ float fScale
 	fScaleArrowThumb = fScale;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfButton = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfButton = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifButtonColor_Up) ifButtonColor_Up->SetColor(crfButton);
 	if(ifButtonColor_Down) ifButtonColor_Down->SetColor(crfButton);
 	ThreadSafe_End();
@@ -1126,10 +1126,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor(_In_ D2D1_COLOR_F&
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfButton_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfButton_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1140,10 +1140,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Move(_In_ D2D1_COL
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfButton_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfButton_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1154,10 +1154,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetButtonColor_Click(_In_ D2D1_CO
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfArrow = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfArrow = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifArrowColor_Up) ifArrowColor_Up->SetColor(crfArrow);
 	if(ifArrowColor_Down) ifArrowColor_Down->SetColor(crfArrow);
 	ThreadSafe_End();
@@ -1172,10 +1172,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor(_In_ D2D1_COLOR_F& 
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfArrow_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfArrow_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1186,10 +1186,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Move(_In_ D2D1_COLO
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfArrow_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfArrow_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1200,10 +1200,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetArrowColor_Click(_In_ D2D1_COL
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfThumb = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfThumb = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	if(ifThumbColor) ifThumbColor->SetColor(crfThumb);
 	ThreadSafe_End();
 }
@@ -1216,10 +1216,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor(_In_ D2D1_COLOR_F& 
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Move(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfThumb_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfThumb_Move = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1230,10 +1230,10 @@ void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Move(_In_ D2D1_COLO
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ unsigned char ucAlpha)
+void __vectorcall RePag::DirectX::COScrollBar::SetThumbColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfThumb_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), ucAlpha);
+	crfThumb_Click = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
