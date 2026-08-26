@@ -36,6 +36,7 @@ SOFTWARE.
 #include "OLookupBoxD2.h"
 #include "OSwitchD2.h"
 #include "OSwitchGroupD2.h"
+#include "OProgressBarD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -54,6 +55,7 @@ char pcRePag_LookupEntry[] = "RePag_LookupEntry";
 char pcRePag_Switch[] = "RePag_Switch";
 char pcRePag_SwitchGroup[] = "RePag_SwitchGroup";
 char pcRePag_Two_waySwitch[] = "RePag_Two_waySwitch";
+char pcRePag_ProgressBar[] = "RePag_ProgressBar";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -137,6 +139,10 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpszClassName = pcRePag_Two_waySwitch;
   wndClass.lpfnWndProc = WndProc_Two_waySwitch;
   RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_ProgressBar;
+  wndClass.lpfnWndProc = WndProc_ProgressBar;
+  RegisterClassEx(&wndClass);
 }
 //---------------------------------------------------------------------------
 void __vectorcall UnRegisterClassName(void)
@@ -167,5 +173,8 @@ void __vectorcall UnRegisterClassName(void)
   UnregisterClass(pcRePag_LookupBox, wndClass.hInstance);
   UnregisterClass(pcRePag_LookupEntry, wndClass.hInstance);
   UnregisterClass(pcRePag_Switch, wndClass.hInstance);
+  UnregisterClass(pcRePag_SwitchGroup, wndClass.hInstance);
+  UnregisterClass(pcRePag_Two_waySwitch, wndClass.hInstance);
+  UnregisterClass(pcRePag_ProgressBar, wndClass.hInstance);
 }
 //---------------------------------------------------------------------------

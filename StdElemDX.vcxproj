@@ -132,6 +132,7 @@
     <ClInclude Include="OListBoxD2.h" />
     <ClInclude Include="OLookupBoxD2.h" />
     <ClInclude Include="OPasswordD2.h" />
+    <ClInclude Include="OProgressBarD2.h" />
     <ClInclude Include="OScrollBarD2.h" />
     <ClInclude Include="OSwitchD2.h" />
     <ClInclude Include="OSwitchGroupD2.h" />
@@ -151,6 +152,7 @@
     <ClCompile Include="OListBoxD2.cpp" />
     <ClCompile Include="OLookupBoxD2.cpp" />
     <ClCompile Include="OPasswordD2.cpp" />
+    <ClCompile Include="OProgressBarD2.cpp" />
     <ClCompile Include="OScrollBarD2.cpp" />
     <ClCompile Include="OSwitchD2.cpp" />
     <ClCompile Include="OSwitchGroupD2.cpp" />

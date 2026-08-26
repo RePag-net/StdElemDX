@@ -241,6 +241,8 @@ void __vectorcall RePag::DirectX::COButton::SetBackgroundColor(_In_ unsigned cha
 void __vectorcall RePag::DirectX::COButton::SetBackgroundColor(_In_ D2D1_COLOR_F& crfBackgroundA)
 {
 	ThreadSafe_Begin();
+	crfBackground_1 = crfBackgroundA;
+	if(ifBackgroundColor_1) ifBackgroundColor_1->SetColor(crfBackground_1);
 	crfBackground = crfBackgroundA;
 	if(ifBackColor) ifBackColor->SetColor(crfBackground);
 	ThreadSafe_End();
@@ -285,6 +287,14 @@ void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_3(_In_ unsigned c
 {
 	ThreadSafe_Begin();
 	crfBackground_3 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	if(ifBackgroundColor_3) ifBackgroundColor_3->SetColor(crfBackground_3);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COButton::SetBackgroundColor_3(_In_ D2D1_COLOR_F& crfBackgroundA)
+{
+	ThreadSafe_Begin();
+	crfBackground_3 = crfBackgroundA;
 	if(ifBackgroundColor_3) ifBackgroundColor_3->SetColor(crfBackground_3);
 	ThreadSafe_End();
 }

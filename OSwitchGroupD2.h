@@ -94,9 +94,13 @@ namespace RePag
 				bool __vectorcall Switch_IsOn(_In_ unsigned char ucSwitchA);
 				void __vectorcall Switch_Font(_In_ unsigned char ucSwitchA, _In_ STFont& stFont);
 				void __vectorcall Switch_SetBackgroundColor(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Switch_SetBackgroundColor(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA);
 				void __vectorcall Switch_SetBackgroundColor_1(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Switch_SetBackgroundColor_1(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA);
 				void __vectorcall Switch_SetBackgroundColor_2(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Switch_SetBackgroundColor_2(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA);
 				void __vectorcall Switch_SetBackgroundColor_3(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Switch_SetBackgroundColor_3(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA);
 				long& __vectorcall Switch_Pos_X(_In_ unsigned char ucSwitchA, _Out_ long& lPos_x);
 				long& __vectorcall Switch_Pos_Y(_In_ unsigned char ucSwitchA, _Out_ long& lPos_y);
 				void __vectorcall Switch_NewPosition(_In_ unsigned char ucSwitchA, _In_ long lPos_x, _In_ long lPos_y);
@@ -107,7 +111,7 @@ namespace RePag
 				void __vectorcall OnPaint(void);
 				void __vectorcall SetFont(STFont& stFont);
 				void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-				void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& stTextA);
+				void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
 				void __vectorcall DrawText(_In_z_ const wchar_t* wcInhalt, _In_ size_t szBytes_Text, _In_ const D2D1_RECT_F& rcfText);
 
 		};
