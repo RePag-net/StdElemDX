@@ -201,7 +201,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 		else dxgiPresent.DirtyRectsCount = 1;
 
 		cSelect = 1;
-		if(ucIndex >= vliText->Number()) ucIndex = vliText->Number() - 1;
+		if(ucIndex >= vliText->Number()) ucIndex = (BYTE)vliText->Number() - 1;
 		ulCharacterPos = ((COStringA*)vliText->Element(ucIndex))->Length();
 		rcfSelect.top = (ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height;
 		rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
@@ -233,10 +233,11 @@ bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char u
 		}
 		else rcfSelect.top = ((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height; rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
 		ucIndex = ucIndexA;
-		cSelect = 1;	
+		cSelect = 1;
 		rcfSelect.left = 0.0f; rcfSelect.right = (float)(lWidth - ucScrollBarSize);
 		siLine.ucMask ^= SIF_PAGE;
 		SetScrollBar(SB_VERT, siLine);
+    ulCharacterPos = ((COStringA*)vliText->Element(ucIndex))->Length();
 
 		rclDirty.left = rclDirty.top = 0;
 		rclDirty.right = lWidth; rclDirty.bottom = lHeight;

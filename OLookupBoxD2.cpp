@@ -326,7 +326,7 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::WM_MouseOver(_In_ LPARAM
 		ifButtonColor->SetColor(crfButton_Move);
 		ifArrowColor->SetColor(crfArrow_Move);
 		rclDirty.left = (long)fButton_left; rclDirty.top = 0;  
-		rclDirty.right = lWidth; rclDirty.bottom = pLookupBox->ucHeight_Entry; 
+		rclDirty.right = lWidth; rclDirty.bottom = pLookupBox->ucHeight_Entry;
 		OnRender();
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		ucDirty = BUTTON;
@@ -353,7 +353,7 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::WM_LButtonDown(_In_ LPAR
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSafe_Begin();
-	if(pfnWM_LButtonUp) pfnWM_LButtonUp(this);
+	if(pfnWM_LButtonDown) pfnWM_LButtonDown(this);
 
 	if(ptlCursor.x >= fButton_left){
 		ifButtonColor->SetColor(crfButton_Click);
@@ -438,8 +438,8 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_LButtonUp_LookupBox(void)
 	ThreadSafe_Begin();
 	eEntry->Text(SelectEnum(vasContent)->c_Str());
 	ShowWindow(hWndElement, SW_HIDE);
-	HWND hWndZeichnen_1, hWndZeichnen_2 = GetParent(hWndElement);
-	while(IsChild(hWndZeichnen_1 = GetParent(hWndZeichnen_2), hWndZeichnen_2)) hWndZeichnen_2 = hWndZeichnen_1;
+	//HWND hWndZeichnen_1, hWndZeichnen_2 = GetParent(hWndElement);
+	//while(IsChild(hWndZeichnen_1 = GetParent(hWndZeichnen_2), hWndZeichnen_2)) hWndZeichnen_2 = hWndZeichnen_1;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

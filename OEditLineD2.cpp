@@ -160,13 +160,13 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 {
-	IDWriteTextLayout* ifTextLayout; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1::Matrix3x2F tfPrevTransform;
+	IDWriteTextLayout* ifTextLayout; float fTextWidth; size_t szBytes_Text; WCHAR wc255Content[255]; D2D1::Matrix3x2F tfPrevTransform;
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
 	D2D1_RECT_F rcfText =  D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -180,7 +180,7 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 
   ifD2D1Context6->GetTransform(&tfPrevTransform);
 	ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-fTextPos, 0.0f));
-	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+	ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 		
 	if(!cSelect){
 		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
@@ -200,8 +200,8 @@ void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
 		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
 
 		ifTextColor->SetColor(crfSelectText);
-		mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
-		ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+		mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
+		ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 	}
 
 	ifD2D1Context6->SetTransform(tfPrevTransform);
@@ -249,10 +249,10 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
-	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
+	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wc255Content[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
 
-	mbstowcs_s(&szBytes_Text, wcInhalt, 255,vasContent->c_Str(), vasContent->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	mbstowcs_s(&szBytes_Text, wc255Content, 255,vasContent->c_Str(), vasContent->Length());
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
 
 	TextAlignment(ifTextLayout, fTextWidth, ptfText);
 	SafeRelease(&ifTextLayout);
@@ -1320,7 +1320,7 @@ bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Delete(void)
 	for(ULONG ulCharacter = 1; ulCharacter <= ulCharacterPos + ucFixCharacter; ulCharacter++){
 		vasCharacterMask->SubString(vbCharacter_Maske, ulCharacter, ulCharacter);
 		if(*(PBYTE)vbCharacter_Maske == 0x27){ VMFrei(vbCharacter_Maske);
-		ucFixCharacter += 2;
+			ucFixCharacter += 2;
 			ULONG ulSprungZeichen = vasCharacterMask->SearchCharacters("'", ulCharacter, vasCharacterMask->Length());
 			if(ulSprungZeichen == ulCharacterPos + ucFixCharacter - 1){ ulCharacterPos -= --ulSprungZeichen - ulCharacter; return false; }
 			ulCharacter = ulSprungZeichen;

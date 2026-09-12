@@ -38,16 +38,11 @@ namespace RePag
 			friend void CALLBACK Timer_Caret_EditLine(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
 
 		private:
-			COStringA* vasCharacterMask;
-			bool __vectorcall CharacterMask_Insert(_In_ WPARAM wParam);
 			bool __vectorcall CharacterMask_Insert_Check(_In_ WPARAM wParam, _In_ VMBLOCK vbCharacter_Mask);
-			bool __vectorcall CharacterMask_Delete(void);
-			bool __vectorcall CharacterMask_FixRight(void);
-			bool __vectorcall CharacterMask_FixLeft(void);
-			void __vectorcall DeSelect(void);
 			void __vectorcall Select_Loschen(void);
 
 		protected:
+			COStringA* vasCharacterMask;
 			float fTextPos;
 			HMENU hMenu;
 			HANDLE htCaret;
@@ -67,7 +62,6 @@ namespace RePag
 			ID2D1SolidColorBrush* ifCaretColor;
 			void __vectorcall OnRender(_In_ bool bCaret);
 			void __vectorcall OnPaint(void);
-			void __vectorcall WM_Create(void);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_KillFocus(void);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -78,6 +72,11 @@ namespace RePag
 			void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam);
+			void __vectorcall DeSelect(void);
+			bool __vectorcall CharacterMask_FixLeft(void);
+			bool __vectorcall CharacterMask_FixRight(void);
+			bool __vectorcall CharacterMask_Insert(_In_ WPARAM wParam);
+			bool __vectorcall CharacterMask_Delete(void);
 			bool __vectorcall CharacterCheck(_In_ WPARAM wParam);
 			bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 			inline long __vectorcall FloatToLong(_In_ float fNumber);
@@ -91,6 +90,7 @@ namespace RePag
 			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
+			void __vectorcall WM_Create(void);
 			void(__vectorcall* pfnWM_Char_Return)(_In_ COEditLine*);
 			void(__vectorcall* pfnWM_Char_Escape)(_In_ COEditLine*);
 			void(__vectorcall* pfnWM_KillFocus)(_In_ COEditLine*);

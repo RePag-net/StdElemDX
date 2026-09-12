@@ -126,6 +126,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="HStdElemDX.h" />
+    <ClInclude Include="ODateD2.h" />
     <ClInclude Include="OEditBoxD2.h" />
     <ClInclude Include="OEditLineD2.h" />
     <ClInclude Include="OButtonD2.h" />
@@ -146,6 +147,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ODateD2.cpp" />
     <ClCompile Include="OEditBoxD2.cpp" />
     <ClCompile Include="OEditLineD2.cpp" />
     <ClCompile Include="OButtonD2.cpp" />

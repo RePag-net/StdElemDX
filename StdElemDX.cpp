@@ -37,6 +37,7 @@ SOFTWARE.
 #include "OSwitchD2.h"
 #include "OSwitchGroupD2.h"
 #include "OProgressBarD2.h"
+#include "ODateD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -56,6 +57,8 @@ char pcRePag_Switch[] = "RePag_Switch";
 char pcRePag_SwitchGroup[] = "RePag_SwitchGroup";
 char pcRePag_Two_waySwitch[] = "RePag_Two_waySwitch";
 char pcRePag_ProgressBar[] = "RePag_ProgressBar";
+char pcRePag_Date[] = "RePag_Date";
+char pcRePag_EditDate[] = "RePag_EditDate";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -80,37 +83,29 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpfnWndProc = WndProc_EditLine;
   wndClass.style |= CS_DBLCLKS;
   wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
-  wndClass.hbrBackground = NULL;
   RegisterClassEx(&wndClass);
-  wndClass.style = CS_OWNDC;
 
   wndClass.lpszClassName = pcRePag_TextBox;
   wndClass.lpfnWndProc = WndProc_TextBox;
-  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
-  wndClass.hbrBackground = NULL;
+  wndClass.style = CS_OWNDC;
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_ScrollBar;
   wndClass.lpfnWndProc = WndProc_ScrollBar;
   wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndClass.hbrBackground = NULL;
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_ListBox;
   wndClass.lpfnWndProc = WndProc_ListBox;
-  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndClass.hbrBackground = NULL;
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_EditBox;
   wndClass.lpfnWndProc = WndProc_EditBox;
-  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wndClass.hbrBackground = NULL;
+  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_Password;
   wndClass.lpfnWndProc = WndProc_Password;
-  wndClass.hCursor = LoadCursor(NULL, IDC_IBEAM);
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_Button;
@@ -120,7 +115,6 @@ void __vectorcall RegisterClassName(void)
 
   wndClass.lpszClassName = pcRePag_LookupBox;
   wndClass.lpfnWndProc = WndProc_LookupBox;
-  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_LookupEntry;
@@ -129,7 +123,6 @@ void __vectorcall RegisterClassName(void)
 
   wndClass.lpszClassName = pcRePag_Switch;
   wndClass.lpfnWndProc = WndProc_Switch;
-  wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
   RegisterClassEx(&wndClass);
 
   wndClass.lpszClassName = pcRePag_SwitchGroup;
@@ -143,6 +136,17 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpszClassName = pcRePag_ProgressBar;
   wndClass.lpfnWndProc = WndProc_ProgressBar;
   RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_Date;
+  wndClass.lpfnWndProc = WndProc_Date;
+  RegisterClassEx(&wndClass);
+
+  wndClass.lpszClassName = pcRePag_EditDate;
+  wndClass.lpfnWndProc = WndProc_EditDate;
+  wndClass.style |= CS_DBLCLKS;
+  RegisterClassEx(&wndClass);
+
+  wndClass.style = CS_OWNDC;
 }
 //---------------------------------------------------------------------------
 void __vectorcall UnRegisterClassName(void)
@@ -176,5 +180,7 @@ void __vectorcall UnRegisterClassName(void)
   UnregisterClass(pcRePag_SwitchGroup, wndClass.hInstance);
   UnregisterClass(pcRePag_Two_waySwitch, wndClass.hInstance);
   UnregisterClass(pcRePag_ProgressBar, wndClass.hInstance);
+  UnregisterClass(pcRePag_Date, wndClass.hInstance);
+  UnregisterClass(pcRePag_EditDate, wndClass.hInstance);
 }
 //---------------------------------------------------------------------------
