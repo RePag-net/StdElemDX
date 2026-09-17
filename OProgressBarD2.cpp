@@ -106,6 +106,15 @@ void __vectorcall RePag::DirectX::COProgressBar::OnRender(void)
 	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COProgressBar::OnPaint(void)
+{
+	ThreadSafe_Begin();
+	OnRender();
+  rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COProgressBar::WM_Create(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfFillColor, &ifFillColor);
@@ -117,10 +126,16 @@ void __vectorcall RePag::DirectX::COProgressBar::WM_Create(void)
 void __vectorcall RePag::DirectX::COProgressBar::WM_Size(_In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	WM_Size_Element(hWndElement, lParam);
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
 
-	if(ulPosition_max > ulPosition_min){ dStep = (double)lWidth / (double)(ulPosition_max - ulPosition_min); }
-	else dStep = 0;
+		if(ulPosition_max > ulPosition_min){ dStep = (double)lWidth / (double)(ulPosition_max - ulPosition_min); }
+		else dStep = 0;
+
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

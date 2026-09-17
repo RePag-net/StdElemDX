@@ -61,6 +61,7 @@ namespace RePag
 				void __vectorcall FillColor(_In_ D2D1_COLOR_F& crfTextA);
 				void(__vectorcall* pfnWM_LButtonDown)(_In_ COProgressBar*, _In_ WPARAM, _In_ LPARAM);
 				void(__vectorcall* pfnWM_MouseMove)(_In_ COProgressBar*, _In_ WPARAM, _In_ LPARAM);
+				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

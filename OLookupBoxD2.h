@@ -67,6 +67,7 @@ namespace RePag
 						void __vectorcall COEntryV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																			 _In_ COLookupBox* pLookupBoxA, _In_ STDeviceResources* pstDeviceResourcesA);
 						VMEMORY __vectorcall COFreiV(void);
+						void __vectorcall ButtonSize(void);
 						void __vectorcall Geometry(void);
 						void __vectorcall OnPaint(void);
 						void __vectorcall Text(_In_z_ char* pcText);
@@ -80,8 +81,9 @@ namespace RePag
 						D2D1_COLOR_F crfArrow_Click;
 				}; COEntry* eEntry;
 				unsigned char ucHeight_Entry;
-				void __vectorcall WM_Create_LookupBox(_In_ HWND hWnd);
+				void __vectorcall WM_Create(void);
 				void __vectorcall WM_LButtonUp_LookupBox(void);
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
 
 			protected:
 
@@ -94,11 +96,6 @@ namespace RePag
 				RECT& __vectorcall GetWindow(_Out_ RECT& rcWindow);
 				void __vectorcall NewWindowPosition(_In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewWindowPosition(_In_ POINT& ptPositionA);
-				void __vectorcall NewWindow(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y);
-				void __vectorcall NewWindowSize(_In_ long lHeightA, _In_ long lWidthA);
-				void __vectorcall NewWindowHeight(_In_ long lHeightA);
-				void __vectorcall NewWindowWidth(_In_ long lWidthA);
-				void __vectorcall ChangeWindowSize(_In_ long lHeightA, _In_ long lWidthA);
 				void __vectorcall ChangeWindowPosition(_In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall SetFont(_In_ STFont& stFontA);
 				void __vectorcall SetHeight_Entry(_In_ unsigned char ucHohe);
@@ -121,6 +118,7 @@ namespace RePag
 				void __vectorcall Text(_In_z_ char* pcText);
 				bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndex);
 				bool __vectorcall SearchAndSetEntry(_In_ COStringA* vasEnum, _In_ unsigned char& ucIndexA);
+				void __vectorcall OnPaint(void);
 
 		};
 		__declspec(dllexport) COLookupBox* __vectorcall COLookupBoxV(const char* pcWindowName, unsigned int uiIDElement,

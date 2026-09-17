@@ -53,7 +53,6 @@ LRESULT CALLBACK RePag::DirectX::WndProc_LookupBox(_In_ HWND hWnd, _In_ unsigned
 	switch(uiMessage){
 		case WM_CREATE			: ((COLookupBox*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_Element(hWnd);
 													((COLookupBox*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
-													((COLookupBox*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_LookupBox(hWnd);
 													return NULL;
 		case WM_SIZE				: pLookupBox = (COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pLookupBox) pLookupBox->WM_Size(lParam);
@@ -112,7 +111,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Entry(_In_ HWND hWnd, _In_ unsigned int
 													((COLookupBox::COEntry*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pEntry = (COLookupBox::COEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pEntry) pEntry->WM_Size_Element(hWnd, lParam);
+													if(pEntry) pEntry->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_SETFOCUS		: ((COLookupBox::COEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
@@ -254,10 +253,22 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::Geometry(void)
 	pstDeviceResources->ifd2d1Factory7->CreateRectangleGeometry(rcfButton, &ifButton);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COLookupBox::COEntry::ButtonSize(void)
+{
+	ThreadSafe_Begin();
+	float fTextHeight = (float)lHeight;
+	float fTextWidth = (float)lWidth;
+	fButtonSize = fTextHeight < fTextWidth ? fTextHeight : fTextWidth;
+	fButton_left = fTextWidth - fButtonSize;
+	fButton_top = (fTextHeight - fButtonSize) / 2.0f;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLookupBox::COEntry::OnPaint(void)
 {
 	ThreadSafe_Begin();
 	OnRender();
+	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -271,18 +282,12 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::WM_Create(void)
 	stTrackMouseEvent.hwndTrack = hWndElement;
 	stTrackMouseEvent.dwHoverTime = 10;
 
-	float fTextHeight = (float)lHeight;
-	float fTextWidth = (float)lWidth;
-	fButtonSize = fTextHeight < fTextWidth ? fTextHeight : fTextWidth;
-	fButton_left = fTextWidth - fButtonSize;
-	fButton_top = (fTextHeight - fButtonSize) / 2.0f;
-
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor);
 
+	ButtonSize();
 	Geometry();
-
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
@@ -423,12 +428,50 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::Release(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::WM_Create_LookupBox(_In_ HWND hWnd)
+void __vectorcall RePag::DirectX::COLookupBox::OnPaint(void)
 {
-	hWndElement = hWnd;
+	ThreadSafe_Begin();
+	OnRender(false, ucIndex, ucIndex);
+	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	eEntry->OnPaint();
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
+{
+	CharacterMetric();
 
-	eEntry->CreateWindowGraphic(GetParent(hWndElement), ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y - ucHeight_Entry);
-	NewWindow(lHeight - ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y);
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
+
+	eEntry->CreateWindowGraphic(GetParent(hWndElement), ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y);
+  ptPosition.y += ucHeight_Entry; lHeight -= ucHeight_Entry;
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+	CreateWindowSizeDependentResources();
+
+	sbVertical->CreateWindowGraphic(hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+	sbHorizontal->CreateWindowGraphic(hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+
+	STScrollInfo siScrollInfo;
+	siScrollInfo.ucMask = SBI_ALL;
+	siScrollInfo.fMax = siScrollInfo.fPos = 0;
+	siScrollInfo.fPage = (float)lHeight - ucScrollBarSize;
+	siScrollInfo.szfCharacter = szfCharacter;
+	sbVertical->SetVisible(false);
+	sbVertical->SetScrollInfo(siScrollInfo);
+
+	siScrollInfo.fPage = (float)lWidth - ucScrollBarSize;
+	sbHorizontal->SetVisible(false);
+	sbHorizontal->SetScrollInfo(siScrollInfo);
+
+	rcfSelect.left = rcfSelect.top = rcfSelect.bottom = 0.0f; rcfSelect.right = (float)lWidth;
+
+	if(vasContent->Length()) CreateText();
+
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 	if(vliText->Number()) eEntry->Text(SetAndSearchEnum(0, vasContent)->c_Str());
 }
@@ -438,8 +481,35 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_LButtonUp_LookupBox(void)
 	ThreadSafe_Begin();
 	eEntry->Text(SelectEnum(vasContent)->c_Str());
 	ShowWindow(hWndElement, SW_HIDE);
-	//HWND hWndZeichnen_1, hWndZeichnen_2 = GetParent(hWndElement);
-	//while(IsChild(hWndZeichnen_1 = GetParent(hWndZeichnen_2), hWndZeichnen_2)) hWndZeichnen_2 = hWndZeichnen_1;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COLookupBox::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+
+		CreateWindowSizeDependentResources();
+
+		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+		siScrollInfo.fPage = (float)lHeight;
+		sbVertical->SetScrollInfo(siScrollInfo);
+		sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+
+		siScrollInfo.fPage = (float)lWidth;
+		sbHorizontal->SetScrollInfo(siScrollInfo);
+		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+
+		ChangeSizeVisibleScrollBars();
+		OnRender(false, ucIndex, ucIndex);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+
+		eEntry->NewWindow(ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y - ucHeight_Entry);
+		eEntry->ButtonSize();
+		eEntry->Geometry();
+		eEntry->OnPaint();
+	}
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -466,7 +536,7 @@ void __vectorcall RePag::DirectX::COLookupBox::NewWindowPosition(_In_ long lPos_
 {
 	ThreadSafe_Begin();
 	ptPosition.x = lPos_x; ptPosition.y = lPos_y + ucHeight_Entry;
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
 	eEntry->NewWindowPosition(ptPosition.x, ptPosition.y - ucHeight_Entry);
 	ThreadSafe_End();
@@ -475,93 +545,10 @@ void __vectorcall RePag::DirectX::COLookupBox::NewWindowPosition(_In_ long lPos_
 void __vectorcall RePag::DirectX::COLookupBox::NewWindowPosition(_In_ POINT& ptPositionA)
 {
 	ThreadSafe_Begin();
-	ptPositionA.y += ucHeight_Entry;
-	ptPosition = ptPositionA;
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	ptPosition = ptPositionA;	ptPositionA.y += ucHeight_Entry;
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
 	eEntry->NewWindowPosition(ptPosition.x, ptPosition.y - ucHeight_Entry);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::NewWindow(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y)
-{
-	ThreadSafe_Begin();
-	lHeight = lHeightA; lWidth = lWidthA; ptPosition.x = lPos_x; ptPosition.y = lPos_y + ucHeight_Entry;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	CreateWindowSizeDependentResources();
-
-  SetScrollBarPos(SB_HORZ, 0, ptPosition.y - ucScrollBarSize - ucHeight_Entry);
-
-	STScrollInfo siScrollInfo;
-	siScrollInfo.ucMask = SBI_POS | SBI_PAGE;
-	siScrollInfo.fPos = 0;
-	siScrollInfo.fPage = (float)lHeight - ucScrollBarSize;
-	SetScrollBar(SB_VERT, siScrollInfo);
-
-	siScrollInfo.fPage = (float)lWidth - ucScrollBarSize;
-	SetScrollBar(SB_HORZ, siScrollInfo);
-
-	ChangeSizeVisibleScrollBars();
-
-	OnRender(false);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-
-	eEntry->NewWindow(ucHeight_Entry, lWidth, lPos_x, lPos_y);
-	eEntry->Geometry();
-	eEntry->OnPaint();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::NewWindowSize(_In_ long lHeightA, _In_ long lWidthA)
-{
-	ThreadSafe_Begin();
-	lHeight = lHeightA - ucHeight_Entry; lWidth = lWidthA;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	CreateWindowSizeDependentResources();
-
-	eEntry->NewWindowSize(ucHeight_Entry, lWidthA);
-	eEntry->Geometry();
-	eEntry->OnPaint();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::NewWindowHeight(_In_ long lHeightA)
-{
-	ThreadSafe_Begin();
-	lHeight = lHeightA - ucHeight_Entry;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	CreateWindowSizeDependentResources();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::NewWindowWidth(_In_ long lWidthA)
-{
-	ThreadSafe_Begin();
-	lWidth = lWidthA;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	CreateWindowSizeDependentResources();
-
-	eEntry->NewWindowWidth(lWidthA);
-	eEntry->Geometry();
-	eEntry->OnPaint();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::ChangeWindowSize(_In_ long lHeightA, _In_ long lWidthA)
-{
-	ThreadSafe_Begin();
-	lHeight += lHeightA; lWidth += lWidthA;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	CreateWindowSizeDependentResources();
-
-	eEntry->ChangeWindowSize(0, lWidthA);
-	eEntry->Geometry();
-	eEntry->OnPaint();
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -569,7 +556,7 @@ void __vectorcall RePag::DirectX::COLookupBox::ChangeWindowPosition(_In_ long lP
 {
 	ThreadSafe_Begin();
 	ptPosition.x += lPos_x; ptPosition.y += lPos_y;
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
 	eEntry->ChangeWindowPosition(lPos_x, lPos_y);
 	ThreadSafe_End();

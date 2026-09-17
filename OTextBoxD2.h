@@ -38,13 +38,13 @@ namespace RePag
 			friend LRESULT CALLBACK WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 			private:
-				COScrollBar* sbHorizontal;
-				COScrollBar* sbVertical;
-				void __vectorcall CreateText(void);
 
 			protected:
+				COScrollBar* sbHorizontal;
+				COScrollBar* sbVertical;
 				COList* vliText;
 				BYTE ucScrollBarSize;
+				void __vectorcall CreateText(void);
 				void __vectorcall OnRender(_In_ bool bCaret, _In_ long lCaretLine = 0, _In_ long lAnchorLine = 0);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
@@ -72,6 +72,7 @@ namespace RePag
 				void __vectorcall Scroll_Line(_In_ BYTE ucDown_UP);
 				void __vectorcall SetScrollBarSize(_In_ BYTE ucWidth_Height);
 				BYTE __vectorcall GetScrollBarSize(_In_ BYTE ucBar, _Out_ BYTE ucWidth_Height);
+				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

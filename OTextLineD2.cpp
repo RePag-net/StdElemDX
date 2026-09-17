@@ -51,7 +51,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 												((COTextLine*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 												return NULL;
 		case WM_SIZE			:	pTextZeile = (COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-												if(pTextZeile) pTextZeile->WM_Size_Element(hWnd, lParam);
+												if(pTextZeile) pTextZeile->WM_Size(lParam);
 												else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 												return NULL;
 		case WM_NCDESTROY :	pTextZeile = (COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
@@ -90,18 +90,18 @@ VMEMORY __vectorcall RePag::DirectX::COTextLine::COFreiV(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::OnRender(void)
 {
-	IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wcInhalt[255];
+	IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wc255Inhalt[255];
 	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 
 	WaitForSingleObjectEx(heRender, INFINITE, false);
-	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	if(mbstowcs_s(&szBytes_Text, wc255Inhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Inhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
-	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
+	ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 	ifD2D1Context6->EndDraw();
 
 Error:
@@ -110,8 +110,9 @@ Error:
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::OnPaint(void)
 {
-	ThreadSafe_Begin();
+	ThreadSafe_Begin();	
 	OnRender();
+	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -123,6 +124,18 @@ void __vectorcall RePag::DirectX::COTextLine::WM_Create(void)
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COTextLine::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::CharacterMetric(void)

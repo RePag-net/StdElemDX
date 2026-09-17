@@ -52,7 +52,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Button(_In_ HWND hWnd, _In_ unsigned in
 													((COButton*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pButton = (COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pButton) pButton->WM_Size_Element(hWnd, lParam);
+													if(pButton) pButton->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_SETFOCUS		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
@@ -98,8 +98,8 @@ void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In
 	crfBackground_3 = D2D1::ColorF(RGB(200, 200, 200), 1.0f);
   crfText = {RGB(230, 230, 230), 1.0f};
   crfText_1 = D2D1::ColorF(RGB(230, 230, 230), 1.0f);
-	ucTextAlignment = TXA_CENTERVERTICAL | TXA_CENTERHORIZONTAL;
   crfText_Focus = D2D1::ColorF(RGB(10, 250, 250), 1.0f);
+	ucTextAlignment = TXA_CENTERVERTICAL | TXA_CENTERHORIZONTAL;
 	bActive = true;
 
 	pfnWM_LButtonDown = nullptr;

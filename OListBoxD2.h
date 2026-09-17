@@ -37,9 +37,10 @@ namespace RePag
 			friend LRESULT CALLBACK WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 		private:
-			unsigned char ucIndex;
 
 		protected:
+			unsigned char ucIndex;
+			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_LButtonUp(_In_ LPARAM lParam);
 			void __vectorcall WM_VScroll(_In_ WPARAM wParam);
 			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
@@ -65,6 +66,7 @@ namespace RePag
 			bool __vectorcall SearchAndSetEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
 			unsigned long __vectorcall NumberEnum(void);
 			void __vectorcall DeSelectEnum(void);
+			void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

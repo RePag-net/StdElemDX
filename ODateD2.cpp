@@ -63,7 +63,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Date(_In_ HWND hWnd, _In_ unsigned int 
 													((CODate*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pCalendar = (CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pCalendar) pCalendar->WM_Size_Element(hWnd, lParam);
+													if(pCalendar) pCalendar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_KILLFOCUS		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();
@@ -102,7 +102,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditDate(_In_ HWND hWnd, _In_ unsigned 
 														((CODate::COEditDate*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 														return NULL;
 		case WM_SIZE					: pEditDate = (CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditDate) pEditDate->WM_Size_Element(hWnd, lParam);
+														if(pEditDate) pEditDate->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
 		case WM_SETFOCUS			: ((CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
@@ -411,6 +411,7 @@ void __vectorcall RePag::DirectX::CODate::OnPaint(void)
 	ThreadSafe_Begin();
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	edEditDate->OnPaint();
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -496,10 +497,22 @@ Error:
 	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::COEditDate::ButtonSize(void)
+{
+	ThreadSafe_Begin();
+	float fTextHeight = (float)lHeight;
+	float fTextWidth = (float)lWidth;
+	fButtonSize = fTextHeight < fTextWidth ? fTextHeight : fTextWidth;
+	fButton_left = fTextWidth - fButtonSize;
+	fButton_top = (fTextHeight - fButtonSize) / 2.0f;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::OnPaint(void)
 {
 	ThreadSafe_Begin();
 	OnRender(true);
+  rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -511,11 +524,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Create(void)
 	stTrackMouseEvent.hwndTrack = hWndElement;
 	stTrackMouseEvent.dwHoverTime = 10;
 
-	float fTextHeight = (float)lHeight;
-	float fTextWidth = (float)lWidth;
-	fButtonSize = fTextHeight < fTextWidth ? fTextHeight : fTextWidth;
-	fButton_left = fTextWidth - fButtonSize;
-	fButton_top = (fTextHeight - fButtonSize) / 2.0f;
+	ButtonSize();
 
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
@@ -525,6 +534,19 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Create(void)
 
 	OnRender(true);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		ButtonSize();
+		OnRender(false);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::WM_SetFocus(void)
@@ -1006,21 +1028,49 @@ void __vectorcall RePag::DirectX::CODate::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfHead_Background, &ifHead_Background);
 
-	lbMonth->CreateWindowGraphic(hWndElement, lHeight - lHeight_EditDate, lWidth, 0, 0);
-	lbMonth->SetVisible(false);
-
-	edEditDate->CreateWindowGraphic(GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y - lHeight_EditDate);
+	edEditDate->CreateWindowGraphic(GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
 	SetDayOfWeek();
 	edEditDate->DateTimeText();
 
-	//if(lWidth_Calendar){
-	//	lWidth = lWidth_Calendar;
-	//	CreateWindowSizeDependentResources();
-	//	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	//}
+	ptPosition.y += lHeight_EditDate; lHeight -= lHeight_EditDate;
+	if(lWidth_Calendar){
+		lWidth = lWidth_Calendar;
+		MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+		CreateWindowSizeDependentResources();
+	}
+	else MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+
+	lbMonth->CreateWindowGraphic(hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+	lbMonth->SetVisible(false);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+
+    static long lWidthA = lWidth;
+		if(lWidth_Calendar && lWidth_Calendar != lWidth){
+			lWidthA = lWidth;
+			MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth_Calendar, lHeight, false);
+		}
+		else{
+			MoveWindow(hWndElement, ptPosition.x, ptPosition.y + lHeight_EditDate, lWidth, lHeight, false);
+			CreateWindowSizeDependentResources();
+
+			OnRender();
+			ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+
+      lbMonth->NewWindow(lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+			edEditDate->NewWindow(lHeight_EditDate, lWidthA, ptPosition.x, ptPosition.y);
+			edEditDate->OnPaint();
+		}
+	}
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -1049,6 +1099,7 @@ void __vectorcall RePag::DirectX::CODate::WM_MouseMove(_In_ WPARAM wParam, _In_ 
 														ucDirty = CALENDAR;
 													}
 													break;
+			case NONCLIENT		:
 			case CALENDAR			: if(ptlCursor.x <= lYear_Pos_x && ptlCursor.x >= lYear_Pos_x - (long)fRowHeight && ptlCursor.y < (long)fRowHeight){
 														ifArrowColor_left->SetColor(crfArrow_Move);
 														rclDirty.left = lYear_Pos_x - (long)fRowHeight; rclDirty.top = 0;
@@ -1178,8 +1229,6 @@ bool __vectorcall RePag::DirectX::CODate::WM_LButtonUp(_In_ LPARAM lParam)
 		}
 		else if(iCursor_x < lYear_Pos_x - (BYTE)fRowHeight){
 			lbMonth->SetSelectIndex(stDate.wMonth - 1);
-      lbMonth->NewWindowHeight(lHeight - fRowHeight);
-      lbMonth->ChangeWindowPosition(0, fRowHeight);
 			lbMonth->SetVisible(true);
 		}
 		return false;
@@ -1247,7 +1296,7 @@ void __vectorcall RePag::DirectX::CODate::NewWindowPosition(_In_ long lPos_x, _I
 	ThreadSafe_Begin();
 	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
 
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 	edEditDate->NewWindowPosition(ptPosition.x, ptPosition.y - lHeight_EditDate);
 	ThreadSafe_End();
 }
@@ -1258,33 +1307,28 @@ void __vectorcall RePag::DirectX::CODate::NewWindowPosition(_In_ POINT& ptPositi
 	ptPosition = ptPositionA;
 	ptPosition.y += lHeight_EditDate;
 
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 	edEditDate->NewWindowPosition(ptPosition.x, ptPosition.y - lHeight_EditDate);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::CODate::NewWindow(long lHeightA, long lWidthA, long lPos_x, long lPos_y)
-{
-	ThreadSafe_Begin();
-	lHeight = lHeightA;	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
-	lWidth_Calendar ? lWidth = lWidth_Calendar : lWidth = lWidthA;
-
-	CreateWindowSizeDependentResources();
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-
-	edEditDate->NewWindow(lHeight_EditDate, lWidth, lPos_x, lPos_y);
-	edEditDate->OnPaint();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
+//void __vectorcall RePag::DirectX::CODate::NewWindow(long lHeightA, long lWidthA, long lPos_x, long lPos_y)
+//{
+//	ThreadSafe_Begin();
+//	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
+//	lWidth_Calendar ? lWidth = lWidth_Calendar : lWidth = lWidthA;
+//
+//	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+//	ThreadSafe_End();
+//}
+////---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::NewWindowSize(long lHeightA, long lWidthA)
 {
 	ThreadSafe_Begin();
 	lHeight = lHeightA - lHeight_EditDate;
 	lWidth_Calendar > lWidthA ? lWidth = lWidth_Calendar : lWidth = lWidthA;
 
-	CreateWindowSizeDependentResources();
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 	edEditDate->NewWindowSize(lHeight_EditDate, lWidthA);
 	edEditDate->OnPaint();
 	ThreadSafe_End();
@@ -1295,8 +1339,7 @@ void __vectorcall RePag::DirectX::CODate::NewWindowHeight(long lHeightA)
 	ThreadSafe_Begin();
 	lHeight = lHeightA - lHeight_EditDate;
 
-	CreateWindowSizeDependentResources();
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
+	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 	edEditDate->NewWindowHeight(lHeight_EditDate);
 	edEditDate->OnPaint();
 	ThreadSafe_End();

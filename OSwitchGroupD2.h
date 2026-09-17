@@ -64,6 +64,7 @@ namespace RePag
 				short sMausPos_x;
 				unsigned char ucSwitch;
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall OnRender(void);

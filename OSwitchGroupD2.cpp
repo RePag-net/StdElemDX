@@ -51,7 +51,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_SwitchGroup(HWND hWnd, unsigned int uiM
 		case WM_CREATE			: ((COSwitchGroup*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_Element(hWnd);
 													((COSwitchGroup*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 		case WM_SIZE				: pSwitchGroup = (COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pSwitchGroup) pSwitchGroup->WM_Size_Element(hWnd, lParam);
+													if(pSwitchGroup) pSwitchGroup->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
@@ -79,7 +79,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Two_waySwitch(HWND hWnd, unsigned int u
 													((COSwitchGroup::COTwo_waySwitch*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pTwo_waySwitch = (COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pTwo_waySwitch) pTwo_waySwitch->WM_Size_Element(hWnd, lParam);
+													if(pTwo_waySwitch) pTwo_waySwitch->WM_Size(lParam);
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
@@ -166,6 +166,9 @@ void __vectorcall RePag::DirectX::COSwitchGroup::OnPaint(void)
 	ThreadSafe_Begin();
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+  for(BYTE ucSwitch = 0; ucSwitch < ucCount; ucSwitch++){
+    if(vpTwo_waySwitch[ucSwitch]) vpTwo_waySwitch[ucSwitch]->OnPaint();
+  }
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -175,6 +178,18 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_Create(void)
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::SetFont(STFont& stFont)

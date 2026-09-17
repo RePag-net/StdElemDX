@@ -52,7 +52,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Password(_In_ HWND hWnd, _In_ unsigned 
 													((COPassword*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pPassword = (COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pPassword) pPassword->WM_Size_Element(hWnd, lParam);
+													if(pPassword) pPassword->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_SETFOCUS		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
@@ -159,6 +159,26 @@ Error:
 	SetEvent(heRender);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COPassword::OnPaint(void)
+{
+	ThreadSafe_Begin();
+  OnRender(true);
+  ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	ThreadSafe_End();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COPassword::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		OnRender(false);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COPassword::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();

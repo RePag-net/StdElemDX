@@ -208,6 +208,15 @@ Error:
 	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COTextBox::OnPaint(void)
+{
+	ThreadSafe_Begin();
+	OnRender(false);
+  rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 {
 	CharacterMetric();
@@ -241,15 +250,23 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 void __vectorcall RePag::DirectX::COTextBox::WM_Size(_In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	WM_Size_Element(hWndElement, lParam);
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
 
-	STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
-	siScrollInfo.fPage = (float)lHeight;
-	sbVertical->SetScrollInfo(siScrollInfo);
-	siScrollInfo.fPage = (float)lWidth;
-	sbHorizontal->SetScrollInfo(siScrollInfo);
+		siScrollInfo.fPage = (float)lHeight;
+		sbVertical->SetScrollInfo(siScrollInfo);
+		sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
 
-	ChangeSizeVisibleScrollBars();
+		siScrollInfo.fPage = (float)lWidth;
+		sbHorizontal->SetScrollInfo(siScrollInfo);
+		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+
+		ChangeSizeVisibleScrollBars();
+		OnRender(false);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	}
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -299,7 +316,7 @@ void __vectorcall RePag::DirectX::COTextBox::ChangeSizeVisibleScrollBars(void)
 		sbHorizontal->GetScrollInfo(siCharacter);
 		if(siCharacter.fMax <= siCharacter.fPage){
 			sbHorizontal->SetVisible(false);
-			sbVertical->NewHeight(lHeight);
+			sbVertical->NewWindowHeight(lHeight);
 			siLine.fPage = (float)lHeight;
 			sbVertical->SetScrollInfo(siLine);
 		}
@@ -319,7 +336,7 @@ void __vectorcall RePag::DirectX::COTextBox::ChangeSizeVisibleScrollBars(void)
 		}
 		else{
 			sbHorizontal->SetVisible(true);
-			sbHorizontal->NewWidth(lWidth);
+			sbHorizontal->NewWindowWidth(lWidth);
 			siCharacter.fPage = (float)lWidth;
 			sbHorizontal->SetScrollInfo(siCharacter);
 		}
@@ -518,11 +535,11 @@ void __vectorcall RePag::DirectX::COTextBox::SetScrollBarSize(_In_ BYTE ucWidth_
 	ucScrollBarSize = ucWidth_Height;
 	siLine.fPage = (float)(lHeight - ucScrollBarSize);
 	sbVertical->SetScrollInfo(siLine);
-	sbVertical->NewSize(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+	sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
 
 	siCharacter.fPage = (float)(lWidth - ucScrollBarSize);
 	sbHorizontal->SetScrollInfo(siCharacter);
-	sbHorizontal->NewSize(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+	sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
 	siCharacter.ucMask |= SBI_MAX;
 	siLine.ucMask |= SBI_MAX;

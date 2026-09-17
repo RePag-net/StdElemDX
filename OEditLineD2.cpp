@@ -53,7 +53,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned 
 														((COEditLine*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 														return NULL;
 		case WM_SIZE          : pEditLine = (COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditLine) pEditLine->WM_Size_Element(hWnd, lParam);
+														if(pEditLine)	pEditLine->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
 		case WM_SETFOCUS      : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
@@ -214,7 +214,8 @@ Error:
 void __vectorcall RePag::DirectX::COEditLine::OnPaint(void)
 {
 	ThreadSafe_Begin();
-	OnRender(false);
+	OnRender(true);
+	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -246,6 +247,18 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		OnRender(false);
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End(); 
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
@@ -594,7 +607,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 {
-  D2D_SIZE_F szfTextPoint, szfTextPoint_1; VMBLOCK vbCharacter = nullptr;
+  D2D_SIZE_F szfTextPoint, szfTextPoint_1; VMBLOCK vbCharacter = nullptr; ULONG ulTextLength;
 	switch(wParam){
 		case VK_TAB    : ThreadSafe_Begin();
 										 if(!ucCharacterSpecification){ ThreadSafe_End(); break; }

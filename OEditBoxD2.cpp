@@ -132,6 +132,37 @@ void __vectorcall RePag::DirectX::COEditBox::OnRender(_In_ bool bCaret)
 	COTextBox::OnRender(bCaret, lLine, lSelectLine);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditBox::OnPaint(void)
+{
+	ThreadSafe_Begin();
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditBox::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+
+		siScrollInfo.fPage = (float)lHeight;
+		sbVertical->SetScrollInfo(siScrollInfo);
+		sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+
+		siScrollInfo.fPage = (float)lWidth;
+		sbHorizontal->SetScrollInfo(siScrollInfo);
+		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+
+		ChangeSizeVisibleScrollBars();
+		OnRender(false);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
@@ -1124,11 +1155,11 @@ void __vectorcall RePag::DirectX::COEditBox::WM_MouseMove(_In_ WPARAM wParam, _I
 {
 	if(hWndElement == GetFocus() && wParam == MK_LBUTTON){
 		ThreadSafe_Begin();
-		if((short)GET_X_LPARAM(lParam) < ptfCaret.x - szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
-		else if((short)GET_X_LPARAM(lParam) > ptfCaret.x + szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
+		if((float)GET_X_LPARAM(lParam) < ptfCaret.x - szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_LEFT, NULL);
+		else if((float)GET_X_LPARAM(lParam) > ptfCaret.x + szfCharacter.width) SendMessage(hWndElement, WM_KEYDOWN, VK_RIGHT, NULL);
 
-		if((short)GET_Y_LPARAM(lParam) < ptfCaret.y - szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_UP, NULL);
-		else if((short)GET_Y_LPARAM(lParam) > ptfCaret.y + szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_DOWN, NULL);
+		if((float)GET_Y_LPARAM(lParam) < ptfCaret.y - szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_UP, NULL);
+		else if((float)GET_Y_LPARAM(lParam) > ptfCaret.y + szfCharacter.height) SendMessage(hWndElement, WM_KEYDOWN, VK_DOWN, NULL);
 		ThreadSafe_End();
 	}
 }

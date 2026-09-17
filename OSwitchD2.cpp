@@ -51,7 +51,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Switch(_In_ HWND hWnd, _In_ unsigned in
 													((COSwitch*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pSwitch = (COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pSwitch) pSwitch->WM_Size_Element(hWnd, lParam);
+													if(pSwitch) pSwitch->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);

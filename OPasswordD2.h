@@ -39,6 +39,7 @@ namespace RePag
 
 			private:
 			COStringA* vasPassword;
+			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_Char(_In_ WPARAM wParam);
 			void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
@@ -51,6 +52,7 @@ namespace RePag
 																		_In_ STDeviceResources* pstDeviceResources);
 			VMEMORY __vectorcall COFreiV(void);
 			void __vectorcall Text(_In_z_ const char* pcText);
+			void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------

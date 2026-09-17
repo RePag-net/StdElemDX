@@ -58,6 +58,7 @@ namespace RePag
 					ID2D1SolidColorBrush* ifArrowColor;
 					CODate* pCalendar;
 					void __vectorcall WM_Create(void);
+					void __vectorcall WM_Size(_In_ LPARAM lParam);
 					void __vectorcall WM_SetFocus(void);
 					void __vectorcall WM_KillFocus(void);
 					bool __vectorcall WM_Command_EditDate(_In_ WPARAM wParam);
@@ -69,6 +70,7 @@ namespace RePag
 					void __vectorcall WM_MouseMove(_In_ LPARAM wParam, _In_ WPARAM lParam);
 					void __vectorcall WM_MouseLeave(void);
 					void __vectorcall WM_MouseOver(_In_ LPARAM lParam);
+					void __vectorcall ButtonSize(void);
 					void __vectorcall OnRender(_In_ bool bCaret);
 					void __vectorcall DeleteCaretPos(void);
 					void __vectorcall DeSelect(void);
@@ -123,6 +125,7 @@ namespace RePag
 				unsigned char ucFirstDayOfWeek;
 				unsigned char ucLastDay;
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseOver(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseLeave(void);
@@ -131,7 +134,6 @@ namespace RePag
 				bool __vectorcall WM_LButtonUp(_In_ LPARAM lParam);
 				void __vectorcall SetDayOfWeek(void);
 				void __vectorcall OnRender(void);
-				void __vectorcall OnPaint(void);
 				bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 
 			protected:
@@ -146,7 +148,7 @@ namespace RePag
 				RECT& __vectorcall GetWindow(_In_ RECT& rcWindow);
 				void __vectorcall NewWindowPosition(_In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewWindowPosition(_In_ POINT& ptPositionA);
-				void __vectorcall NewWindow(_In_ long lHoheA, _In_ long lBreiteA, _In_ long lPos_x, _In_ long lPos_y);
+				//void __vectorcall NewWindow(_In_ long lHoheA, _In_ long lBreiteA, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewWindowSize(_In_ long lHoheA, _In_ long lBreiteA);
 				void __vectorcall NewWindowHeight(_In_ long lHoheA);
 				void __vectorcall NewWindowWidth(_In_ long lBreiteA);
@@ -191,6 +193,7 @@ namespace RePag
 				COStringA* __vectorcall GetDate(_In_ COStringA* pasDate);
 				COTime* __vectorcall GetTime(_In_ COTime* ptDate);
 				SYSTEMTIME __vectorcall GetSystemTime(void);
+				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

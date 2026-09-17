@@ -87,6 +87,7 @@ namespace RePag
 			protected:
 				void __vectorcall OnRender(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseOver(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseLeave(void);
@@ -103,9 +104,6 @@ namespace RePag
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall GetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall SetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
-				void __vectorcall NewSize(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y);
-				void __vectorcall NewHeight(_In_ long lHeightA);
-				void __vectorcall NewWidth(_In_ long lWidth);
 				void __vectorcall ScaleArrowThumb(_In_ float fScale);
 				void __vectorcall SetButtonColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetButtonColor(_In_ D2D1_COLOR_F& crfButtonA);

@@ -61,7 +61,8 @@ namespace RePag
 			ID2D1SolidColorBrush* ifSelectBackColor;
 			ID2D1SolidColorBrush* ifCaretColor;
 			void __vectorcall OnRender(_In_ bool bCaret);
-			void __vectorcall OnPaint(void);
+			void __vectorcall WM_Create(void);
+			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_KillFocus(void);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -90,7 +91,6 @@ namespace RePag
 			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
-			void __vectorcall WM_Create(void);
 			void(__vectorcall* pfnWM_Char_Return)(_In_ COEditLine*);
 			void(__vectorcall* pfnWM_Char_Escape)(_In_ COEditLine*);
 			void(__vectorcall* pfnWM_KillFocus)(_In_ COEditLine*);
@@ -98,6 +98,7 @@ namespace RePag
 			void(__vectorcall* pfnWM_LButtonDown)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonUp)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonDBClick)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
+			void __vectorcall OnPaint(void);
 			void __vectorcall SetzVerfugbar(_In_ bool bVerfugbar);
 			void __vectorcall Text(_In_ char* pcText);
 			void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);

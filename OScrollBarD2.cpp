@@ -65,7 +65,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(_In_ HWND hWnd, _In_ unsigned
 													((COScrollBar*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: pScrollBar = (COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pScrollBar) pScrollBar->WM_Size_Element(hWnd, lParam);
+													if(pScrollBar) pScrollBar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
 		case WM_VSCROLL			: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam);
@@ -181,6 +181,19 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COScrollBar::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		Geometry();
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -1055,48 +1068,6 @@ void __vectorcall RePag::DirectX::COScrollBar::SetScrollInfo(_In_ STScrollInfo& 
 	if(siScrollInfoA.ucMask & SBI_CHARACTER_WIDTH) siScrollInfo.szfCharacter.width = siScrollInfoA.szfCharacter.width;
 	if(siScrollInfoA.ucMask & SBI_CHARACTER_HEIGHT) siScrollInfo.szfCharacter.height = siScrollInfoA.szfCharacter.height;
 	if(hWndElement) CreateThumb(true);
-	ThreadSafe_End();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::NewSize(_In_ long lHeightA, _In_ long lWidthA, _In_ long lPos_x, _In_ long lPos_y)
-{
-	ThreadSafe_Begin();
-	if(hWndElement){
-		NewWindow(lHeightA, lWidthA, lPos_x, lPos_y);
-		Geometry();
-		OnRender();
-		rclDirty.top = 0; rclDirty.bottom = lHeight;
-		rclDirty.left = 0; rclDirty.right = lWidth;
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	}
-	ThreadSafe_End();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::NewHeight(_In_ long lHeightA)
-{
-	ThreadSafe_Begin();
-	if(hWndElement){
-		NewWindowHeight(lHeightA);
-		Geometry();
-		OnRender();
-		rclDirty.top = 0; rclDirty.bottom = lHeight;
-		rclDirty.left = 0; rclDirty.right = lWidth;
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	}
-	ThreadSafe_End();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::NewWidth(_In_ long lWidthA)
-{
-	ThreadSafe_Begin();
-	if(hWndElement){
-		NewWindowWidth(lWidthA);
-		Geometry();
-		OnRender();
-		rclDirty.top = 0; rclDirty.bottom = lHeight;
-		rclDirty.left = 0; rclDirty.right = lWidth;
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	}
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

@@ -120,6 +120,38 @@ VMEMORY __vectorcall RePag::DirectX::COListBox::COFreiV(void)
 	return ((COTextBox*)this)->COFreiV();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COListBox::OnPaint(void)
+{
+	ThreadSafe_Begin();
+	OnRender(false, ucIndex, ucIndex);
+	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	ThreadSafe_End();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COListBox::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+
+		siScrollInfo.fPage = (float)lHeight;
+		sbVertical->SetScrollInfo(siScrollInfo);
+		sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+
+		siScrollInfo.fPage = (float)lWidth;
+		sbHorizontal->SetScrollInfo(siScrollInfo);
+		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+
+		ChangeSizeVisibleScrollBars();
+		OnRender(false, ucIndex, ucIndex);
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 {
 	ThreadSafe_Begin();

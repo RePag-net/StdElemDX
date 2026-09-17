@@ -58,6 +58,7 @@ namespace RePag
 			unsigned char ucTextAlignment;
 			void __vectorcall OnRender(void);
 			void __vectorcall WM_Create(void);
+			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall CharacterMetric(void);
 			void __vectorcall TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_POINT_2F& ptfText);
 			void __vectorcall TextAlignment(_In_ IDWriteTextLayout* ifTextLayout, _Out_ float& fTextWidth, _Out_ D2D1_RECT_F& rcfText);
@@ -68,13 +69,14 @@ namespace RePag
 			void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
+			void __vectorcall OnPaint(void);
 			void __vectorcall Text(_In_z_ char* pcText);
 			void __vectorcall SetFont(STFont& stFont);
 			COStringA* __vectorcall Content(_Out_ COStringA* vasContentA);
 			void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 			void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
 			void __vectorcall TextAlignment(_In_ unsigned char ucTextAlignmentA);
-			void __vectorcall OnPaint(void);
+
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);

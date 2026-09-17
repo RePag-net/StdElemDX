@@ -42,6 +42,7 @@ namespace RePag
 			long lLine;
 			void* pvLine;
 			void __vectorcall OnRender(_In_ bool bCaret);
+			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
@@ -63,6 +64,7 @@ namespace RePag
 			void(__vectorcall* pfnWM_KillFocus)(_In_ COEditBox*);
 			bool(__vectorcall* pfnWM_Command)(_In_ COEditBox*, _In_ WPARAM);
 			COStringA* __vectorcall Content(_Out_ COStringA* vasInhaltA);
+			void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
