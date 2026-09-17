@@ -769,10 +769,11 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 													if(ucTextAlignment & TXA_LEFT){
 														if(szfTextPoint.width < (float)lWidth){
-															vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
-															GetTextPoint(vbCharacter, 1, szfTextPoint_1); VMFrei(vbCharacter);
+															ulTextLength = vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
+															GetTextPoint(vbCharacter, ulTextLength, szfTextPoint_1); VMFrei(vbCharacter);
 															if((float)lWidth - ptfCaret.x > szfTextPoint_1.width){
 																rclDirty.left = FloatToLong(ptfCaret.x) - ucCaretStrength;
+																if(rclDirty.left < 0) rclDirty.left = 0;
 																ulCharacterPos == vasContent->Length() ? *vasContent += (char*)&wParam
 																																			 : vasContent->Insert((char*)&wParam, ulCharacterPos);
 																GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
@@ -814,8 +815,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 													}
 													else if(ucTextAlignment & TXA_RIGHT){
 														if(szfTextPoint.width < (float)lWidth){
-															vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
-															GetTextPoint(vbCharacter, 1, szfTextPoint_1); VMFrei(vbCharacter);
+															ulTextLength = vasContent->SubString(vbCharacter, ulCharacterPos, ulCharacterPos);
+															GetTextPoint(vbCharacter, ulTextLength, szfTextPoint_1); VMFrei(vbCharacter);
 															if((float)lWidth - szfTextPoint.width > szfTextPoint_1.width){
 																rclDirty.right = FloatToLong(ptfCaret.x);
 																ulCharacterPos == vasContent->Length() ? *vasContent += (char*)&wParam
@@ -1189,8 +1190,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 				ptfCaret.x += szfTextPoint.width;
 			} 
 		}
-		if(ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
 	}
+	if(ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
 	if(pfnWM_LButtonDown) pfnWM_LButtonDown(this, wParam, lParam);
 	ThreadSafe_End();
 }
@@ -1638,9 +1639,9 @@ inline long __vectorcall RePag::DirectX::COEditLine::FloatToLong(_In_ float fNum
 bool __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint)
 {
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
-	size_t szBytes_Text; WCHAR wcInhalt[255];		
-	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, pcText, ulTextLength)) return false;
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT)szBytes_Text, ifText, fTextLine_maxwidth, (float)lHeight, &ifTextLayout);
+	size_t szBytes_Text; WCHAR wc255Content[255];		
+	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, pcText, ulTextLength)) return false;
+	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT)szBytes_Text, ifText, fTextLine_maxwidth, (float)lHeight, &ifTextLayout);
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	SafeRelease(&ifTextLayout);
 
