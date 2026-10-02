@@ -95,6 +95,9 @@ void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _
 	vliText = COListV(vmMemory, false);
 
 	ucScrollBarSize = 20;
+
+	stSelect_top.lLine = 0; stSelect_top.fPosition = 0.0f;
+	stSelect_bottom.lLine = 0; stSelect_bottom.fPosition = 0.0f;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
@@ -156,47 +159,65 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 			}
 		}
 		else{
-			long lStartLine = lAnchorLine, lEndLine = lCaretLine;
-			ULONG ulStartPos = ulSelectPos, ulEndPos = ulCharacterPos;
-			if(lStartLine > lEndLine){
-				long lLineTemp = lStartLine; lStartLine = lEndLine; lEndLine = lLineTemp;
-				ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
-			}
-			else if(lStartLine == lEndLine && ulStartPos > ulEndPos){
-				ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
-			}
-
-			if(lStartLine < 0) lStartLine = 0;
-			if(lEndLine >= (long)vliText->Number()) lEndLine = (long)vliText->Number() - 1;
+			long lSelectLine = 0; VMBLOCK vbCharacter; ULONG ulCharacters, ulCharacter_top = stSelect_top.ulCharacterPos; D2D_SIZE_F szfTextPoint; 
+			pvIterator = vliText->IteratorToBegin(); rcfSelect = {0};
+			while(pvIterator && rcfSelect.top < siLine.fPos){	vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++;	}
+			rcfSelect.top = 0;
+			while(pvIterator && lSelectLine++ < stSelect_top.lLine){ vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; }
+			if(stSelect_top.lLine >= --lSelectLine){ rcfSelect.left = stSelect_top.fPosition; lSelectLine = stSelect_top.lLine; }
+			else{ rcfSelect.left = 0.0f; ulCharacter_top = 0; }
 			ifTextColor->SetColor(crfSelectText);
 
-			for(long lSelectLine = lStartLine; lSelectLine <= lEndLine; lSelectLine++){
-				COStringA* pSelectLine = (COStringA*)vliText->Element(lSelectLine);
-				ULONG ulLineLength = pSelectLine->Length();
-				ULONG ulLineStart = 0, ulLineEnd = ulLineLength;
-				if(lStartLine == lEndLine){ ulLineStart = ulStartPos; ulLineEnd = ulEndPos; }
-				else if(lSelectLine == lStartLine) ulLineStart = ulStartPos;
-				else if(lSelectLine == lEndLine) ulLineEnd = ulEndPos;
+			if(stSelect_top.lLine == stSelect_bottom.lLine){
+        rcfSelect.right = stSelect_bottom.fPosition; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
 
-				if(ulLineStart > ulLineLength) ulLineStart = ulLineLength;
-				if(ulLineEnd > ulLineLength) ulLineEnd = ulLineLength;
-				if(ulLineStart >= ulLineEnd) continue;
-
-				float fTop = (float)lSelectLine * siLine.szfCharacter.height - siLine.fPos;
-				if(fTop + siLine.szfCharacter.height <= 0.0f) continue;
-				if(fTop >= siLine.fPage) break;
-
-				D2D_SIZE_F szfLeft = {0}, szfRight = {0};
-				if(ulLineStart) GetTextPoint(pSelectLine->c_Str(), ulLineStart, szfLeft);
-				GetTextPoint(pSelectLine->c_Str(), ulLineEnd, szfRight);
-				D2D1_RECT_F rcfSelectLine = D2D1::RectF(szfLeft.width, fTop, szfRight.width, fTop + siLine.szfCharacter.height);
-				ifD2D1Context6->FillRectangle(&rcfSelectLine, ifSelectBackColor);
-
-				VMBLOCK vbCharacter = nullptr;
-				ULONG ulCharacters = pSelectLine->SubString(vbCharacter, ulLineStart + 1, ulLineEnd);
+				ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+				ulCharacters = _Line->SubString(vbCharacter, ulCharacter_top + 1, stSelect_bottom.ulCharacterPos);
 				if(ulCharacters && !mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulCharacters))
-					ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelectLine, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-				if(vbCharacter) VMFrei(vbCharacter);
+					ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+				VMFrei(vbCharacter);
+			}
+			else{
+				if(stSelect_bottom.lLine == lSelectLine){ rcfSelect.bottom = siLine.szfCharacter.height; goto LastLine;	}
+
+				ulCharacters = _Line->SubString(vbCharacter, ulCharacter_top + 1, _Line->Length());
+				if(ulCharacters && !mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulCharacters)){
+					GetTextPoint(vbCharacter, ulCharacters, szfTextPoint);
+					rcfSelect.right = stSelect_top.fPosition + szfTextPoint.width; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
+					ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+					ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+				}
+				VMFrei(vbCharacter);
+				
+				vliText->NextElement(pvIterator); lSelectLine++;
+				rcfSelect.top += siLine.szfCharacter.height; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
+
+				if(stSelect_bottom.lLine == lSelectLine) goto LastLine;
+				else{
+					do{
+						ulCharacters = _Line->SubString(vbCharacter, 1, _Line->Length());
+						if(ulCharacters && !mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulCharacters)){
+							GetTextPoint(vbCharacter, ulCharacters, szfTextPoint);
+							rcfSelect.left = 0.0f; rcfSelect.right = szfTextPoint.width;
+							ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+							ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+						}
+						VMFrei(vbCharacter);
+
+						vliText->NextElement(pvIterator); lSelectLine++;
+						rcfSelect.top += siLine.szfCharacter.height; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
+					}
+					while(pvIterator && lSelectLine < stSelect_bottom.lLine);
+
+LastLine:
+					rcfSelect.left = 0.0f; rcfSelect.right = stSelect_bottom.fPosition;
+					ulCharacters = _Line->SubString(vbCharacter, 1, stSelect_bottom.ulCharacterPos);
+					if(ulCharacters && !mbstowcs_s(&szBytes_Text, wcInhalt, 255, vbCharacter, ulCharacters)){
+						ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
+						ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfSelect, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+					}
+					VMFrei(vbCharacter);
+				}
 			}
 		}
 	}
@@ -575,8 +596,8 @@ void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
   cSelect = 0; SetEvent(heCaret); //ulSelectPos = ulCharacterPos;
 
-	rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-	rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
+	//rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
+	rclDirty.left = 0; rclDirty.right = lWidth;
 	OnRender(true);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }

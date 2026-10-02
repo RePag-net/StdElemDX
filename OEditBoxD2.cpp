@@ -28,9 +28,18 @@ SOFTWARE.
 #include "OEditBoxD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
 #define _Line ((COStringA*)pvLine)
+#define _SelectLine ((COStringA*)vliText->Element(pvIterator))
+#define _PasteLine ((COStringA*)vliText->Element(pvIterator))
+#define _DeleteLine ((COStringA*)vliText->Element(pvIterator))
+#define _InsertLine ((COStringA*)liText.Element(pvIterator_insert))
 #define _ZeileAktuell ((COStringA*)vliText->Element(pvLineAktuell))
 #define _ZeileErste ((COStringA*)vliText->Element(pvLineErste))
 #define _EditBox ((RePag::DirectX::COEditBox*)pvParam)
+
+constexpr CHAR LEFT = -1;
+constexpr CHAR RIGHT = 1;
+constexpr CHAR UP = -2;
+constexpr	CHAR DOWN = 2;
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																																	 _In_ STDeviceResources* pstDeviceResources)
@@ -123,13 +132,13 @@ void __vectorcall RePag::DirectX::COEditBox::COEditBoxV(_In_ VMEMORY vmMemory, _
 	// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 	COTextBoxV(vmMemory, pcRePag_EditBox, pcWindowName, uiIDElementA, pstDeviceResources);
 	pvLine = nullptr;
-	lSelectLine = lLine = 0;
+	/*lSelectLine = */lLine = 0;
 	pfnWM_Char_ShiftReturn = nullptr;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::OnRender(_In_ bool bCaret)
 {
-	COTextBox::OnRender(bCaret, lLine, lSelectLine);
+	COTextBox::OnRender(bCaret, lLine/*, lSelectLine*/);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::OnPaint(void)
@@ -179,6 +188,19 @@ void __vectorcall RePag::DirectX::COEditBox::WM_SetFocus(void)
     rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret_EditBox, this, 0, 500, 0);
 	}
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditBox::WM_KillFocus(void)
+{
+	ThreadSafe_Begin();
+	DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); htCaret = nullptr;
+
+	//rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+
+	if(pfnWM_KillFocus) pfnWM_KillFocus(this);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -266,45 +288,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 	void* pvLineTemp = nullptr; float fCharacterPos_old; D2D_POINT_2F ptfCaret_old; long lLines;
 	unsigned long ulCharacterPos_old; long lLine_old;
 
-	auto MoveCaretToLine = [&](long lLineA){
-		pvLine = vliText->Element(lLineA);
-		ulCharacterPos = 0;
-		if(ptfCaret.x > 0.0f && _Line->Length()){
-			do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
-			while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
-			ptfCaret.x = szfTextPoint.width;
-		}
-		else ptfCaret.x = 0.0f;
-	};
-
-	auto UpdateSelection = [&](){
-		D2D_SIZE_F szfSelectPoint; COStringA* pSelectLine = (COStringA*)vliText->Element(lSelectLine);
-		GetTextPoint(pSelectLine->c_Str(), ulSelectPos, szfSelectPoint);
-		float fSelectY = ptfCaret.y + (float)(lSelectLine - lLine) * szfCharacter.height;
-
-		if(lLine == lSelectLine && ulCharacterPos == ulSelectPos){
-			cSelect = 0; SetEvent(heCaret);
-			rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-			rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-			OnRender(true);
-			return;
-		}
-
-		if(lLine < lSelectLine) cSelect = -2;
-		else if(lLine > lSelectLine) cSelect = 2;
-		else if(ulCharacterPos < ulSelectPos) cSelect = -1;
-		else cSelect = 1;
-
-		if(ptfCaret.x < szfSelectPoint.width){ rcfSelect.left = ptfCaret.x; rcfSelect.right = szfSelectPoint.width; }
-		else{ rcfSelect.left = szfSelectPoint.width; rcfSelect.right = ptfCaret.x; }
-		if(ptfCaret.y < fSelectY){ rcfSelect.top = ptfCaret.y; rcfSelect.bottom = fSelectY + szfCharacter.height; }
-		else{ rcfSelect.top = fSelectY; rcfSelect.bottom = ptfCaret.y + szfCharacter.height; }
-
-		ResetEvent(heCaret);
-		rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-		OnRender(false);
-	};
-
 	switch(wParam){
 		case VK_HOME		:	ThreadSafe_Begin();
 											ulCharacterPos = 0;
@@ -387,6 +370,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 													GetTextPoint(_Line->c_Str(), --ulCharacterPos, szfTextPoint);
 													GetScrollBar(SB_HORZ, siCharacter);
 													rcl2Dirty[1].left = FloatToLong(ptfCaret.x - siCharacter.fPos) - 1;
+													ptfCaret_old = ptfCaret;
 													ptfCaret.x = szfTextPoint.width;
 													if(szfTextPoint.width - siCharacter.fPos > 0.0f){
 														rcl2Dirty[1].top = rcl2Dirty[0].top = rclDirty.top;
@@ -415,56 +399,92 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 												}
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-													if(cSelect < 0){
-														rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-														GetTextPoint(_Line->c_Str(), --ulCharacterPos, szfTextPoint);
-														if(cSelect == -2){ // Up
-															rcfSelect.left = ptfCaret.x = szfTextPoint.width;
-															GetTextPoint(_Line->c_Str(), ulSelectPos, szfTextPoint);
-															rcfSelect.right = szfTextPoint.width;
-															rclDirty.right = FloatToLong(rcfSelect.right);
-															rclDirty.left = FloatToLong(rcfSelect.left);
-															OnRender(false);
-															cSelect = -1;
-														}
-														else{	// LEFT
-															rclDirty.right = FloatToLong(ptfCaret.x);
-															ptfCaret.x = szfTextPoint.width;
-															rclDirty.left = FloatToLong(ptfCaret.x);
-															if(ulSelectPos > ulCharacterPos){	rcfSelect.left = ptfCaret.x; OnRender(false); }
-															else if(ulSelectPos < ulCharacterPos){ rcfSelect.right = ptfCaret.x; OnRender(false);	}
-															else if(lLine == lSelectLine){ cSelect = 0; SetEvent(heCaret); OnRender(true); }
-														}
+													siCharacter.ucMask = SBI_POS | SBI_PAGE;
+													GetScrollBar(SB_HORZ, siCharacter);
+													GetTextPoint(_Line->c_Str(), ulCharacterPos - 1, szfTextPoint);
+													if(szfTextPoint.width - siCharacter.fPos < 0.0f){
+														siCharacter.fPos = szfTextPoint.width;
+														SetScrollBar(SB_HORZ, siCharacter);
+														rclDirty.left = rclDirty.top = 0;
+														GetScrollBar(SB_VERT, siLine);
+														rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 													}
-													else if(cSelect > 0){
-                            rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-                            rclDirty.right = FloatToLong(ptfCaret.x);
-														GetTextPoint(_Line->c_Str(), --ulCharacterPos, szfTextPoint);
-														ptfCaret.x = szfTextPoint.width;
-														rclDirty.left = FloatToLong(ptfCaret.x);
+													
+													switch(cSelect){ // left
+														case	0			:	ResetEvent(heCaret);
+																					stSelect_top.lLine = stSelect_bottom.lLine = lLine;
+																					stSelect_top.fPosition = ptfCaret.x;
+																					stSelect_top.ulCharacterPos = ulCharacterPos;
+																					stSelect_bottom.fPosition = ptfCaret_old.x;
+																					stSelect_bottom.ulCharacterPos = ulCharacterPos + 1;
 
-														if(cSelect == 2){ // DOWN
-															UpdateSelection();
-														}
-														else{ // RIGHT
-															if(ulSelectPos < ulCharacterPos){ rcfSelect.right = ptfCaret.x; OnRender(false); cSelect = -1; }
-															else if(ulSelectPos > ulCharacterPos){ rcfSelect.left = ptfCaret.x; OnRender(false); cSelect = -1; }
-															else if(lLine == lSelectLine){ cSelect = 0; SetEvent(heCaret); OnRender(true); }
-														}
+																					rclDirty.left = FloatToLong(stSelect_top.fPosition - siCharacter.fPos);
+																					rclDirty.right = FloatToLong(stSelect_bottom.fPosition - siCharacter.fPos);
+																					rclDirty.top = FloatToLong(ptfCaret.y);
+																					rclDirty.bottom = FloatToLong(ptfCaret.y + szfCharacter.height);
+																					break;
+														case	RIGHT	:
+														case	LEFT	:	ulCharacterPos--;
+																					if(stSelect_top.lLine == stSelect_bottom.lLine){
+																						if(ulCharacterPos == stSelect_top.ulCharacterPos){
+																							stSelect_bottom.fPosition = ptfCaret.x = stSelect_top.fPosition;
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(ulCharacterPos > stSelect_top.ulCharacterPos){
+																							rclDirty.right = FloatToLong(stSelect_bottom.fPosition);
+																							GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																							stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																							stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						}
+																						else{
+																							GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																							stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																							stSelect_top.ulCharacterPos = ulCharacterPos;
+																							rclDirty.left = FloatToLong(stSelect_top.fPosition - siCharacter.fPos);
+																						}
+																					}
+																					else if(lLine == stSelect_top.lLine){
+																						GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																					}
+																					else{
+																						GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																					}
+																					break;
+														case	DOWN	: 
+														case	UP		:	ulCharacterPos--; 
+																					GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																					ptfCaret.x = szfTextPoint.width;
+																					if(stSelect_top.lLine == stSelect_bottom.lLine){
+																						if(ptfCaret.x == stSelect_top.fPosition){
+																							stSelect_bottom.fPosition = ptfCaret.x = stSelect_top.fPosition;
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																						else{
+																							stSelect_bottom.fPosition = ptfCaret.x;
+																							stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						}
+																					}
+																					else if(lLine <= stSelect_top.lLine){
+																						stSelect_top.fPosition = ptfCaret.x;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																					}
+																					else{
+																						stSelect_bottom.fPosition = ptfCaret.x;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																					}
+																					break;
 													}
-													else{ cSelect = -1; // LEFT
-														ulSelectPos = ulCharacterPos + 1;
-														GetTextPoint(_Line->c_Str(), ulSelectPos, szfTextPoint);
-														rcfSelect.right = szfTextPoint.width; rcfSelect.left = ptfCaret.x;
-														rclDirty.right = FloatToLong(rcfSelect.right);
-														rcfSelect.top = ptfCaret.y; rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
-														ResetEvent(heCaret);
-
-														rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-														rclDirty.left =	FloatToLong(rcfSelect.left);
-														OnRender(false);
-													}
-													rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													cSelect = -1;
+													OnRender(false);
 													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
@@ -477,6 +497,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 													GetScrollBar(SB_HORZ, siCharacter);
 													rcl2Dirty[0].left = FloatToLong(ptfCaret.x - siCharacter.fPos) - 1;
 													GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint);
+													ptfCaret_old = ptfCaret;
 													ptfCaret.x = szfTextPoint.width;
 
 													siCharacter.ucMask = SBI_PAGE | SBI_POS;
@@ -510,50 +531,93 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 												}
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-													if(cSelect > 0){
-														rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-														rclDirty.left = FloatToLong(ptfCaret.x);
-														GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint);
-														ptfCaret.x = szfTextPoint.width;
-														rclDirty.right = FloatToLong(ptfCaret.x);
-
-														if(cSelect == 2){ // DOWN
-															UpdateSelection();
-														}
-														else{ // RIGHT
-															if(ulSelectPos < ulCharacterPos){	rcfSelect.right = ptfCaret.x; OnRender(false); }
-															else if(ulSelectPos > ulCharacterPos){ rcfSelect.left = ptfCaret.x; OnRender(false); }
-															else if(lLine == lSelectLine){ cSelect = 0; SetEvent(heCaret); OnRender(true); }
-														}
+													siCharacter.ucMask = SBI_PAGE | SBI_POS; siLine.ucMask = SBI_PAGE;
+													GetScrollBar(SB_HORZ, siCharacter);
+													GetTextPoint(_Line->c_Str(), ulCharacterPos + 1, szfTextPoint);
+													if(szfTextPoint.width - siCharacter.fPos > siCharacter.fPage){
+														siCharacter.fPos = szfTextPoint.width - siCharacter.fPage + (float)ucCaretStrength;
+														SetScrollBar(SB_HORZ, siCharacter);
+														rclDirty.left = rclDirty.top = 0;
+														GetScrollBar(SB_VERT, siLine);
+														rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 													}
-													else if(cSelect < 0){
-														rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-														rclDirty.left = FloatToLong(ptfCaret.x);
-														GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint);
-														ptfCaret.x = szfTextPoint.width;
-														rclDirty.right = FloatToLong(ptfCaret.x);
+													
+													switch(cSelect){	// right
+														case	0			: ResetEvent(heCaret);
+																					stSelect_top.lLine = stSelect_bottom.lLine = lLine;
+																					stSelect_top.fPosition = ptfCaret_old.x;
+																					stSelect_top.ulCharacterPos = ulCharacterPos - 1;
+																					stSelect_bottom.fPosition = ptfCaret.x;
+																					stSelect_bottom.ulCharacterPos = ulCharacterPos;
 
-														if(cSelect == -2){ // Up
-															UpdateSelection();
-														}
-														else{ // LEFT
-															if(ulSelectPos < ulCharacterPos){	rcfSelect.right = ptfCaret.x;	OnRender(false); cSelect = 1;	}
-															else if(ulSelectPos > ulCharacterPos){ rcfSelect.left = ptfCaret.x;	OnRender(false); cSelect = 1;	}
-															else if(lLine == lSelectLine){ cSelect = 0; SetEvent(heCaret); OnRender(true); }
-														}
+																					rclDirty.left = FloatToLong(stSelect_top.fPosition - siCharacter.fPos);
+																					rclDirty.right = FloatToLong(stSelect_bottom.fPosition - siCharacter.fPos);
+																					rclDirty.top = FloatToLong(ptfCaret.y);
+																					rclDirty.bottom = FloatToLong(ptfCaret.y + szfCharacter.height);
+																					break;
+														case RIGHT	:
+														case	LEFT	: ulCharacterPos++;
+																					if(stSelect_top.lLine == stSelect_bottom.lLine){
+																						if(ulCharacterPos == stSelect_bottom.ulCharacterPos){
+																							stSelect_top.fPosition = ptfCaret.x = stSelect_bottom.fPosition;
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(ulCharacterPos > stSelect_bottom.ulCharacterPos){
+																							GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																							stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																							stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																							stSelect_bottom.fPosition > siCharacter.fPage ? rclDirty.right = FloatToLong(siCharacter.fPage)
+																																														: rclDirty.right = FloatToLong(stSelect_bottom.fPosition);
+																						}
+																						else{
+																							rclDirty.left = FloatToLong(stSelect_top.fPosition);
+																							GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																							stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																							stSelect_top.ulCharacterPos = ulCharacterPos;
+																						}
+																					}
+																					else if(lLine == stSelect_top.lLine){
+																						GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																					}
+																					else{
+																						GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																					}
+																					break;
+														case	DOWN	: 
+														case	UP		: ulCharacterPos++;
+																					GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
+																					ptfCaret.x = szfTextPoint.width;
+																					if(stSelect_top.lLine == stSelect_bottom.lLine){
+																						if(ptfCaret.x == stSelect_top.fPosition){
+																							stSelect_bottom.fPosition = ptfCaret.x = stSelect_top.fPosition;
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																						else{
+																							stSelect_bottom.fPosition = ptfCaret.x;
+																							stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						}
+																					}
+																					else if(lLine <= stSelect_top.lLine){
+																						stSelect_top.fPosition = ptfCaret.x;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																					}
+																					else{
+																						stSelect_bottom.fPosition = ptfCaret.x;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																					}
+																					break;
 													}
-													else{ cSelect = 1; // RIGHT
-														ulSelectPos = ulCharacterPos - 1;
-														GetTextPoint(_Line->c_Str(), ulSelectPos, szfTextPoint);
-														rcfSelect.left = szfTextPoint.width; rcfSelect.right = ptfCaret.x;
-														rcfSelect.top = ptfCaret.y; rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
-														ResetEvent(heCaret);
-
-														rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
-														rclDirty.right = FloatToLong(rcfSelect.right); rclDirty.left = FloatToLong(rcfSelect.left);
-														OnRender(false);
-													}
-													rclDirty.left = rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+													cSelect = 1;
+													OnRender(false);
 													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
@@ -562,15 +626,21 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 											break;
 		case VK_UP			: ThreadSafe_Begin();
 											if(lLine){
+												siCharacter.ucMask = SBI_PAGE | SBI_POS; GetScrollBar(SB_HORZ, siCharacter);
 												if(!cSelect){
-													siCharacter.ucMask = SBI_POS;	GetScrollBar(SB_HORZ, siCharacter);
 													fCharacterPos_old = siCharacter.fPos;
-													ptfCaret_old = ptfCaret;
-													lLine_old = lLine; ulCharacterPos_old = ulCharacterPos;
+													ptfCaret_old = ptfCaret; ulCharacterPos_old = ulCharacterPos;
+													lLine_old = lLine; 
 
-													MoveCaretToLine(--lLine);
+													pvLine = vliText->Element(--lLine);
+													ulCharacterPos = 0;
+													if(ptfCaret.x > 0.0f && _Line->Length()){
+														do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+														while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+														ptfCaret.x = szfTextPoint.width;
+													}
+													else ptfCaret.x = 0.0f;
 
-													siCharacter.ucMask = SBI_PAGE | SBI_POS;
 													GetScrollBar(SB_HORZ, siCharacter);
 													if(ptfCaret.x < siCharacter.fPos){
 														siCharacter.fPos = ptfCaret.x;
@@ -622,21 +692,113 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 												}
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-													if(cSelect){
-														MoveCaretToLine(--lLine);
-														if(!ptfCaret.y){
-															siLine.ucMask = SBI_POS;
-															GetScrollBar(SB_VERT, siLine);
-															if(siLine.fPos > 0.0f){
-																siLine.fPos -= szfCharacter.height;
-																if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-																SetScrollBar(SB_VERT, siLine);
-															}
-														}
-														else ptfCaret.y -= szfCharacter.height;
+													siLine.ucMask = SBI_PAGE | SBI_POS;
+													GetScrollBar(SB_VERT, siLine);
+													if(siLine.fPos && ptfCaret.y < szfCharacter.height && cSelect){
+														siLine.fPos -= szfCharacter.height;
+														SetScrollBar(SB_VERT, siLine);
+														rclDirty.left = rclDirty.top = 0;
+														GetScrollBar(SB_HORZ, siCharacter);
+														rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 													}
-													else{ lSelectLine = lLine_old; ulSelectPos = ulCharacterPos_old; }
-													UpdateSelection();
+
+													switch(cSelect){ // up
+														case	0			:	ResetEvent(heCaret);
+																					stSelect_top.lLine = lLine;
+																					stSelect_top.fPosition = ptfCaret.x;
+																					stSelect_top.ulCharacterPos = ulCharacterPos;
+																					stSelect_bottom.lLine = stSelect_top.lLine + 1;
+																					stSelect_bottom.fPosition = ptfCaret_old.x;
+																					stSelect_bottom.ulCharacterPos = ulCharacterPos_old;
+
+																					rclDirty.left = 0;
+																					rclDirty.right = FloatToLong(siCharacter.fPage);
+																					rclDirty.top = FloatToLong(ptfCaret.y);
+																					rclDirty.bottom = FloatToLong(ptfCaret_old.y + szfCharacter.height);
+																					break;
+														case	DOWN	:	
+														case	UP		:	pvLine = vliText->Element(--lLine);
+																					if(lLine == stSelect_top.lLine){
+																						stSelect_bottom.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y ? ptfCaret.y -= szfCharacter.height : ptfCaret.y = 0.0f;
+																						if(stSelect_top.fPosition == stSelect_bottom.fPosition){
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																					}
+																					else if(lLine < stSelect_top.lLine){
+																						stSelect_top.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y ? ptfCaret.y -= szfCharacter.height : ptfCaret.y = 0.0f;
+																						rclDirty.top = FloatToLong(ptfCaret.y);
+																					}
+																					else{
+																						stSelect_bottom.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y -= szfCharacter.height;
+																					}
+																					break;
+														case	LEFT	: 
+														case	RIGHT	: pvLine = vliText->Element(--lLine);
+																					if(lLine == stSelect_top.lLine){
+																						stSelect_bottom.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y -= szfCharacter.height;
+																						if(stSelect_top.fPosition == stSelect_bottom.fPosition){
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																					}
+																					else if(lLine < stSelect_top.lLine){
+																						stSelect_top.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y ? ptfCaret.y -= szfCharacter.height : ptfCaret.y = 0.0f;
+																						rclDirty.top = FloatToLong(ptfCaret.y);
+																						rclDirty.left = 0;
+																						rclDirty.right = FloatToLong(siCharacter.fPage);
+																					}
+																					else{
+																						stSelect_bottom.lLine--;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y -= szfCharacter.height;
+																					}
+																					break;
+													}
+													cSelect = -2;
+													OnRender(false);
 													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
@@ -645,15 +807,21 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 											break;
 		case VK_DOWN		: ThreadSafe_Begin();
 											if(lLine < (long)vliText->Number() - 1){
+												siCharacter.ucMask = SBI_PAGE | SBI_POS; GetScrollBar(SB_HORZ, siCharacter);
 												if(!cSelect){
-													siCharacter.ucMask = SBI_POS;	GetScrollBar(SB_HORZ, siCharacter);
 													fCharacterPos_old = siCharacter.fPos;
 													ptfCaret_old = ptfCaret;
-													lLine_old = lLine; ulCharacterPos_old = ulCharacterPos;
+													ulCharacterPos_old = ulCharacterPos;
 
-													MoveCaretToLine(++lLine);
+													pvLine = vliText->Element(++lLine);
+													ulCharacterPos = 0;
+													if(ptfCaret.x > 0.0f && _Line->Length()){
+														do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+														while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+														ptfCaret.x = szfTextPoint.width;
+													}
+													else ptfCaret.x = 0.0f;
 
-													siCharacter.ucMask = SBI_PAGE | SBI_POS;
 													GetScrollBar(SB_HORZ, siCharacter);
 													if(ptfCaret.x < siCharacter.fPos){
 														siCharacter.fPos = ptfCaret.x;
@@ -669,12 +837,12 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 
 													siLine.ucMask = SBI_PAGE | SBI_POS;
 													GetScrollBar(SB_VERT, siLine);
-													if(ptfCaret.y + szfCharacter.height >= siLine.fPage){
+													if(ptfCaret.y + szfCharacter.height * 2 >= siLine.fPage){
 														siLine.fPos += szfCharacter.height;
 														SetScrollBar(SB_VERT, siLine);
 
 														rclDirty.left = rclDirty.top = 0;
-														rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+														rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 														OnRender(true);
 														ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 													}
@@ -702,19 +870,117 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 												}
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-													if(cSelect){
-														MoveCaretToLine(++lLine);
-														siLine.ucMask = SBI_PAGE | SBI_POS;
-														GetScrollBar(SB_VERT, siLine);
-														if(ptfCaret.y + szfCharacter.height >= siLine.fPage){
-															siLine.fPos += szfCharacter.height;
-															SetScrollBar(SB_VERT, siLine);
-														}
-														else ptfCaret.y += szfCharacter.height;
+													siLine.ucMask = SBI_PAGE | SBI_POS;
+													GetScrollBar(SB_VERT, siLine);
+													if(cSelect && ptfCaret.y + szfCharacter.height * 2 > siLine.fPage){
+														siLine.fPos += szfCharacter.height;
+														SetScrollBar(SB_VERT, siLine);
+														rclDirty.left = rclDirty.top = 0;
+														GetScrollBar(SB_HORZ, siCharacter);
+														rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 													}
-													else{ lSelectLine = lLine_old; ulSelectPos = ulCharacterPos_old; }
-													UpdateSelection();
-                          ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+
+													switch(cSelect){ // down
+														case	0			: ResetEvent(heCaret);
+																					stSelect_bottom.lLine = lLine;
+																					stSelect_bottom.fPosition = ptfCaret.x;
+																					stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																					stSelect_top.lLine = stSelect_bottom.lLine - 1;
+																					stSelect_top.fPosition = ptfCaret_old.x;
+																					stSelect_top.ulCharacterPos = ulCharacterPos_old;
+
+																					rclDirty.left = 0;
+																					rclDirty.right = FloatToLong(siCharacter.fPage);
+																					ptfCaret_old.y ? rclDirty.top = FloatToLong(ptfCaret_old.y - szfCharacter.height) : rclDirty.top = 0;
+																					rclDirty.bottom = FloatToLong(ptfCaret.y + szfCharacter.height);
+																					break;
+														case	DOWN	: 
+														case	UP		: 	pvLine = vliText->Element(++lLine);
+																					if(lLine == stSelect_bottom.lLine){
+																						stSelect_top.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y += szfCharacter.height;
+																						if(stSelect_bottom.fPosition == stSelect_top.fPosition){
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																					}
+																					else if(lLine < stSelect_bottom.lLine){
+																						stSelect_top.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						rclDirty.top = FloatToLong(ptfCaret.y);
+																						ptfCaret.y += szfCharacter.height;
+																					}
+																					else{
+																						stSelect_bottom.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						if(ptfCaret.y + szfCharacter.height < siLine.fPage) ptfCaret.y += szfCharacter.height;
+																						rclDirty.bottom = FloatToLong(ptfCaret.y + szfCharacter.height);
+																						if(rclDirty.bottom > FloatToLong(siLine.fPage)) rclDirty.bottom = FloatToLong(siLine.fPage);
+																					}
+																					break;
+														case	LEFT	: 
+														case	RIGHT	:	pvLine = vliText->Element(++lLine);
+																					if(lLine == stSelect_bottom.lLine){
+																						stSelect_top.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y += szfCharacter.height;
+																						if(stSelect_top.fPosition == stSelect_bottom.fPosition){
+																							DeSelect(); ThreadSafe_End(); return;
+																						}
+																						else if(stSelect_bottom.fPosition < stSelect_top.fPosition){
+																							STSelect stSelect_temp = stSelect_top;
+																							stSelect_top = stSelect_bottom;
+																							stSelect_bottom = stSelect_temp;
+																						}
+																					}
+																					else if(lLine < stSelect_bottom.lLine){
+																						stSelect_top.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_top.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_top.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y += szfCharacter.height;
+																					}
+																					else{
+																						stSelect_bottom.lLine++;
+																						ulCharacterPos = 0;
+																						do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
+																						while(szfTextPoint.width < ptfCaret.x && ulCharacterPos < _Line->Length());
+																						stSelect_bottom.fPosition = ptfCaret.x = szfTextPoint.width;
+																						stSelect_bottom.ulCharacterPos = ulCharacterPos;
+																						ptfCaret.y += szfCharacter.height;
+																						rclDirty.bottom += FloatToLong(szfCharacter.height);
+																						if(rclDirty.bottom > FloatToLong(siLine.fPage)) rclDirty.bottom = FloatToLong(siLine.fPage);
+																						rclDirty.left = 0;
+																						rclDirty.right = FloatToLong(siCharacter.fPage);
+																					}
+																					break;
+													}
+													cSelect = 2;
+													OnRender(false);
+													ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 												}
 												else if(cSelect) DeSelect();
 											}
@@ -974,159 +1240,213 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COEditBox::WM_Command(_In_ WPARAM wParam)
 {
-	HGLOBAL hGlobal; char* pcClipboard;
-
-	auto CopySelection = [&]() -> bool{
-		if(!cSelect) return false;
-
-		long lStartLine = lLine, lEndLine = lSelectLine;
-		ULONG ulStartPos = ulCharacterPos, ulEndPos = ulSelectPos;
-		if(lStartLine > lEndLine || lStartLine == lEndLine && ulStartPos > ulEndPos){
-			long lLineTemp = lStartLine; lStartLine = lEndLine; lEndLine = lLineTemp;
-			ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
-		}
-
-		COStringA* vasClipboard = COStringAV(vmMemory);
-		VMBLOCK vbCharacter = nullptr;
-		if(lStartLine == lEndLine){
-			COStringA* pLine = (COStringA*)vliText->Element(lStartLine);
-			if(ulEndPos > ulStartPos){
-				pLine->SubString(vbCharacter, ulStartPos + 1, ulEndPos);
-				*vasClipboard = vbCharacter; VMFrei(vbCharacter);
-			}
-		}
-		else{
-			COStringA* pLine = (COStringA*)vliText->Element(lStartLine);
-			if(ulStartPos < pLine->Length()){
-				pLine->SubString(vbCharacter, ulStartPos + 1, pLine->Length());
-				*vasClipboard += vbCharacter; VMFrei(vbCharacter);
-			}
-			*vasClipboard += "\n";
-
-			for(long lCurrentLine = lStartLine + 1; lCurrentLine < lEndLine; lCurrentLine++){
-				*vasClipboard += *((COStringA*)vliText->Element(lCurrentLine));
-				*vasClipboard += "\n";
-			}
-
-			pLine = (COStringA*)vliText->Element(lEndLine);
-			if(ulEndPos){
-				pLine->SubString(vbCharacter, 1, ulEndPos);
-				*vasClipboard += vbCharacter; VMFrei(vbCharacter);
-			}
-		}
-
-		if(!OpenClipboard(hWndElement)){ VMFreiV(vasClipboard); return false; }
-		EmptyClipboard();
-		hGlobal = GlobalAlloc(GMEM_MOVEABLE, vasClipboard->Length() + 1);
-		if(!hGlobal){ CloseClipboard(); VMFreiV(vasClipboard); return false; }
-		pcClipboard = (char*)GlobalLock(hGlobal);
-		if(!pcClipboard){ GlobalFree(hGlobal); CloseClipboard(); VMFreiV(vasClipboard); return false; }
-		MemCopy(pcClipboard, vasClipboard->c_Str(), vasClipboard->Length());
-		pcClipboard[vasClipboard->Length()] = 0;
-		GlobalUnlock(hGlobal);
-		if(!SetClipboardData(CF_TEXT, hGlobal)) GlobalFree(hGlobal);
-		CloseClipboard(); VMFreiV(vasClipboard);
-		return true;
-	};
-
-	auto UpdateDirectXState = [&](){
-		D2D_SIZE_F szfTextPoint; STScrollInfo siCharacter, siLine;
-		siCharacter.ucMask = SBI_ALL; GetScrollBar(SB_HORZ, siCharacter);
-		siCharacter.fMax = 0.0f;
-		void* pvIterator = vliText->IteratorToBegin();
-		while(pvIterator){
-			COStringA* pLine = (COStringA*)vliText->Element(pvIterator);
-			GetTextPoint(pLine->c_Str(), pLine->Length(), szfTextPoint);
-			if(szfTextPoint.width > siCharacter.fMax) siCharacter.fMax = szfTextPoint.width;
-			vliText->NextElement(pvIterator);
-		}
-
-		siLine.ucMask = SBI_ALL; GetScrollBar(SB_VERT, siLine);
-		siLine.fMax = (float)vliText->Number() * szfCharacter.height;
-		if((float)lLine * szfCharacter.height < siLine.fPos) siLine.fPos = (float)lLine * szfCharacter.height;
-		else if((float)(lLine + 1) * szfCharacter.height - siLine.fPos > siLine.fPage)
-			siLine.fPos = (float)(lLine + 1) * szfCharacter.height - siLine.fPage;
-		if(siLine.fPos + siLine.fPage > siLine.fMax) siLine.fPos = siLine.fMax - siLine.fPage;
-		if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-
-		GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
-		if(szfTextPoint.width < siCharacter.fPos) siCharacter.fPos = szfTextPoint.width;
-		else if(szfTextPoint.width - siCharacter.fPos >= siCharacter.fPage)
-			siCharacter.fPos = szfTextPoint.width - siCharacter.fPage + (float)ucCaretStrength;
-		if(siCharacter.fPos + siCharacter.fPage > siCharacter.fMax) siCharacter.fPos = siCharacter.fMax - siCharacter.fPage;
-		if(siCharacter.fPos < 0.0f) siCharacter.fPos = 0.0f;
-
-		SetScrollBar(SB_HORZ, siCharacter); SetScrollBar(SB_VERT, siLine);
-		ptfCaret.x = szfTextPoint.width - siCharacter.fPos;
-		ptfCaret.y = (float)lLine * szfCharacter.height - siLine.fPos;
-		rclDirty.left = rclDirty.top = 0;
-		rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
-		SetEvent(heCaret); OnRender(true);
-		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
-	};
+HGLOBAL hGlobal; char* pcClipboard;	*vasContent = NULL; ULONG ulCharacter; long lSelectLine = 0; VMBLOCK vbSelectLine;
+void* pvIterator; void* pvDelete; void* pvPreIterator; void* pvIterator_insert;
+STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
+STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE | SBI_MAX;
+D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0; ULONG ulWidth, ulSign = 0, ulSign_right = 1; COList liText(false);
 
 	switch(LOWORD(wParam)){
-		case IDM_COPY   			: ThreadSafe_Begin();
-														if(!CopySelection()){ ThreadSafe_End(); return true; }
-														ThreadSafe_End(); return false;
-		case IDM_CUT				  : ThreadSafe_Begin();
-														if(!ucCharacterSpecification){ ThreadSafe_End(); return false; }
-														if(!CopySelection()){ ThreadSafe_End(); return true; }
-														Select_Delete();
-														ThreadSafe_End(); return false;
-		case IDM_PASTE	      : ThreadSafe_Begin();
-														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
-														if(cSelect) Select_Delete();
-														if(!vliText->Number()){
-															COStringA* vasLine = COStringAV(vmMemory);
-															vliText->ToEnd(vasLine); pvLine = vasLine; lLine = 0; ulCharacterPos = 0;
-														}
-														if(!OpenClipboard(hWndElement)){ ThreadSafe_End(); return false; }
-														hGlobal = GetClipboardData(CF_TEXT);
-														pcClipboard = hGlobal ? (char*)GlobalLock(hGlobal) : nullptr;
-														if(!pcClipboard){ CloseClipboard(); ThreadSafe_End(); return false; }
+		case IDM_COPY		:	ThreadSafe_Begin();
+											OpenClipboard(hWndElement); EmptyClipboard();
+											if(stSelect_top.lLine == stSelect_bottom.lLine){
+												((COStringA*)vliText->Element(stSelect_top.lLine))->SubString(vbSelectLine, stSelect_top.ulCharacterPos + 1, stSelect_bottom.ulCharacterPos);
+												ulCharacter = stSelect_bottom.ulCharacterPos - stSelect_top.ulCharacterPos + 1;
+												hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulCharacter);
+												pcClipboard = (char*)GlobalLock(hGlobal);
+												MemCopy(pcClipboard, vbSelectLine, ulCharacter); VMFrei(vbSelectLine);
+												pcClipboard[ulCharacter] = 0;
+												GlobalUnlock(hGlobal);
+											}
+											else{
+												sbVertical->GetScrollInfo(siLine);
+												pvIterator = vliText->IteratorToBegin(); rcfSelect = {0};
+												while(pvIterator && rcfSelect.top < siLine.fPos){ 
+													vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++; }
+												while(pvIterator && lSelectLine++ < stSelect_top.lLine) vliText->NextElement(pvIterator);
 
-														{
-															COStringA* vasClipboard = COStringAV(vmMemory);
-															ULONG ulInsertedLines = 0, ulLastLineCharacters = 0;
-															char acCharacter[2] = { 0, 0 };
-															for(ULONG ulClipboardPos = 0; pcClipboard[ulClipboardPos]; ulClipboardPos++){
-																if(pcClipboard[ulClipboardPos] == '\r') continue;
-																if(pcClipboard[ulClipboardPos] == '\n'){
-																	*vasClipboard += "\n"; ulInsertedLines++; ulLastLineCharacters = 0;
-																}
-																else{
-																	acCharacter[0] = pcClipboard[ulClipboardPos];
-																	*vasClipboard += acCharacter; ulLastLineCharacters++;
-																}
-															}
-															GlobalUnlock(hGlobal); CloseClipboard();
+												_SelectLine->SubString(vbSelectLine, stSelect_top.ulCharacterPos + 1, _SelectLine->Length());
+												*vasContent += vbSelectLine; *vasContent += "\n"; VMFrei(vbSelectLine);
+												vliText->NextElement(pvIterator);
 
-															if(vasClipboard->Length()){
-																COStringA* vasText = COStringAV(vmMemory);
-																ULONG ulInsertPos = ulCharacterPos;
-																for(long lCurrentLine = 0; lCurrentLine < (long)vliText->Number(); lCurrentLine++){
-																	COStringA* pLine = (COStringA*)vliText->Element(lCurrentLine);
-																	if(lCurrentLine < lLine) ulInsertPos += pLine->Length() + 1;
-																	*vasText += *pLine;
-																	if(lCurrentLine + 1 < (long)vliText->Number()) *vasText += "\n";
-																}
+												if(lSelectLine++ == stSelect_bottom.lLine) goto LastLineCopy;
 
-																long lPasteLine = lLine; ULONG ulPastePos = ulCharacterPos;
-																if(ulInsertPos == vasText->Length()) *vasText += *vasClipboard;
-																else vasText->Insert(vasClipboard, ulInsertPos);
-																Text(vasText->c_Str());
-																lLine = lPasteLine + (long)ulInsertedLines;
-																ulInsertedLines ? ulCharacterPos = ulLastLineCharacters : ulCharacterPos = ulPastePos + vasClipboard->Length();
-																pvLine = vliText->Element(lLine);
-																lSelectLine = lLine; ulSelectPos = ulCharacterPos; cSelect = 0;
-																rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-																VMFreiV(vasText); UpdateDirectXState();
-															}
-															VMFreiV(vasClipboard);
-														}
-														ThreadSafe_End(); return false;
-		default               : return true;
+												do{
+													_SelectLine->SubString(vbSelectLine, 1, _SelectLine->Length());
+													*vasContent += vbSelectLine; *vasContent += "\n"; VMFrei(vbSelectLine);
+													vliText->NextElement(pvIterator);
+												}
+												while(pvIterator && lSelectLine++ < stSelect_bottom.lLine);
+LastLineCopy:
+												_SelectLine->SubString(vbSelectLine, 1, stSelect_bottom.ulCharacterPos);
+												*vasContent += vbSelectLine; VMFrei(vbSelectLine);
+
+												hGlobal = GlobalAlloc(GMEM_MOVEABLE, vasContent->Length() + 1);
+												pcClipboard = (char*)GlobalLock(hGlobal);
+												MemCopy(pcClipboard, vasContent->c_Str(), vasContent->Length());
+												pcClipboard[vasContent->Length()] = 0;
+												GlobalUnlock(hGlobal);
+												*vasContent = NULL;
+											}
+											SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
+											ThreadSafe_End(); return false;
+		case IDM_CUT		: ThreadSafe_Begin();
+											OpenClipboard(hWndElement); EmptyClipboard();
+											if(stSelect_top.lLine == stSelect_bottom.lLine){
+												((COStringA*)vliText->Element(stSelect_top.lLine))->SubString(vbSelectLine, stSelect_top.ulCharacterPos + 1, stSelect_bottom.ulCharacterPos);
+												ulCharacter = stSelect_bottom.ulCharacterPos - stSelect_top.ulCharacterPos + 1;
+												hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulCharacter);
+												pcClipboard = (char*)GlobalLock(hGlobal);
+												MemCopy(pcClipboard, vbSelectLine, ulCharacter); VMFrei(vbSelectLine);
+												pcClipboard[ulCharacter] = 0;
+												GlobalUnlock(hGlobal);
+												
+												((COStringA*)vliText->Element(stSelect_top.lLine))->Delete(stSelect_top.ulCharacterPos, ulCharacter - 1);
+												sbHorizontal->GetScrollInfo(siCharacter);
+												rclDirty.left = FloatToLong(stSelect_top.fPosition); rclDirty.right = FloatToLong(siCharacter.fPage);
+												stSelect_bottom = stSelect_top;
+												OnRender(true);
+												ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+											}
+											else{
+												sbVertical->GetScrollInfo(siLine);
+												pvIterator = vliText->IteratorToBegin(); pvDelete = nullptr;  rcfSelect = {0};
+												while(pvIterator && rcfSelect.top < siLine.fPos){
+													vliText->NextElement(pvIterator, pvDelete); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++;
+												}
+												while(pvIterator && lSelectLine++ < stSelect_top.lLine) vliText->NextElement(pvIterator);
+
+												_SelectLine->SubString(vbSelectLine, stSelect_top.ulCharacterPos + 1, _SelectLine->Length());
+												*vasContent += vbSelectLine; *vasContent += "\n"; VMFrei(vbSelectLine);
+												((COStringA*)vliText->Element(pvIterator))->Delete(stSelect_top.ulCharacterPos, _SelectLine->Length() - stSelect_top.ulCharacterPos);
+												pvPreIterator = pvIterator;
+												vliText->NextElement(pvIterator, pvDelete);
+
+												if(lSelectLine++ == stSelect_bottom.lLine) goto LastLineCut;
+
+												do{
+													_SelectLine->SubString(vbSelectLine, 1, _SelectLine->Length());
+													*vasContent += vbSelectLine; *vasContent += "\n"; VMFrei(vbSelectLine);
+													VMFrei(vliText->Element(pvIterator));
+													vliText->DeleteElement(pvIterator, pvDelete, false);
+												}
+												while(pvIterator && lSelectLine++ < stSelect_bottom.lLine);
+LastLineCut:
+												_SelectLine->SubString(vbSelectLine, 1, stSelect_bottom.ulCharacterPos);
+												*vasContent += vbSelectLine; VMFrei(vbSelectLine);
+
+												hGlobal = GlobalAlloc(GMEM_MOVEABLE, vasContent->Length() + 1);
+												pcClipboard = (char*)GlobalLock(hGlobal);
+												MemCopy(pcClipboard, vasContent->c_Str(), vasContent->Length());
+												pcClipboard[vasContent->Length()] = 0;
+												GlobalUnlock(hGlobal);
+
+												((COStringA*)vliText->Element(pvIterator))->Delete(0, stSelect_bottom.ulCharacterPos);
+                        *((COStringA*)vliText->Element(pvPreIterator)) += *((COStringA*)vliText->Element(pvIterator));
+												VMFrei(vliText->Element(pvIterator));
+												vliText->DeleteElement(pvIterator, pvDelete, false);
+
+												stSelect_bottom = stSelect_top; cSelect = 0; SetEvent(heCaret);
+												sbHorizontal->GetScrollInfo(siCharacter);
+												rclDirty.left = 0; rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
+												stSelect_bottom = stSelect_top;
+												OnRender(true);
+												ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+											}
+											SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
+											*vasContent = NULL;
+											ThreadSafe_End(); return false;
+		case IDM_PASTE	: ThreadSafe_Begin();
+											if(!IsClipboardFormatAvailable(CF_TEXT) || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
+											OpenClipboard(hWndElement);
+											hGlobal = GetClipboardData(CF_TEXT);
+											*vasContent = (char*)GlobalLock(hGlobal);
+											GlobalUnlock(hGlobal);
+											CloseClipboard();
+
+											if(!vasContent->Length()){ ThreadSafe_End(); return false; }
+											if((*vasContent)[vasContent->Length() - 1] != 0x0A) *vasContent += "\n";
+
+											ulWidth = vasContent->Length();
+											do{
+												ulSign_right++;
+												if((*vasContent)[++ulSign] == 0x0A){
+													vasLine = COStringAV(vmMemory);
+													vasContent->SubString(vasLine, ulSign - ulSign_right + 2, ulSign);
+													liText.ToEnd(vasLine);
+													ulSign_right = 0;
+												}
+											}
+											while(ulSign < ulWidth);
+											
+											if(liText.Number() == 1){
+												vasContent->ShortRightOne();
+												pvIterator = vliText->IteratorToBegin();
+												for(long lPastLine = 0; lPastLine < lLine; lPastLine++) vliText->NextElement(pvIterator);
+												_PasteLine->Insert(vasContent, ulCharacterPos);
+
+												sbHorizontal->GetScrollInfo(siCharacter);
+                        GetTextPoint(_PasteLine->c_Str(), _PasteLine->Length(), szfTextPoint);
+                        if(siCharacter.fMax < szfTextPoint.width){
+                          siCharacter.fMax = szfTextPoint.width;
+                          SetScrollBar(SB_HORZ, siCharacter);
+													ChangeSizeVisibleScrollBars();
+                        }
+												VMFrei(vliText->Element(lLine));
+
+												rclDirty.left = ulCharacterPos; rclDirty.right = FloatToLong(siCharacter.fPage);
+												OnRender(true);
+												ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+											}
+											else{
+												pvIterator = vliText->IteratorToBegin(); pvPreIterator = nullptr;
+												for(long lPastLine = 0; lPastLine < lLine; lPastLine++) vliText->NextElement(pvIterator, pvPreIterator);
+												_PasteLine->SubString(vasContent, ulCharacterPos + 1, _PasteLine->Length());
+												_PasteLine->Delete(ulCharacterPos, _PasteLine->Length() - ulCharacterPos);
+
+												pvIterator_insert = liText.IteratorToBegin();
+												_PasteLine->Insert(_InsertLine->c_Str(), ulCharacterPos + 1);
+												GetTextPoint(_PasteLine->c_Str(), _PasteLine->Length(), szfTextPoint);
+												if(fWidestLine < szfTextPoint.width) fWidestLine = szfTextPoint.width;
+
+                        VMFrei(liText.Element(pvIterator_insert));
+												liText.DeleteFirstElement(pvIterator_insert, false);
+                        vliText->NextElement(pvIterator, pvPreIterator);
+												if(liText.Number() == 1) goto LastLinePaste;
+
+												do{
+                          vliText->Insert(pvIterator, pvPreIterator, liText.Element(pvIterator_insert));
+
+													GetTextPoint(_PasteLine->c_Str(), _PasteLine->Length(), szfTextPoint);
+													if(fWidestLine < szfTextPoint.width) fWidestLine = szfTextPoint.width;
+
+													VMFrei(liText.Element(pvIterator_insert));
+													liText.DeleteFirstElement(pvIterator_insert, false);
+                          vliText->NextElement(pvPreIterator);
+												}
+												while(liText.Number() > 1);
+LastLinePaste:
+												vliText->Insert(pvIterator, pvPreIterator, liText.Element(pvIterator_insert));
+												vliText->NextElement(pvPreIterator);
+												*(COStringA*)vliText->Element(pvPreIterator) += *vasContent;
+												GetTextPoint(((COStringA*)vliText->Element(pvPreIterator))->c_Str(), ((COStringA*)vliText->Element(pvPreIterator))->Length(), szfTextPoint);
+												if(fWidestLine < szfTextPoint.width) fWidestLine = szfTextPoint.width;
+
+												sbHorizontal->GetScrollInfo(siCharacter);
+												if(siCharacter.fMax < fWidestLine){
+													siCharacter.fMax = fWidestLine;
+													SetScrollBar(SB_HORZ, siCharacter);
+													ChangeSizeVisibleScrollBars();
+												}
+
+												sbVertical->GetScrollInfo(siLine);
+                        rclDirty.left = 0; rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
+												OnRender(true);
+												ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+											}
+											*vasContent = NULL;
+											ThreadSafe_End(); return false;
+		default         : return true;
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -1188,7 +1508,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 	lLine = (long)(((float)GET_Y_LPARAM(lParam) + siLine.fPos) / szfCharacter.height);
 	if(lLine < 0) lLine = 0;
 	else if(lLine >= (long)vliText->Number()) lLine = (long)vliText->Number() - 1;
-  lSelectLine = lLine;
+  //lSelectLine = lLine;
 
 	ptfCaret.y = (float)lLine * szfCharacter.height - siLine.fPos;
 	pvLine = vliText->Element(lLine);
@@ -1233,75 +1553,57 @@ COStringA* __vectorcall RePag::DirectX::COEditBox::Content(_Out_ COStringA* vasI
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::Select_Delete(void)
 {
-	D2D_SIZE_F szfTextPoint; STScrollInfo siCharacter, siLine;
-	long lStartLine = lLine, lEndLine = lSelectLine; ULONG ulStartPos = ulCharacterPos, ulEndPos = ulSelectPos;
+	STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE | SBI_MAX; STScrollInfo siLine; siLine.ucMask = SBI_PAGE | SBI_MAX;
+	if(stSelect_top.lLine == stSelect_bottom.lLine){
+		((COStringA*)vliText->Element(stSelect_top.lLine))->Delete(stSelect_top.ulCharacterPos, stSelect_bottom.ulCharacterPos - stSelect_top.ulCharacterPos);
 
-	if(lStartLine > lEndLine || lStartLine == lEndLine && ulStartPos > ulEndPos){
-		long lLineTemp = lStartLine; lStartLine = lEndLine; lEndLine = lLineTemp;
-		ULONG ulPosTemp = ulStartPos; ulStartPos = ulEndPos; ulEndPos = ulPosTemp;
-	}
-
-	if(lStartLine == lEndLine){
-		pvLine = vliText->Element(lStartLine);
-		if(ulEndPos > ulStartPos) _Line->Delete(ulStartPos, ulEndPos - ulStartPos);
+		sbHorizontal->GetScrollInfo(siCharacter);
+    rclDirty.left = FloatToLong(stSelect_top.fPosition); rclDirty.right = FloatToLong(siCharacter.fPage);
+    cSelect = 0; stSelect_bottom = stSelect_top; SetEvent(heCaret);
+		OnRender(true);
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	else{
-		COStringA* pStartLine = (COStringA*)vliText->Element(lStartLine);
-		COStringA* pEndLine = (COStringA*)vliText->Element(lEndLine);
+		void* pvIterator = vliText->IteratorToBegin(); void* pvDelete = nullptr; void* pvIterator_firstline;
+		long lSelectLine = stSelect_top.lLine; VMBLOCK vbLastLine; D2D_SIZE_F szfTextPoint; float fWidestLine = 0;
+		for(long lDeleteLine = 0; lDeleteLine < stSelect_top.lLine; lDeleteLine++) vliText->NextElement(pvIterator, pvDelete);
+    _DeleteLine->Delete(stSelect_top.ulCharacterPos, _DeleteLine->Length() - stSelect_top.ulCharacterPos);
+    pvIterator_firstline = pvIterator;
+		
+		if(++lSelectLine < stSelect_bottom.lLine){
+			do{
+				vliText->NextElement(pvIterator, pvDelete);
+				VMFrei(vliText->Element(pvIterator));
+				vliText->DeleteElement(pvIterator, pvDelete, false);
+			}
+			while(pvIterator && ++lSelectLine < stSelect_bottom.lLine);
+    }
+		else vliText->NextElement(pvIterator, pvDelete);
 
-		VMBLOCK vbRest = nullptr;
-		if(ulEndPos < pEndLine->Length()) pEndLine->SubString(vbRest, ulEndPos + 1, pEndLine->Length());
-		pStartLine->Delete(ulStartPos, pStartLine->Length() - ulStartPos);
-		if(vbRest){ *pStartLine += vbRest; VMFrei(vbRest); }
+    _DeleteLine->SubString(vbLastLine, stSelect_bottom.ulCharacterPos + 1, _DeleteLine->Length());
+		*((COStringA*)vliText->Element(pvIterator_firstline)) += vbLastLine; VMFrei(vbLastLine);
+		VMFrei(vliText->Element(pvIterator));
+		vliText->DeleteElement(pvIterator, pvDelete, false);
 
-		void* pvDelete = vliText->IteratorToBegin(); void* pvPrevious = nullptr;
-		for(long lLines = 0; lLines <= lStartLine; lLines++) vliText->NextElement(pvDelete, pvPrevious);
-		for(long lLines = lStartLine + 1; pvDelete && lLines <= lEndLine; lLines++){
-			VMFreiV((COStringA*)vliText->Element(pvDelete));
-			vliText->DeleteElement(pvDelete, pvPrevious, false);
-			vliText->NextElement(pvDelete);
+		pvIterator = vliText->IteratorToBegin();
+		do{
+			GetTextPoint(_DeleteLine->c_Str(), _DeleteLine->Length(), szfTextPoint);
+			if(fWidestLine < szfTextPoint.width) fWidestLine = szfTextPoint.width;
+      vliText->NextElement(pvIterator); 
 		}
+		while(pvIterator);
+
+		sbHorizontal->GetScrollInfo(siCharacter); sbVertical->GetScrollInfo(siLine);
+		siCharacter.fMax = fWidestLine;
+		sbHorizontal->SetScrollInfo(siCharacter);
+		siLine.fMax = vliText->Number() * szfCharacter.height;
+		sbVertical->SetScrollInfo(siLine);
+		ChangeSizeVisibleScrollBars();
+
+		rclDirty.left = 0; rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
+		cSelect = 0; stSelect_bottom = stSelect_top; SetEvent(heCaret);
+		OnRender(true);
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
-
-	lLine = lSelectLine = lStartLine;
-	ulCharacterPos = ulSelectPos = ulStartPos;
-	pvLine = vliText->Element(lLine);
-	cSelect = 0;
-	rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-
-	siCharacter.ucMask = SBI_ALL; GetScrollBar(SB_HORZ, siCharacter);
-	siCharacter.fMax = 0.0f;
-	void* pvIterator = vliText->IteratorToBegin();
-	while(pvIterator){
-		COStringA* pLine = (COStringA*)vliText->Element(pvIterator);
-		GetTextPoint(pLine->c_Str(), pLine->Length(), szfTextPoint);
-		if(szfTextPoint.width > siCharacter.fMax) siCharacter.fMax = szfTextPoint.width;
-		vliText->NextElement(pvIterator);
-	}
-	if(siCharacter.fPos + siCharacter.fPage > siCharacter.fMax) siCharacter.fPos = siCharacter.fMax - siCharacter.fPage;
-	if(siCharacter.fPos < 0.0f) siCharacter.fPos = 0.0f;
-
-	siLine.ucMask = SBI_ALL; GetScrollBar(SB_VERT, siLine);
-	siLine.fMax = (float)vliText->Number() * szfCharacter.height;
-	if(siLine.fPos + siLine.fPage > siLine.fMax) siLine.fPos = siLine.fMax - siLine.fPage;
-	if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-
-	GetTextPoint(_Line->c_Str(), ulCharacterPos, szfTextPoint);
-	ptfCaret.x = szfTextPoint.width;
-	ptfCaret.y = (float)lLine * szfCharacter.height - siLine.fPos;
-	if(ptfCaret.x < siCharacter.fPos) siCharacter.fPos = ptfCaret.x;
-	else if(ptfCaret.x - siCharacter.fPos >= siCharacter.fPage){
-		siCharacter.fPos = ptfCaret.x - siCharacter.fPage + (float)ucCaretStrength;
-		if(siCharacter.fPos + siCharacter.fPage > siCharacter.fMax) siCharacter.fPos = siCharacter.fMax - siCharacter.fPage;
-		if(siCharacter.fPos < 0.0f) siCharacter.fPos = 0.0f;
-	}
-	SetScrollBar(SB_HORZ, siCharacter);
-	SetScrollBar(SB_VERT, siLine);
-
-	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
-	SetEvent(heCaret);
-	OnRender(true);
-	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

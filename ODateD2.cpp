@@ -818,7 +818,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::WM_KeyDown(_In_ WPARAM wPa
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Char(_In_ WPARAM wParam)
 {
-	D2D_SIZE_F szfTextPoint, szfTextPoint_1; BYTE ucPosition;
+	D2D_SIZE_F szfTextPoint, szfTextPoint_1;
 	switch(wParam){
 		case VK_RETURN	: ThreadSafe_Begin();
 											if(pCalendar->pfnWM_Char_Return) pCalendar->pfnWM_Char_Return(pCalendar);

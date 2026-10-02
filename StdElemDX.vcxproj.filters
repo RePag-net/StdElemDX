@@ -113,4 +113,7 @@
       <Filter>Ressourcendateien</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="EditBox.cd" />
+  </ItemGroup>
 </Project>

@@ -40,6 +40,14 @@ namespace RePag
 			private:
 
 			protected:
+				typedef struct STSelect
+				{
+					long lLine;
+					float fPosition;
+          unsigned long ulCharacterPos;
+				} STSelect;
+				STSelect stSelect_top;
+				STSelect stSelect_bottom;
 				COScrollBar* sbHorizontal;
 				COScrollBar* sbVertical;
 				COList* vliText;

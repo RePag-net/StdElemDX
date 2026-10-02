@@ -152,7 +152,9 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	SafeRelease(&ifSelectBackColor);
 	SafeRelease(&ifCaretColor);
 	CloseHandle(heCaret);
-	if(htCaret){ CloseHandle(htCaret); DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); }
+	if(htCaret){
+		CloseHandle(htCaret);
+		DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); }
 	VMFreiV(vasCharacterMask);
 	DestroyMenu(hMenu);
 	return ((COTextLine*)this)->COFreiV();
