@@ -113,7 +113,7 @@ void CALLBACK RePag::DirectX::Timer_Caret_EditBox(_In_ void* pvParam, _In_ bool 
 	static bool bCaret = false;
 	bCaret ? bCaret = false : bCaret = true;
 
-  STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS;
+  STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS;
 	_EditBox->ThreadSafe_Begin();
 	_EditBox->GetScrollBar(SB_HORZ, siCharacter);
 	_EditBox->rclDirty.left = _EditBox->FloatToLong(_EditBox->ptfCaret.x - siCharacter.fPos);
@@ -132,13 +132,8 @@ void __vectorcall RePag::DirectX::COEditBox::COEditBoxV(_In_ VMEMORY vmMemory, _
 	// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 	COTextBoxV(vmMemory, pcRePag_EditBox, pcWindowName, uiIDElementA, pstDeviceResources);
 	pvLine = nullptr;
-	/*lSelectLine = */lLine = 0;
+	lLine = 0;
 	pfnWM_Char_ShiftReturn = nullptr;
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::OnRender(_In_ bool bCaret)
-{
-	COTextBox::OnRender(bCaret, lLine/*, lSelectLine*/);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::OnPaint(void)
@@ -155,7 +150,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Size(_In_ LPARAM lParam)
 	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
 		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
 		CreateWindowSizeDependentResources();
-		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+		STScrollInfo siScrollInfo{}; siScrollInfo.ucMask = SBI_PAGE;
 
 		siScrollInfo.fPage = (float)lHeight;
 		sbVertical->SetScrollInfo(siScrollInfo);
@@ -181,7 +176,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_SetFocus(void)
 			ptfCaret.x = ptfCaret.y = 0.0f; ulCharacterPos = lLine = 0;
 		}
 		else{
-			STScrollInfo siLine, siCharacter; siLine.ucMask = siCharacter.ucMask = SBI_POS;
+			STScrollInfo siLine{}, siCharacter{}; siLine.ucMask = siCharacter.ucMask = SBI_POS;
 			GetScrollBar(SB_VERT, siLine); GetScrollBar(SB_HORZ, siCharacter);
 			if(!ptfCaret.x && !ptfCaret.y && !siLine.fPos && !siCharacter.fPos){ ulCharacterPos = lLine = 0; pvLine = vliText->Element(lLine); }
 		}
@@ -219,7 +214,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_HScroll(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	STScrollInfo siLine; siLine.ucMask = SBI_PAGE | SBI_POS | SBI_MAX | SBI_CHARACTER_HEIGHT; GetScrollBar(SB_VERT, siLine);
+	STScrollInfo siLine{}; siLine.ucMask = SBI_PAGE | SBI_POS | SBI_MAX | SBI_CHARACTER_HEIGHT; GetScrollBar(SB_VERT, siLine);
 	bool bScrollChanged = lParam != NULL;
 	float fScrollPage = siLine.fPage;
 	if(siLine.szfCharacter.height > 0.0f){
@@ -284,7 +279,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-  D2D_SIZE_F szfTextPoint; STScrollInfo siLine, siCharacter; siCharacter.ucMask = SBI_POS; siLine.ucMask = SBI_PAGE; RECT rcl2Dirty[2];
+  D2D_SIZE_F szfTextPoint; STScrollInfo siLine, siCharacter{}; siCharacter.ucMask = SBI_POS; siLine.ucMask = SBI_PAGE; RECT rcl2Dirty[2];
 	void* pvLineTemp = nullptr; float fCharacterPos_old; D2D_POINT_2F ptfCaret_old; long lLines;
 	unsigned long ulCharacterPos_old; long lLine_old;
 
@@ -1052,7 +1047,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KeyDown(_In_ WPARAM wParam, _In_
 void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 {
 	VMBLOCK vbCharacter = nullptr; ULONG ulTab; D2D_SIZE_F szfTextPoint; long lLines; void* pvLineTemp = nullptr; COStringA* vasLine;
-	STScrollInfo siCharacter, siLine; siCharacter.ucMask = SBI_ALL; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_MAX; GetScrollBar(SB_HORZ, siCharacter);
+	STScrollInfo siCharacter, siLine{}; siCharacter.ucMask = SBI_ALL; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_MAX; GetScrollBar(SB_HORZ, siCharacter);
 	switch(wParam){
 		case VK_ESCAPE		: ThreadSafe_Begin();
 												if(pfnWM_Char_Escape) pfnWM_Char_Escape(this);
@@ -1242,8 +1237,8 @@ bool __vectorcall RePag::DirectX::COEditBox::WM_Command(_In_ WPARAM wParam)
 {
 HGLOBAL hGlobal; char* pcClipboard;	*vasContent = NULL; ULONG ulCharacter; long lSelectLine = 0; VMBLOCK vbSelectLine;
 void* pvIterator; void* pvDelete; void* pvPreIterator; void* pvIterator_insert;
-STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
-STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE | SBI_MAX;
+STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
+STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE | SBI_MAX;
 D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0; ULONG ulWidth, ulSign = 0, ulSign_right = 1; COList liText(false);
 
 	switch(LOWORD(wParam)){
@@ -1492,7 +1487,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 	if(cSelect) DeSelect();
 
 	D2D_SIZE_F szfTextPoint; RECT rcl2Dirty[2];
-	STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_MAX;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_MAX;
 	GetScrollBar(SB_VERT, siLine);
 
 	rcl2Dirty[0].right = FloatToLong(ptfCaret.x) + 2; rcl2Dirty[0].left = rcl2Dirty[0].right - ucCaretStrength - 4;
@@ -1508,12 +1503,11 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 	lLine = (long)(((float)GET_Y_LPARAM(lParam) + siLine.fPos) / szfCharacter.height);
 	if(lLine < 0) lLine = 0;
 	else if(lLine >= (long)vliText->Number()) lLine = (long)vliText->Number() - 1;
-  //lSelectLine = lLine;
 
 	ptfCaret.y = (float)lLine * szfCharacter.height - siLine.fPos;
 	pvLine = vliText->Element(lLine);
 
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS;
 	GetScrollBar(SB_HORZ, siCharacter);
 	if(_Line->Length()){
 		do{ GetTextPoint(_Line->c_Str(), ++ulCharacterPos, szfTextPoint); }
@@ -1553,7 +1547,7 @@ COStringA* __vectorcall RePag::DirectX::COEditBox::Content(_Out_ COStringA* vasI
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::Select_Delete(void)
 {
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE | SBI_MAX; STScrollInfo siLine; siLine.ucMask = SBI_PAGE | SBI_MAX;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE | SBI_MAX; STScrollInfo siLine{}; siLine.ucMask = SBI_PAGE | SBI_MAX;
 	if(stSelect_top.lLine == stSelect_bottom.lLine){
 		((COStringA*)vliText->Element(stSelect_top.lLine))->Delete(stSelect_top.ulCharacterPos, stSelect_bottom.ulCharacterPos - stSelect_top.ulCharacterPos);
 

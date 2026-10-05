@@ -26,7 +26,6 @@ SOFTWARE.
 ******************************************************************************/
 #include "HStdElemDX.h"
 #include "OListBoxD2.h"
-//#include "OKlappBox.h"
 #define _Line ((COStringA*)vliText->Element(pvIterator))
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COListBox* __vectorcall RePag::DirectX::COListBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
@@ -123,7 +122,7 @@ VMEMORY __vectorcall RePag::DirectX::COListBox::COFreiV(void)
 void __vectorcall RePag::DirectX::COListBox::OnPaint(void)
 {
 	ThreadSafe_Begin();
-	OnRender(false, ucIndex, ucIndex);
+	OnRender(false);
 	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
@@ -135,7 +134,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_Size(_In_ LPARAM lParam)
 	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
 		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
 		CreateWindowSizeDependentResources();
-		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+		STScrollInfo siScrollInfo{}; siScrollInfo.ucMask = SBI_PAGE;
 
 		siScrollInfo.fPage = (float)lHeight;
 		sbVertical->SetScrollInfo(siScrollInfo);
@@ -146,7 +145,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_Size(_In_ LPARAM lParam)
 		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
 		ChangeSizeVisibleScrollBars();
-		OnRender(false, ucIndex, ucIndex);
+		OnRender(false);
 		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	}
 	ThreadSafe_End();
@@ -155,9 +154,11 @@ void __vectorcall RePag::DirectX::COListBox::WM_Size(_In_ LPARAM lParam)
 void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 {
 	ThreadSafe_Begin();
+	STScrollInfo siLine{}; siLine.ucMask = SIF_PAGE; GetScrollBar(SB_VERT, siLine);
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
 	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender(false, ucIndex, ucIndex);
+	rclDirty.right = siCharacter.fPage; rclDirty.bottom = siLine.fPage;
+	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -165,25 +166,18 @@ void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COListBox::WM_VScroll(_In_ WPARAM wParam)
 {
 	ThreadSafe_Begin();
-	if(cSelect){ STScrollInfo siLine; siLine.ucMask = SIF_PAGE | SIF_POS; GetScrollBar(SB_VERT, siLine);
-	switch(LOWORD(wParam)){
-			case SB_LINEUP		: rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; break;
-			case SB_LINEDOWN	: rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height; break;
-			case SB_PAGEUP		:	
-			case SB_PAGEDOWN	:	rcfSelect.top = (float)ucIndex * szfCharacter.height - siLine.fPos;
-													rcfSelect.bottom = rcfSelect.top + szfCharacter.height; break;
-		}
-	}
+	STScrollInfo siLine{}; siLine.ucMask = SIF_PAGE; GetScrollBar(SB_VERT, siLine);
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
   rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender(false, ucIndex, ucIndex);
+	rclDirty.right = siCharacter.fPage; rclDirty.bottom = siLine.fPage;
+	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COListBox::WM_KeyDown(_In_ WPARAM wParam)
 {
-	STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE;
 	switch(wParam){
 		case VK_UP		: ThreadSafe_Begin();
 										if(cSelect) SetSelectIndex(ucIndex - 1);
@@ -214,35 +208,37 @@ void __vectorcall RePag::DirectX::COListBox::WM_Char(_In_ WPARAM wParam)
 void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 {
 	if(vliText->Number()){ SetFocus(hWndElement);
-		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_MAX;
-		GetScrollBar(SB_VERT, siLine);
+		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE; GetScrollBar(SB_VERT, siLine);
+		STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE; GetScrollBar(SB_HORZ, siCharacter);
 
-		ucIndex = (BYTE)((float)(HIWORD(lParam) / szfCharacter.height) + (BYTE)(siLine.fPos / szfCharacter.height));
-
-		RECT rcl2Dirty[2] = {0};
-		dxgiPresent.pDirtyRects = rcl2Dirty;
+		RECT rcl2Dirty[2] = {0}; dxgiPresent.pDirtyRects = rcl2Dirty;
 		if(cSelect){
-			if(rcfSelect.top >= 0.0f){
+			float fSelect_top_old = (float)ucIndex * szfCharacter.height;
+			if(siLine.fPos) fSelect_top_old -= siLine.fPos;
+			if(fSelect_top_old >= 0.0f){
 				dxgiPresent.DirtyRectsCount = 2;
-				rcl2Dirty[1].left = 0; rcl2Dirty[1].right = lWidth;
-				!rcfSelect.top ? rcl2Dirty[1].top = 0 : rcl2Dirty[1].top = FloatToLong(rcfSelect.top) - 1;
-				rcl2Dirty[1].bottom = FloatToLong(rcfSelect.bottom) + 1;
+				rcl2Dirty[1].top = FloatToLong(fSelect_top_old);
+				rcl2Dirty[1].bottom = rcl2Dirty[1].top + FloatToLong(szfCharacter.height) + 2;
+				rcl2Dirty[1].left = 0; rcl2Dirty[1].right = siCharacter.fPage;
 			}
 			else dxgiPresent.DirtyRectsCount = 1;
 		}
 		else dxgiPresent.DirtyRectsCount = 1;
 
 		cSelect = 1;
+		ucIndex = (BYTE)((float)(HIWORD(lParam) / szfCharacter.height) + (BYTE)(siLine.fPos / szfCharacter.height));
 		if(ucIndex >= vliText->Number()) ucIndex = (BYTE)vliText->Number() - 1;
-		ulCharacterPos = ((COStringA*)vliText->Element(ucIndex))->Length();
-		rcfSelect.top = (ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height;
-		rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
-		rcfSelect.left = 0.0f; rcfSelect.right = (float)(lWidth - ucScrollBarSize);
+		COStringA* pasLine = (COStringA*)vliText->Element(ucIndex); D2D_SIZE_F szfTextPoint;
+		ulCharacterPos = pasLine->Length();
+		GetTextPoint(pasLine->c_Str(), ulCharacterPos, szfTextPoint);
+    stSelect_top.lLine = ucIndex; stSelect_top.ulCharacterPos = 0; stSelect_top.fPosition = 0.0f; 
+    stSelect_bottom.lLine = ucIndex; stSelect_bottom.ulCharacterPos = ulCharacterPos; stSelect_bottom.fPosition = szfTextPoint.width + 1.5f;
 
-		rcl2Dirty[0].left = 0; rcl2Dirty[0].right = lWidth;
+		rcl2Dirty[0].left = 0;
+		stSelect_bottom.fPosition > siCharacter.fPage ? rcl2Dirty[0].right = siCharacter.fPage :rcl2Dirty[0].right = stSelect_bottom.fPosition;
 		rcl2Dirty[0].top = FloatToLong(((float)ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height);
 		rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
-		OnRender(false, ucIndex, ucIndex);
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		dxgiPresent.DirtyRectsCount = 1;
 		dxgiPresent.pDirtyRects = &rclDirty;
@@ -252,28 +248,39 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char ucIndexA)
 {
 	ThreadSafe_Begin();
-	if(ucIndexA < vliText->Number()){	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SIF_PAGE;
-		GetScrollBar(SB_VERT, siLine);
+	if(ucIndexA < vliText->Number()){	D2D_SIZE_F szfTextPoint;
+		STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
+		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SIF_PAGE; GetScrollBar(SB_VERT, siLine);
 		if((float)ucIndexA < siLine.fPos / szfCharacter.height){
 			siLine.fPos = (float)ucIndexA * szfCharacter.height;
-			rcfSelect.top = 0.0f; rcfSelect.bottom = szfCharacter.height;
+			SetScrollBar(SB_VERT, siLine);
+			rclDirty.top = 0; rclDirty.bottom = FloatToLong(siLine.fPage);
 		}
 		else if((float)ucIndexA >= (siLine.fPos + siLine.fPage) / szfCharacter.height){
-      BYTE ucLines = (BYTE)(siLine.fPage / szfCharacter.height) - 1;
-			siLine.fPos = (float)ucIndexA * szfCharacter.height - (float)ucLines * szfCharacter.height;
-			rcfSelect.top = ((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height; rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
+      float fLines = siLine.fPage / szfCharacter.height - 1.0f;
+			siLine.fPos = (float)ucIndexA * szfCharacter.height - fLines * szfCharacter.height;
+			SetScrollBar(SB_VERT, siLine);
+			rclDirty.top = 0; rclDirty.bottom = FloatToLong(siLine.fPage);
 		}
-		else rcfSelect.top = ((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height; rcfSelect.bottom = rcfSelect.top + szfCharacter.height;
+		else{
+			rclDirty.top = FloatToLong(((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height);
+			rclDirty.bottom = rclDirty.top + FloatToLong(szfCharacter.height);
+		}
+
 		ucIndex = ucIndexA;
 		cSelect = 1;
-		rcfSelect.left = 0.0f; rcfSelect.right = (float)(lWidth - ucScrollBarSize);
-		siLine.ucMask ^= SIF_PAGE;
-		SetScrollBar(SB_VERT, siLine);
-    ulCharacterPos = ((COStringA*)vliText->Element(ucIndex))->Length();
 
-		rclDirty.left = rclDirty.top = 0;
-		rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-		OnRender(false, ucIndex, ucIndex);
+		COStringA* pasLine = (COStringA*)vliText->Element(ucIndex);
+		ulCharacterPos = pasLine->Length();
+		GetTextPoint(pasLine->c_Str(), ulCharacterPos, szfTextPoint);
+		stSelect_top.lLine = stSelect_bottom.lLine = ucIndex;
+		stSelect_top.ulCharacterPos = 0; stSelect_top.fPosition = 0.0f;
+		stSelect_bottom.ulCharacterPos = ulCharacterPos; stSelect_bottom.fPosition = szfTextPoint.width + 1.5f;
+
+		rclDirty.left = 0; 
+
+		rclDirty.right = siCharacter.fPage;
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		ThreadSafe_End();
 		return true;
@@ -343,11 +350,18 @@ unsigned long __vectorcall RePag::DirectX::COListBox::NumberEnum(void)
 void __vectorcall RePag::DirectX::COListBox::DeSelectEnum(void)
 {
 	ThreadSafe_Begin();
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE; GetScrollBar(SB_VERT, siLine);
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE; GetScrollBar(SB_HORZ, siCharacter);
+
+	float fSelect_top_old = (float)ucIndex * szfCharacter.height;
+	if(siLine.fPos) fSelect_top_old -= siLine.fPos;
+	if(fSelect_top_old >= 0.0f && fSelect_top_old < siLine.fPage){
+		rclDirty.top = FloatToLong(fSelect_top_old);
+		rclDirty.bottom = rclDirty.top + FloatToLong(szfCharacter.height) + 2;
+		rclDirty.left = 0; rclDirty.right = siCharacter.fPage;
+	}
 	cSelect = 0;
-	rclDirty.left = 0; rclDirty.right = lWidth;
-	!rcfSelect.top ? rclDirty.top = 0 : rclDirty.top = FloatToLong(rcfSelect.top) - 1;
-	rclDirty.bottom = FloatToLong(rcfSelect.bottom) + 1;
-	OnRender(false, ucIndex, ucIndex);
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }

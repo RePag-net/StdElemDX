@@ -42,6 +42,7 @@ namespace RePag
 			void __vectorcall Select_Loschen(void);
 
 		protected:
+			D2D1_RECT_F rcfSelect;
 			COStringA* vasCharacterMask;
 			float fTextPos;
 			HMENU hMenu;
@@ -50,7 +51,6 @@ namespace RePag
 			D2D_POINT_2F ptfCaret;
 			BYTE ucCaretStrength;
 			char cSelect;
-			D2D1_RECT_F rcfSelect;
 			unsigned long ulCharacter_max;
 			unsigned char ucCharacterSpecification;
 			unsigned long ulCharacterPos;

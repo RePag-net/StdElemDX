@@ -113,7 +113,7 @@ VMEMORY __vectorcall RePag::DirectX::COTextBox::COFreiV(void)
 	return ((COEditLine*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ long lCaretLine, _In_ long lAnchorLine)
+void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 {
 	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
@@ -126,8 +126,8 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 	void* pvIterator = vliText->IteratorToBegin();
 	if(pvIterator){
 		float fLine = 0; size_t szBytes_Text; WCHAR wcInhalt[255];
-		STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
-		STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS | SBI_PAGE | SBI_MAX | SBI_CHARACTER_WIDTH;
+		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
+		STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS | SBI_PAGE | SBI_MAX | SBI_CHARACTER_WIDTH;
 		sbVertical->GetScrollInfo(siLine); sbHorizontal->GetScrollInfo(siCharacter);
 
 		while(pvIterator && fLine < siLine.fPos){	vliText->NextElement(pvIterator); fLine += siLine.szfCharacter.height; }
@@ -160,8 +160,9 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 		}
 		else{
 			long lSelectLine = 0; VMBLOCK vbCharacter; ULONG ulCharacters, ulCharacter_top = stSelect_top.ulCharacterPos; D2D_SIZE_F szfTextPoint; 
-			pvIterator = vliText->IteratorToBegin(); rcfSelect = {0};
+			pvIterator = vliText->IteratorToBegin(); D2D1_RECT_F rcfSelect = {0.0f, 0.0f, 0.0f, 0.0f};
 			while(pvIterator && rcfSelect.top < siLine.fPos){	vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++;	}
+			if(lSelectLine > stSelect_bottom.lLine) goto Error;
 			rcfSelect.top = 0;
 			while(pvIterator && lSelectLine++ < stSelect_top.lLine){ vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; }
 			if(stSelect_top.lLine >= --lSelectLine){ rcfSelect.left = stSelect_top.fPosition; lSelectLine = stSelect_top.lLine; }
@@ -169,7 +170,7 @@ void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret, _In_ lon
 			ifTextColor->SetColor(crfSelectText);
 
 			if(stSelect_top.lLine == stSelect_bottom.lLine){
-        rcfSelect.right = stSelect_bottom.fPosition; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
+				rcfSelect.right = stSelect_bottom.fPosition; rcfSelect.bottom = rcfSelect.top + siLine.szfCharacter.height;
 
 				ifD2D1Context6->FillRectangle(&rcfSelect, ifSelectBackColor);
 				ulCharacters = _Line->SubString(vbCharacter, ulCharacter_top + 1, stSelect_bottom.ulCharacterPos);
@@ -248,7 +249,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	sbVertical->CreateWindowGraphic(hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
 	sbHorizontal->CreateWindowGraphic(hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
-	STScrollInfo siScrollInfo;
+	STScrollInfo siScrollInfo{};
 	siScrollInfo.ucMask = SBI_ALL;
 	siScrollInfo.fMax = siScrollInfo.fPos = 0;
 	siScrollInfo.fPage = (float)lHeight - ucScrollBarSize;
@@ -259,8 +260,6 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	siScrollInfo.fPage = (float)lWidth - ucScrollBarSize;
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
-
-	rcfSelect.left = rcfSelect.top = 	rcfSelect.bottom = 0.0f; rcfSelect.right = (float)lWidth;
 
 	if(vasContent->Length()) CreateText();
 
@@ -274,7 +273,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Size(_In_ LPARAM lParam)
 	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
 		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
 		CreateWindowSizeDependentResources();
-		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+		STScrollInfo siScrollInfo{}; siScrollInfo.ucMask = SBI_PAGE;
 
 		siScrollInfo.fPage = (float)lHeight;
 		sbVertical->SetScrollInfo(siScrollInfo);
@@ -318,7 +317,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_MouseWheel(_In_ WPARAM wParam, _
 {
 	POINTS ptPoints = MAKEPOINTS(lParam);
 	POINT ptPoint; ptPoint.x = ptPoints.x; ptPoint.y = ptPoints.y;
-	STScrollInfo siLine; siLine.ucMask = SBI_PAGE;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_PAGE;
 
 	ThreadSafe_Begin();
 	ScreenToClient(hWndElement, &ptPoint);
@@ -330,7 +329,7 @@ void __vectorcall RePag::DirectX::COTextBox::WM_MouseWheel(_In_ WPARAM wParam, _
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::ChangeSizeVisibleScrollBars(void)
 {
-	STScrollInfo siLine; siLine.ucMask = SBI_MAX | SBI_PAGE; STScrollInfo siCharacter; siCharacter.ucMask = SBI_MAX | SBI_PAGE;	long lSize;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_MAX | SBI_PAGE; STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_MAX | SBI_PAGE;	long lSize;
 	sbVertical->GetScrollInfo(siLine);
 	if(siLine.fMax > siLine.fPage){
 		sbVertical->SetVisible(true);
@@ -383,7 +382,7 @@ void __vectorcall RePag::DirectX::COTextBox::CreateText(void)
 	while(ulSign < ulWidth);
 	*vasContent = NULL;
 
-	STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_MAX;
+	STScrollInfo siScrollInfo{}; siScrollInfo.ucMask = SBI_MAX;
 	siScrollInfo.fMax = fWidestLine;
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 	siScrollInfo.fMax = vliText->Number() * szfCharacter.height;
@@ -407,7 +406,7 @@ void __vectorcall RePag::DirectX::COTextBox::Text(_In_ char* pcText)
 		if(hWndElement) CreateText();
 	}
 	else{
-		STScrollInfo siScrollInfo;
+		STScrollInfo siScrollInfo{};
 		siScrollInfo.ucMask = SBI_ALL;
 		siScrollInfo.fMax = siScrollInfo.fPos = 0;
 		siScrollInfo.fPage = (float)lHeight;
@@ -436,12 +435,12 @@ void __vectorcall RePag::DirectX::COTextBox::Text_NewLine(_In_ char* pcText, _In
 		GetTextPoint(vasLine->c_Str(), vasLine->Length(), szfTextPoint);
 		if(fWidestLine < szfTextPoint.width) fWidestLine = szfTextPoint.width;
 
-		STScrollInfo siLine; siLine.ucMask = SBI_MAX | SBI_CHARACTER_HEIGHT;
+		STScrollInfo siLine{}; siLine.ucMask = SBI_MAX | SBI_CHARACTER_HEIGHT;
 		sbVertical->GetScrollInfo(siLine);
 		siLine.fMax += siLine.szfCharacter.height;
 		sbVertical->SetScrollInfo(siLine);
 
-		STScrollInfo siCharacter; siCharacter.ucMask = SBI_MAX;
+		STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_MAX;
 		sbHorizontal->GetScrollInfo(siCharacter);
 		if(fWidestLine > siCharacter.fMax){	siCharacter.fMax = fWidestLine;	sbHorizontal->SetScrollInfo(siCharacter);	}
 		ChangeSizeVisibleScrollBars();
@@ -492,8 +491,8 @@ unsigned long __vectorcall RePag::DirectX::COTextBox::LineNumbers(void)
 void __vectorcall RePag::DirectX::COTextBox::Scroll_Begin(void)
 {
 	ThreadSafe_Begin();
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS;
-	STScrollInfo siLine; siLine.ucMask = SBI_POS;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS;
 	siCharacter.fPos = 0;	sbHorizontal->SetScrollInfo(siCharacter);
 	siLine.fPos = 0; sbVertical->SetScrollInfo(siLine);
 	OnRender(false);
@@ -506,8 +505,8 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Begin(void)
 void __vectorcall RePag::DirectX::COTextBox::Scroll_End(void)
 {
 	ThreadSafe_Begin();
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_POS;
-	STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_MAX | SBI_PAGE;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_POS;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_MAX | SBI_PAGE;
 	siCharacter.fPos = 0;	sbHorizontal->SetScrollInfo(siCharacter);
 	sbVertical->GetScrollInfo(siLine);
 	siLine.fPos = siLine.fMax - siLine.fPage; sbVertical->SetScrollInfo(siLine);
@@ -521,15 +520,14 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_End(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 {
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE;
-	STScrollInfo siLine; siLine.ucMask = SBI_POS | SBI_MAX | SBI_PAGE | SBI_CHARACTER_HEIGHT;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_MAX | SBI_PAGE | SBI_CHARACTER_HEIGHT;
 	ThreadSafe_Begin();
 	sbVertical->GetScrollInfo(siLine);
 	sbHorizontal->GetScrollInfo(siCharacter);
 	if(ucDown_UP == SB_LINEDOWN){
 		if(siLine.fPos + siLine.fPage < siLine.fMax){
 			siLine.fPos += siLine.szfCharacter.height;
-			if(cSelect){ rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height;	}
 			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -538,7 +536,6 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 	else if(ucDown_UP == SB_LINEUP){
 		if(siLine.fPos){
 			siLine.fPos -= siLine.szfCharacter.height;
-			if(cSelect){ rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; }
 			sbVertical->SetScrollInfo(siLine);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -549,8 +546,8 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::SetScrollBarSize(_In_ BYTE ucWidth_Height)
 {
-	STScrollInfo siCharacter; siCharacter.ucMask = SBI_PAGE;
-	STScrollInfo siLine; siLine.ucMask = SBI_PAGE;
+	STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE;
+	STScrollInfo siLine{}; siLine.ucMask = SBI_PAGE;
 
 	ThreadSafe_Begin();
 	ucScrollBarSize = ucWidth_Height;
@@ -594,10 +591,8 @@ void __vectorcall RePag::DirectX::COTextBox::SetScrollBarPos(_In_ BYTE ucBar, _I
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::DeSelect(void)
 {
-  cSelect = 0; SetEvent(heCaret); //ulSelectPos = ulCharacterPos;
-
-	//rclDirty.top = FloatToLong(rcfSelect.top); rclDirty.bottom = FloatToLong(rcfSelect.bottom);
 	rclDirty.left = 0; rclDirty.right = lWidth;
+	cSelect = 0; stSelect_bottom = stSelect_top; SetEvent(heCaret);
 	OnRender(true);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 }

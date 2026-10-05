@@ -431,7 +431,7 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::Release(void)
 void __vectorcall RePag::DirectX::COLookupBox::OnPaint(void)
 {
 	ThreadSafe_Begin();
-	OnRender(false, ucIndex, ucIndex);
+	OnRender(false);
 	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	eEntry->OnPaint();
@@ -454,7 +454,7 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
 	sbVertical->CreateWindowGraphic(hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
 	sbHorizontal->CreateWindowGraphic(hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
-	STScrollInfo siScrollInfo;
+	STScrollInfo siScrollInfo{};
 	siScrollInfo.ucMask = SBI_ALL;
 	siScrollInfo.fMax = siScrollInfo.fPos = 0;
 	siScrollInfo.fPage = (float)lHeight - ucScrollBarSize;
@@ -492,7 +492,7 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Size(_In_ LPARAM lParam)
 
 		CreateWindowSizeDependentResources();
 
-		STScrollInfo siScrollInfo; siScrollInfo.ucMask = SBI_PAGE;
+		STScrollInfo siScrollInfo{}; siScrollInfo.ucMask = SBI_PAGE;
 		siScrollInfo.fPage = (float)lHeight;
 		sbVertical->SetScrollInfo(siScrollInfo);
 		sbVertical->NewWindow(lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
@@ -502,7 +502,7 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Size(_In_ LPARAM lParam)
 		sbHorizontal->NewWindow(ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
 		ChangeSizeVisibleScrollBars();
-		OnRender(false, ucIndex, ucIndex);
+		OnRender(false);
 		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 
 		eEntry->NewWindow(ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y - ucHeight_Entry);
