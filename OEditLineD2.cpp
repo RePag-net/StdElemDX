@@ -1134,7 +1134,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_ContexMenu(_In_ LPARAM lParam)
 	}
 
 	POINT ptPosition;
-	ptPosition.x = LOWORD(lParam); ptPosition.y = HIWORD(lParam);
+	ptPosition.x = GET_X_LPARAM(lParam); ptPosition.y = GET_Y_LPARAM(lParam);
 	if(ptPosition.x == USHRT_MAX && ptPosition.y == USHRT_MAX) ClientToScreen(GetParent(hWndElement), &Position(ptPosition));
 	TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, ptPosition.x, ptPosition.y, hWndElement, nullptr);
 	ThreadSafe_End();
@@ -1162,7 +1162,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 	if(vasContent->Length()){	D2D_SIZE_F szfTextPoint;
 		if(fTextPos || ucTextAlignment & TXA_LEFT){
 			do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint); }
-			while(szfTextPoint.width - fTextPos < (float)LOWORD(lParam) && ulCharacterPos < vasContent->Length());
+			while(szfTextPoint.width - fTextPos < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
 			ptfCaret.x = szfTextPoint.width - fTextPos;
 
 			if(vasCharacterMask->Length()){
@@ -1176,15 +1176,15 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 			GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 			if(szfTextPoint.width > (float)lWidth){
 				do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint); }
-				while(szfTextPoint.width < (float)LOWORD(lParam) && ulCharacterPos < vasContent->Length());
+				while(szfTextPoint.width < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
 				ptfCaret.x = szfTextPoint.width;
 			}
 			else if(ucTextAlignment & TXA_RIGHT) ptfCaret.x = (float)lWidth - szfTextPoint.width;
 			else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
 
-			if(LOWORD(lParam) > (short)ptfCaret.x){
+			if(GET_X_LPARAM(lParam) > (short)ptfCaret.x){
 				do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);}
-				while(szfTextPoint.width + ptfCaret.x < (float)LOWORD(lParam) && ulCharacterPos < vasContent->Length());
+				while(szfTextPoint.width + ptfCaret.x < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
 			 
 				if(vasCharacterMask->Length()){
 					if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);

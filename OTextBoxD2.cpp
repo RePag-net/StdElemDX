@@ -529,6 +529,8 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 		if(siLine.fPos + siLine.fPage < siLine.fMax){
 			siLine.fPos += siLine.szfCharacter.height;
 			sbVertical->SetScrollInfo(siLine);
+			rclDirty.left = rclDirty.top = 0; 
+      rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
@@ -536,7 +538,10 @@ void __vectorcall RePag::DirectX::COTextBox::Scroll_Line(_In_ BYTE ucDown_UP)
 	else if(ucDown_UP == SB_LINEUP){
 		if(siLine.fPos){
 			siLine.fPos -= siLine.szfCharacter.height;
+			if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
 			sbVertical->SetScrollInfo(siLine);
+			rclDirty.left = rclDirty.top = 0;
+			rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}

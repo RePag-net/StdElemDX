@@ -70,7 +70,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditBox(_In_ HWND hWnd, _In_ unsigned i
 														return NULL;
 		case WM_VSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam, lParam);
 														return NULL;
-		case WM_HSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_HScroll(wParam);
+		case WM_HSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_HScroll();
 														return NULL;
 		case WM_SETFOCUS      : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 														return NULL;
@@ -180,7 +180,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_SetFocus(void)
 			GetScrollBar(SB_VERT, siLine); GetScrollBar(SB_HORZ, siCharacter);
 			if(!ptfCaret.x && !ptfCaret.y && !siLine.fPos && !siCharacter.fPos){ ulCharacterPos = lLine = 0; pvLine = vliText->Element(lLine); }
 		}
-    rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret_EditBox, this, 0, 500, 0);
 	}
 	ThreadSafe_End();
@@ -191,7 +190,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KillFocus(void)
 	ThreadSafe_Begin();
 	DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); htCaret = nullptr;
 
-	//rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
 	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
@@ -199,10 +197,9 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KillFocus(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::WM_HScroll(_In_ WPARAM wParam)
+void __vectorcall RePag::DirectX::COEditBox::WM_HScroll(void)
 {
 	ThreadSafe_Begin();
-	UNREFERENCED_PARAMETER(wParam);
 
 	rclDirty.left = rclDirty.top = 0;
 	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
@@ -271,7 +268,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 	}
 
 	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
+	rclDirty.right = lWidth; rclDirty.bottom = FloatToLong(siLine.fPage);
 	OnRender(true);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
@@ -1299,7 +1296,7 @@ LastLineCopy:
 												((COStringA*)vliText->Element(stSelect_top.lLine))->Delete(stSelect_top.ulCharacterPos, ulCharacter - 1);
 												sbHorizontal->GetScrollInfo(siCharacter);
 												rclDirty.left = FloatToLong(stSelect_top.fPosition); rclDirty.right = FloatToLong(siCharacter.fPage);
-												stSelect_bottom = stSelect_top;
+												stSelect_bottom = stSelect_top; cSelect = 0; SetEvent(heCaret);
 												OnRender(true);
 												ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 											}
@@ -1460,7 +1457,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_ContexMenu(_In_ LPARAM lParam)
 	}
 
 	POINT ptPosition;
-	ptPosition.x = LOWORD(lParam); ptPosition.y = HIWORD(lParam);
+	ptPosition.x = GET_X_LPARAM(lParam); ptPosition.y = GET_Y_LPARAM(lParam);
 	if(ptPosition.x == USHRT_MAX && ptPosition.y == USHRT_MAX) ClientToScreen(GetParent(hWndElement), &Position(ptPosition));
 	TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, ptPosition.x, ptPosition.y, hWndElement, nullptr);
 	ThreadSafe_End();
@@ -1490,9 +1487,8 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 	STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_MAX;
 	GetScrollBar(SB_VERT, siLine);
 
-	rcl2Dirty[0].right = FloatToLong(ptfCaret.x) + 2; rcl2Dirty[0].left = rcl2Dirty[0].right - ucCaretStrength - 4;
-	ptfCaret.y ? rcl2Dirty[0].top = FloatToLong(ptfCaret.y) - 1 : rcl2Dirty[0].top = 0;
-	rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height) + 2;
+	rcl2Dirty[0].left = FloatToLong(ptfCaret.x); rcl2Dirty[0].right = rcl2Dirty[0].left + ucCaretStrength;
+	rcl2Dirty[0].top = FloatToLong(ptfCaret.y);	rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
 
 	ptfCaret.x = 0.0f; ulCharacterPos = 0;
 	if(!vliText->Number()){
@@ -1515,7 +1511,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 		ptfCaret.x = szfTextPoint.width;
 	}
 	else ptfCaret.x = 0.0f;
-  ulSelectPos = ulCharacterPos;
 
 	rcl2Dirty[1].left = FloatToLong(ptfCaret.x); rcl2Dirty[1].right = rcl2Dirty[1].left + ucCaretStrength;
   rcl2Dirty[1].top = FloatToLong(ptfCaret.y); rcl2Dirty[1].bottom = rcl2Dirty[1].top + FloatToLong(szfCharacter.height);

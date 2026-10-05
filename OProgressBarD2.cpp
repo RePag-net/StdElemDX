@@ -143,7 +143,7 @@ void __vectorcall RePag::DirectX::COProgressBar::WM_LButtonDown(_In_ WPARAM wPar
 {
 	ThreadSafe_Begin();
 	if(ulPosition_max){
-		ulPosition = LOWORD(lParam);
+		ulPosition = GET_X_LPARAM(lParam);
 		OnRender();
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
@@ -155,7 +155,7 @@ void __vectorcall RePag::DirectX::COProgressBar::WM_MouseMove(_In_ WPARAM wParam
 {
 	ThreadSafe_Begin();
 	if(ulPosition_max && wParam == MK_LBUTTON){
-		ulPosition = LOWORD(lParam);
+		ulPosition = GET_X_LPARAM(lParam);
 		OnRender();
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}

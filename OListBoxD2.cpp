@@ -157,7 +157,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_HScroll(_In_ WPARAM wParam)
 	STScrollInfo siLine{}; siLine.ucMask = SIF_PAGE; GetScrollBar(SB_VERT, siLine);
 	STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
 	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = siCharacter.fPage; rclDirty.bottom = siLine.fPage;
+	rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
@@ -169,7 +169,7 @@ void __vectorcall RePag::DirectX::COListBox::WM_VScroll(_In_ WPARAM wParam)
 	STScrollInfo siLine{}; siLine.ucMask = SIF_PAGE; GetScrollBar(SB_VERT, siLine);
 	STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
   rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = siCharacter.fPage; rclDirty.bottom = siLine.fPage;
+	rclDirty.right = FloatToLong(siCharacter.fPage); rclDirty.bottom = FloatToLong(siLine.fPage);
 	OnRender(false);
 	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
@@ -219,14 +219,15 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
 				dxgiPresent.DirtyRectsCount = 2;
 				rcl2Dirty[1].top = FloatToLong(fSelect_top_old);
 				rcl2Dirty[1].bottom = rcl2Dirty[1].top + FloatToLong(szfCharacter.height) + 2;
-				rcl2Dirty[1].left = 0; rcl2Dirty[1].right = siCharacter.fPage;
+				if(rcl2Dirty[1].bottom > FloatToLong(siLine.fPage))  rcl2Dirty[1].bottom = FloatToLong(siLine.fPage);
+				rcl2Dirty[1].left = 0; rcl2Dirty[1].right = FloatToLong(siCharacter.fPage);
 			}
 			else dxgiPresent.DirtyRectsCount = 1;
 		}
 		else dxgiPresent.DirtyRectsCount = 1;
 
 		cSelect = 1;
-		ucIndex = (BYTE)((float)(HIWORD(lParam) / szfCharacter.height) + (BYTE)(siLine.fPos / szfCharacter.height));
+		ucIndex = GET_Y_LPARAM(lParam) / FloatToLong(szfCharacter.height) + FloatToLong(siLine.fPos / szfCharacter.height);
 		if(ucIndex >= vliText->Number()) ucIndex = (BYTE)vliText->Number() - 1;
 		COStringA* pasLine = (COStringA*)vliText->Element(ucIndex); D2D_SIZE_F szfTextPoint;
 		ulCharacterPos = pasLine->Length();
@@ -235,7 +236,8 @@ void __vectorcall RePag::DirectX::COListBox::WM_LButtonUp(_In_ LPARAM lParam)
     stSelect_bottom.lLine = ucIndex; stSelect_bottom.ulCharacterPos = ulCharacterPos; stSelect_bottom.fPosition = szfTextPoint.width + 1.5f;
 
 		rcl2Dirty[0].left = 0;
-		stSelect_bottom.fPosition > siCharacter.fPage ? rcl2Dirty[0].right = siCharacter.fPage :rcl2Dirty[0].right = stSelect_bottom.fPosition;
+		stSelect_bottom.fPosition > siCharacter.fPage ? rcl2Dirty[0].right = FloatToLong(siCharacter.fPage) 
+																									: rcl2Dirty[0].right = FloatToLong(stSelect_bottom.fPosition);
 		rcl2Dirty[0].top = FloatToLong(((float)ucIndex - siLine.fPos / szfCharacter.height) * szfCharacter.height);
 		rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
 		OnRender(false);
@@ -251,20 +253,38 @@ bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char u
 	if(ucIndexA < vliText->Number()){	D2D_SIZE_F szfTextPoint;
 		STScrollInfo siCharacter{}; siCharacter.ucMask = SIF_PAGE; GetScrollBar(SB_HORZ, siCharacter);
 		STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SIF_PAGE; GetScrollBar(SB_VERT, siLine);
+
+		RECT rcl2Dirty[2] = {0}; dxgiPresent.pDirtyRects = rcl2Dirty;
+		if(cSelect){
+			float fSelect_top_old = (float)ucIndex * szfCharacter.height;
+			if(siLine.fPos) fSelect_top_old -= siLine.fPos;
+			if(fSelect_top_old >= 0.0f){
+				dxgiPresent.DirtyRectsCount = 2;
+				rcl2Dirty[1].top = FloatToLong(fSelect_top_old);
+				rcl2Dirty[1].bottom = rcl2Dirty[1].top + FloatToLong(szfCharacter.height) + 2;
+				if(rcl2Dirty[1].bottom > FloatToLong(siLine.fPage))  rcl2Dirty[1].bottom = FloatToLong(siLine.fPage);
+				rcl2Dirty[1].left = 0; rcl2Dirty[1].right = FloatToLong(siCharacter.fPage);
+			}
+			else dxgiPresent.DirtyRectsCount = 1;
+		}
+		else dxgiPresent.DirtyRectsCount = 1;
+
 		if((float)ucIndexA < siLine.fPos / szfCharacter.height){
 			siLine.fPos = (float)ucIndexA * szfCharacter.height;
 			SetScrollBar(SB_VERT, siLine);
-			rclDirty.top = 0; rclDirty.bottom = FloatToLong(siLine.fPage);
-		}
-		else if((float)ucIndexA >= (siLine.fPos + siLine.fPage) / szfCharacter.height){
-      float fLines = siLine.fPage / szfCharacter.height - 1.0f;
-			siLine.fPos = (float)ucIndexA * szfCharacter.height - fLines * szfCharacter.height;
-			SetScrollBar(SB_VERT, siLine);
-			rclDirty.top = 0; rclDirty.bottom = FloatToLong(siLine.fPage);
+			rcl2Dirty[0].top = 0; rcl2Dirty[0].bottom = FloatToLong(siLine.fPage);
 		}
 		else{
-			rclDirty.top = FloatToLong(((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height);
-			rclDirty.bottom = rclDirty.top + FloatToLong(szfCharacter.height);
+			if((float)ucIndexA >= (siLine.fPos + siLine.fPage) / szfCharacter.height){
+				float fLines = siLine.fPage / szfCharacter.height - 1.0f;
+				siLine.fPos = (float)ucIndexA * szfCharacter.height - fLines * szfCharacter.height;
+				SetScrollBar(SB_VERT, siLine);
+				rcl2Dirty[0].top = 0; rcl2Dirty[0].bottom = FloatToLong(siLine.fPage);
+			}
+			else{
+				rcl2Dirty[0].top = FloatToLong(((float)ucIndexA - siLine.fPos / szfCharacter.height) * szfCharacter.height);
+				rcl2Dirty[0].bottom = rcl2Dirty[0].top + FloatToLong(szfCharacter.height);
+			}
 		}
 
 		ucIndex = ucIndexA;
@@ -277,11 +297,11 @@ bool __vectorcall RePag::DirectX::COListBox::SetSelectIndex(_In_ unsigned char u
 		stSelect_top.ulCharacterPos = 0; stSelect_top.fPosition = 0.0f;
 		stSelect_bottom.ulCharacterPos = ulCharacterPos; stSelect_bottom.fPosition = szfTextPoint.width + 1.5f;
 
-		rclDirty.left = 0; 
-
-		rclDirty.right = siCharacter.fPage;
+		rcl2Dirty[0].left = 0; rcl2Dirty[0].right = FloatToLong(siCharacter.fPage);
 		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+		dxgiPresent.DirtyRectsCount = 1;
+		dxgiPresent.pDirtyRects = &rclDirty;
 		ThreadSafe_End();
 		return true;
 	}
@@ -358,7 +378,7 @@ void __vectorcall RePag::DirectX::COListBox::DeSelectEnum(void)
 	if(fSelect_top_old >= 0.0f && fSelect_top_old < siLine.fPage){
 		rclDirty.top = FloatToLong(fSelect_top_old);
 		rclDirty.bottom = rclDirty.top + FloatToLong(szfCharacter.height) + 2;
-		rclDirty.left = 0; rclDirty.right = siCharacter.fPage;
+		rclDirty.left = 0; rclDirty.right = FloatToLong(siCharacter.fPage);
 	}
 	cSelect = 0;
 	OnRender(false);

@@ -278,16 +278,16 @@ void __vectorcall RePag::DirectX::COPassword::WM_LButtonDown(_In_ LPARAM lParam)
 	if(vasPassword->Length()){
 		if(fTextPos || ucTextAlignment & TXA_LEFT){
 			do{ GetTextPoint(vasPassword->c_Str(), ++ulCharacterPos, szfTextPoint); }
-			while(szfTextPoint.width - fTextPos < LOWORD(lParam) && ulCharacterPos < vasPassword->Length());
+			while(szfTextPoint.width - fTextPos < GET_X_LPARAM(lParam) && ulCharacterPos < vasPassword->Length());
 			ptfCaret.x = szfTextPoint.width - fTextPos;
 		}
 		else if(ucTextAlignment & TXA_CENTERHORIZONTAL){
 			GetTextPoint(vasPassword->c_Str(), vasPassword->Length(), szfTextPoint);
 			ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
 
-			if(LOWORD(lParam) > ptfCaret.x){
+			if(GET_X_LPARAM(lParam) > ptfCaret.x){
 				do{ GetTextPoint(vasPassword->c_Str(), ++ulCharacterPos, szfTextPoint); }
-				while(szfTextPoint.width + ptfCaret.x < LOWORD(lParam) && ulCharacterPos < vasPassword->Length());
+				while(szfTextPoint.width + ptfCaret.x < GET_X_LPARAM(lParam) && ulCharacterPos < vasPassword->Length());
 				ptfCaret.x += szfTextPoint.width;
 			}
 		}

@@ -269,7 +269,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_LButtonDown(_In_ LPARAM lPar
 {
 	SetCapture(hWndElement);
 	ThreadSafe_Begin();
-	sMausPos_x = LOWORD(lParam);
+	sMausPos_x = GET_X_LPARAM(lParam);
 
 	long lPos_x;
 	ucSwitch = 0;
@@ -283,8 +283,8 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_MouseMove(_In_ WPARAM wParam
 	if(pfnChangeColumnWidth && wParam == MK_LBUTTON){
 		short sWidth = 0; long lSwitchWidth;
 		ThreadSafe_Begin();
-		if(LOWORD(lParam) >= sMausPos_x) sWidth = LOWORD(lParam) - sMausPos_x;
-		else sWidth = LOWORD(lParam) - sMausPos_x;
+		if(GET_X_LPARAM(lParam) >= sMausPos_x) sWidth = GET_X_LPARAM(lParam) - sMausPos_x;
+		else sWidth = GET_X_LPARAM(lParam) - sMausPos_x;
 
 		if(vpTwo_waySwitch[ucSwitch]->Width(lSwitchWidth) + sWidth >= 3){
 			//AndernFensterGrosse(0, sBreite);
@@ -298,7 +298,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_MouseMove(_In_ WPARAM wParam
 
 			for(BYTE ucNummer = ucSwitch + 1; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->ChangeWindowPosition(sWidth, 0);
 
-			sMausPos_x = LOWORD(lParam);
+			sMausPos_x = GET_X_LPARAM(lParam);
 			pfnChangeColumnWidth(GetParent(hWndElement), ucSwitch, sWidth);
 		}
 		ThreadSafe_End();

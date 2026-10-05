@@ -276,7 +276,7 @@ void __vectorcall RePag::DirectX::CODate::OnRender(void)
 		GetCalendarInfoEx(LOCALE_NAME_USER_DEFAULT, CAL_GREGORIAN, nullptr, dwCalendarInfo++, pwcWeekday_2, 3, nullptr);
 		if(!wcscmp(pwcWeekday_1, pwcWeekday_2)){ ucTag == 6 ? stMonth.wDayOfWeek = 0 : stMonth.wDayOfWeek = ucTag + 1; break; }
 	}
-	ucFirstDayOfWeek = stMonth.wDayOfWeek;
+	ucFirstDayOfWeek = (BYTE)stMonth.wDayOfWeek;
 
 	BYTE ucWeeksInMonth = 5;
 	switch(stMonth.wMonth){
@@ -1688,7 +1688,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DateTimeText(void)
 	}
 
 	if(bNewMask){
-		BYTE ucMaske, ucStelle_Maske = 0, ucStelle_DatumZeit = 0, ucLange = asFormat_Date.Length(); COStringA asMaske_Datum;
+		BYTE ucMaske, ucStelle_Maske = 0, ucStelle_DatumZeit = 0, ucLange = (BYTE)asFormat_Date.Length(); COStringA asMaske_Datum;
 		char c2Buchstabe[2]; c2Buchstabe[1] = 0; WORD wJahr;	bNewMask = false; char pc5KurzText[5]; int iBytes; DWORD dwKalenderInfo; VMBLOCK vbText;
 		do{
 			switch((asFormat_Date)[ucStelle_Maske]){
@@ -1794,7 +1794,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DateTimeText(void)
 		while(ucStelle_Maske < ucLange);
 
 		if(iBytes_Zeit){
-			ucStelle_Maske = 0, ucStelle_DatumZeit = 0, ucLange = asFormat_Time.Length(); COStringA asMaske_Zeit;
+			ucStelle_Maske = 0, ucStelle_DatumZeit = 0, ucLange = (BYTE)asFormat_Time.Length(); COStringA asMaske_Zeit;
 			do{
 				switch((asFormat_Time)[ucStelle_Maske]){
 					case 0x68	: ucMaske = 1; while((asFormat_Time)[++ucStelle_Maske] == 0x68 && ucStelle_Maske < ucLange) ucMaske++;
@@ -1967,7 +1967,7 @@ bool __vectorcall RePag::DirectX::CODate::COEditDate::TextToSYSTEMTIME(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::CODate::COEditDate::DateTextToSYSTEMTIME(SYSTEMTIME& stSystemTime, unsigned char& ucStelle_DatumZeit)
 {
-	BYTE ucMaske, ucStelle_Maske = 0, ucLange = asFormat_Date.Length(); COStringA asZahl;
+	BYTE ucMaske, ucStelle_Maske = 0, ucLange = (BYTE)asFormat_Date.Length(); COStringA asZahl;
 	do{
 		switch((asFormat_Date)[ucStelle_Maske]){
 			case 0x64	: ucMaske = 1; while((asFormat_Date)[++ucStelle_Maske] == 0x64 && ucStelle_Maske < ucLange) ucMaske++;
@@ -2024,7 +2024,7 @@ bool __vectorcall RePag::DirectX::CODate::COEditDate::DateTextToSYSTEMTIME(SYSTE
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::CODate::COEditDate::TimeTextToSYSTEMTIME(SYSTEMTIME& stSystemTime, unsigned char& ucStelle_DatumZeit)
 {
-	BYTE ucMaske, ucStelle_Maske = 0, ucLange = asFormat_Time.Length(); COStringA asZahl;
+	BYTE ucMaske, ucStelle_Maske = 0, ucLange = (BYTE)asFormat_Time.Length(); COStringA asZahl;
 	do{
 		switch((asFormat_Time)[ucStelle_Maske]){
 			case 0x68	: ucMaske = 1; while((asFormat_Time)[++ucStelle_Maske] == 0x68 && ucStelle_Maske < ucLange) ucMaske++;
@@ -2083,7 +2083,7 @@ bool __vectorcall RePag::DirectX::CODate::SetDate(STTime& stZeit)
 {
 	ThreadSafe_Begin();
 	SYSTEMTIME stSystemTime;
-	stSystemTime.wYear = stZeit.usJahr; stSystemTime.wMonth = stZeit.ucMonat; stSystemTime.wDay = stZeit.ulTag; stSystemTime.wHour = stZeit.ucStunde;
+	stSystemTime.wYear = stZeit.usJahr; stSystemTime.wMonth = stZeit.ucMonat; stSystemTime.wDay = (WORD)stZeit.ulTag; stSystemTime.wHour = stZeit.ucStunde;
 	stSystemTime.wMinute = stZeit.ucMinute; stSystemTime.wSecond = stZeit.ucSekunde; stSystemTime.wMilliseconds = stZeit.usMillisekunde;
 	if(GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_USE_ALT_CALENDAR, &stSystemTime, nullptr, nullptr, NULL, nullptr)){
 		stDate = stSystemTime; SetDayOfWeek();
