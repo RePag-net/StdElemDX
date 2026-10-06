@@ -226,10 +226,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 													SetScrollBar(SB_VERT, siLine);
 													bScrollChanged = true;
 												}
-												if(bScrollChanged){
-													ptfCaret.y += szfCharacter.height;
-													if(cSelect){ rcfSelect.top += szfCharacter.height; rcfSelect.bottom += szfCharacter.height; }
-												}
+												if(bScrollChanged) ptfCaret.y += szfCharacter.height;
 												break;
 		case SB_LINEDOWN	: if(!lParam && siLine.fPos + siLine.fPage < siLine.fMax){
 													siLine.fPos += szfCharacter.height;
@@ -239,10 +236,7 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 													SetScrollBar(SB_VERT, siLine);
 													bScrollChanged = true;
 												}
-												if(bScrollChanged){
-													ptfCaret.y -= szfCharacter.height;
-													if(cSelect){ rcfSelect.top -= szfCharacter.height; rcfSelect.bottom -= szfCharacter.height; }
-												}
+												if(bScrollChanged) ptfCaret.y -= szfCharacter.height;
 												break;
 		case SB_PAGEUP		: if(!lParam && siLine.fPos > 0.0f){
 													siLine.fPos -= fScrollPage;
@@ -250,9 +244,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 													siLine.ucMask = SBI_POS;
 													SetScrollBar(SB_VERT, siLine);
 												}
-												if(cSelect){
-													rcfSelect.top = (float)lLine * szfCharacter.height - siLine.fPos;
-													rcfSelect.bottom = rcfSelect.top + szfCharacter.height; }
 												break;
 		case SB_PAGEDOWN	: if(!lParam && siLine.fPos + siLine.fPage < siLine.fMax){
 													siLine.fPos += fScrollPage;
@@ -261,9 +252,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_
 													siLine.ucMask = SBI_POS;
 													SetScrollBar(SB_VERT, siLine);
 												}
-												if(cSelect){
-													rcfSelect.top = (float)lLine * szfCharacter.height - siLine.fPos;
-													rcfSelect.bottom = rcfSelect.top + szfCharacter.height; }
 												break;
 	}
 
@@ -1236,7 +1224,7 @@ HGLOBAL hGlobal; char* pcClipboard;	*vasContent = NULL; ULONG ulCharacter; long 
 void* pvIterator; void* pvDelete; void* pvPreIterator; void* pvIterator_insert;
 STScrollInfo siLine{}; siLine.ucMask = SBI_POS | SBI_PAGE | SBI_CHARACTER_HEIGHT;
 STScrollInfo siCharacter{}; siCharacter.ucMask = SBI_PAGE | SBI_MAX;
-D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0; ULONG ulWidth, ulSign = 0, ulSign_right = 1; COList liText(false);
+D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0, fSelect_top = 0; ULONG ulWidth, ulSign = 0, ulSign_right = 1; COList liText(false);
 
 	switch(LOWORD(wParam)){
 		case IDM_COPY		:	ThreadSafe_Begin();
@@ -1252,9 +1240,9 @@ D2D_SIZE_F szfTextPoint; COStringA* vasLine; float fWidestLine = 0; ULONG ulWidt
 											}
 											else{
 												sbVertical->GetScrollInfo(siLine);
-												pvIterator = vliText->IteratorToBegin(); rcfSelect = {0};
-												while(pvIterator && rcfSelect.top < siLine.fPos){ 
-													vliText->NextElement(pvIterator); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++; }
+												pvIterator = vliText->IteratorToBegin();
+												while(pvIterator && fSelect_top < siLine.fPos){
+													vliText->NextElement(pvIterator); fSelect_top += siLine.szfCharacter.height; lSelectLine++; }
 												while(pvIterator && lSelectLine++ < stSelect_top.lLine) vliText->NextElement(pvIterator);
 
 												_SelectLine->SubString(vbSelectLine, stSelect_top.ulCharacterPos + 1, _SelectLine->Length());
@@ -1302,9 +1290,9 @@ LastLineCopy:
 											}
 											else{
 												sbVertical->GetScrollInfo(siLine);
-												pvIterator = vliText->IteratorToBegin(); pvDelete = nullptr;  rcfSelect = {0};
-												while(pvIterator && rcfSelect.top < siLine.fPos){
-													vliText->NextElement(pvIterator, pvDelete); rcfSelect.top += siLine.szfCharacter.height; lSelectLine++;
+												pvIterator = vliText->IteratorToBegin(); pvDelete = nullptr;
+												while(pvIterator && fSelect_top < siLine.fPos){
+													vliText->NextElement(pvIterator, pvDelete); fSelect_top += siLine.szfCharacter.height; lSelectLine++;
 												}
 												while(pvIterator && lSelectLine++ < stSelect_top.lLine) vliText->NextElement(pvIterator);
 
