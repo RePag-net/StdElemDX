@@ -444,7 +444,6 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
 
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
 
 	eEntry->CreateWindowGraphic(GetParent(hWndElement), ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y);
   ptPosition.y += ucHeight_Entry; lHeight -= ucHeight_Entry;
