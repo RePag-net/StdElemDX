@@ -38,7 +38,6 @@ namespace RePag
 			friend void CALLBACK Timer_Caret_EditBox(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
 
 		private:
-
 			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_KillFocus(void);
@@ -49,7 +48,6 @@ namespace RePag
 			void __vectorcall WM_Char(_In_ WPARAM wParam);
 			bool __vectorcall WM_Command(_In_ WPARAM wParam);
 			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
-			//void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall Select_Delete(void);
 
 		protected:
@@ -58,9 +56,6 @@ namespace RePag
 			void __vectorcall COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																	 _In_ STDeviceResources* pstDeviceResources); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 			void(__vectorcall* pfnWM_Char_ShiftReturn)(_In_ COEditBox*);
-			void(__vectorcall* pfnWM_Char_Escape)(_In_ COEditBox*);
-			void(__vectorcall* pfnWM_KillFocus)(_In_ COEditBox*);
-			bool(__vectorcall* pfnWM_Command)(_In_ COEditBox*, _In_ WPARAM);
 			COStringA* __vectorcall Content(_Out_ COStringA* vasInhaltA);
 			void __vectorcall OnPaint(void);
 

@@ -75,12 +75,12 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 													else PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
 		case WM_LBUTTONDOWN : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pListBox->pfnWM_LButtonDown){ pListBox->ThreadSafe_Begin(); pListBox->pfnWM_LButtonDown(pListBox); pListBox->ThreadSafe_End(); }
+													if(pListBox->pfnWM_LButtonDown){ pListBox->ThreadSafe_Begin(); pListBox->pfnWM_LButtonDown(pListBox, wParam, lParam); pListBox->ThreadSafe_End(); }
 													return NULL;
 		case WM_LBUTTONUP   : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													pListBox->ThreadSafe_Begin();
 													pListBox->WM_LButtonUp(lParam);
-													if(pListBox->pfnWM_LButtonUp) pListBox->pfnWM_LButtonUp(pListBox);
+													if(pListBox->pfnWM_LButtonUp) pListBox->pfnWM_LButtonUp(pListBox, wParam, lParam);
 													else PostMessage(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWnd, GWLP_ID), wParam), lParam);
 													pListBox->ThreadSafe_End();
 													return NULL;

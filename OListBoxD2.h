@@ -52,12 +52,6 @@ namespace RePag
 		public:
 			void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
 			VMEMORY __vectorcall COFreiV(void);
-			void(__vectorcall* pfnWM_LButtonDown)(_In_ COListBox*);
-			void(__vectorcall* pfnWM_LButtonUp)(_In_ COListBox*);
-			void(__vectorcall* pfnWM_Char_Return)(_In_ COListBox*);
-			void(__vectorcall* pfnWM_Char_Escape)(_In_ COListBox*);
-			void(__vectorcall* pfnWM_KillFocus)(_In_ COListBox*);
-			bool(__vectorcall* pfnWM_Command)(_In_ COListBox*, _In_ WPARAM);
 			bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndexA);
 			unsigned char __vectorcall GetSelectIndex(void);
 			COStringA* __vectorcall SelectEnum(_Out_ COStringA* vasEintrag);

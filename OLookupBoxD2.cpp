@@ -83,13 +83,13 @@ LRESULT CALLBACK RePag::DirectX::WndProc_LookupBox(_In_ HWND hWnd, _In_ unsigned
 													else PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
 		case WM_LBUTTONDOWN	: pLookupBox = (COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pLookupBox->pfnWM_LButtonDown){ pLookupBox->ThreadSafe_Begin(); pLookupBox->pfnWM_LButtonDown(pLookupBox); pLookupBox->ThreadSafe_End(); }
+													if(pLookupBox->pfnWM_LButtonDown){ pLookupBox->ThreadSafe_Begin(); pLookupBox->pfnWM_LButtonDown(pLookupBox, wParam, lParam); pLookupBox->ThreadSafe_End(); }
 													return NULL;
 		case WM_LBUTTONUP		: pLookupBox = (COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													pLookupBox->ThreadSafe_Begin();
 													pLookupBox->WM_LButtonUp(lParam);
 													pLookupBox->WM_LButtonUp_LookupBox();
-													if(pLookupBox->pfnWM_LButtonUp) pLookupBox->pfnWM_LButtonUp(pLookupBox);
+													if(pLookupBox->pfnWM_LButtonUp) pLookupBox->pfnWM_LButtonUp(pLookupBox, wParam, lParam);
 													else PostMessage(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWnd, GWLP_ID), wParam), lParam);
 													pLookupBox->ThreadSafe_End();
 													return NULL;

@@ -38,6 +38,7 @@ namespace RePag
 			friend LRESULT CALLBACK WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 			private:
+				bool bDoNotCopy;
 
 			protected:
 				typedef struct STSelect
@@ -67,9 +68,12 @@ namespace RePag
 				void __vectorcall SetScrollBarPos(_In_ BYTE ucBar, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _Out_ STScrollInfo& stScrollInfo);
 				void __vectorcall SetScrollBar(_In_ BYTE ucBar, _In_ STScrollInfo& stScrollInfo);
-				void __vectorcall DeSelect(void);
 				void __vectorcall SelectText_Left(D2D_POINT_2F& ptfCaret_old);
+				void __vectorcall SelectText_Right(D2D_POINT_2F& ptfCaret_old);
+				void __vectorcall SelectText_Up(D2D_POINT_2F& ptfCaret_old, ULONG& ulCharacterPos_old);
+				void __vectorcall SelectText_Down(D2D_POINT_2F& ptfCaret_old, ULONG& ulCharacterPos_old);
 				void __vectorcall LButtonDown(_In_ LPARAM lParam);
+				void __vectorcall DeSelect(void);
 				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars !!!
 
@@ -80,11 +84,9 @@ namespace RePag
 				void __vectorcall Text(_In_ char* pcText);
 				void __vectorcall Text_NewLine(_In_ char* pcText, _In_ bool bDraw);
 				unsigned long __vectorcall LineNumbers(void);
-				void __vectorcall Scroll_Begin(void);
-				void __vectorcall Scroll_End(void);
-				void __vectorcall Scroll_Line(_In_ BYTE ucDown_UP);
 				void __vectorcall SetScrollBarSize(_In_ BYTE ucWidth_Height);
 				BYTE __vectorcall GetScrollBarSize(_In_ BYTE ucBar, _Out_ BYTE ucWidth_Height);
+				void __vectorcall DoNotCopy(_In_ bool bDoNotCopyA);
 				void __vectorcall OnPaint(void);
 
 		};
