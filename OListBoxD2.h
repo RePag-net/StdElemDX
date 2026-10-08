@@ -34,33 +34,35 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport) COListBox : public COTextBox
 		{
-			friend LRESULT CALLBACK WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
+				friend LRESULT CALLBACK WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
-		private:
+			private:
 
-		protected:
-			unsigned char ucIndex;
-			void __vectorcall WM_Size(_In_ LPARAM lParam);
-			void __vectorcall WM_LButtonUp(_In_ LPARAM lParam);
-			void __vectorcall WM_VScroll(_In_ WPARAM wParam);
-			void __vectorcall WM_HScroll(_In_ WPARAM wParam);
-			void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
-			void __vectorcall WM_Char(_In_ WPARAM wParam);
-			void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																	 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
+			protected:
+				unsigned char ucIndex;
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
+				void __vectorcall WM_LButtonUp(_In_ LPARAM lParam);
+				void __vectorcall WM_VScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_HScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
+				void __vectorcall WM_Char(_In_ WPARAM wParam);
+				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 
-		public:
-			void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
-			VMEMORY __vectorcall COFreiV(void);
-			bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndexA);
-			unsigned char __vectorcall GetSelectIndex(void);
-			COStringA* __vectorcall SelectEnum(_Out_ COStringA* vasEintrag);
-			COStringA* __vectorcall SetAndSearchEnum(_In_ unsigned char ucIndexA, _Out_ COStringA* vasEnum);
-			bool __vectorcall SearchEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
-			bool __vectorcall SearchAndSetEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
-			unsigned long __vectorcall NumberEnum(void);
-			void __vectorcall DeSelectEnum(void);
-			void __vectorcall OnPaint(void);
+			public:
+				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
+				VMEMORY __vectorcall COFreiV(void);
+				void(__vectorcall* pfnWM_LButtonDown)(_In_ COListBox*, _In_ WPARAM, _In_ LPARAM);
+				void(__vectorcall* pfnWM_Char_Return)(_In_ COListBox*);
+				bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndexA);
+				unsigned char __vectorcall GetSelectIndex(void);
+				COStringA* __vectorcall SelectEnum(_Out_ COStringA* vasEintrag);
+				COStringA* __vectorcall SetAndSearchEnum(_In_ unsigned char ucIndexA, _Out_ COStringA* vasEnum);
+				bool __vectorcall SearchEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
+				bool __vectorcall SearchAndSetEnum(_In_ COStringA* vasEnum, _Out_ unsigned char& ucIndexA);
+				unsigned long __vectorcall NumberEnum(void);
+				void __vectorcall DeSelectEnum(void);
+				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

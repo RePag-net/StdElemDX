@@ -33,12 +33,11 @@ namespace RePag
 	namespace DirectX
 	{
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		class __declspec(dllexport) COTextBox : public COEditLine
+		class __declspec(dllexport) COTextBox : public COSelect
 		{
-			friend LRESULT CALLBACK WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
+				friend LRESULT CALLBACK WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 			private:
-				bool bDoNotCopy;
 
 			protected:
 				typedef struct STSelect
@@ -51,10 +50,10 @@ namespace RePag
 				STSelect stSelect_bottom;
 				COScrollBar* sbHorizontal;
 				COScrollBar* sbVertical;
+				BYTE ucScrollBarSize;
 				COList* vliText;
 				long lLine;
 				void* pvLine;
-				BYTE ucScrollBarSize;
 				void __vectorcall CreateText(void);
 				void __vectorcall OnRender(_In_ bool bCaret);
 				void __vectorcall WM_Create(void);
@@ -62,6 +61,8 @@ namespace RePag
 				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
+				bool __vectorcall WM_Command(_In_ WPARAM wParam);
+				void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall ChangeSizeVisibleScrollBars(void);
@@ -81,6 +82,10 @@ namespace RePag
 				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		 _In_ STDeviceResources* pstDeviceResources);
 				VMEMORY __vectorcall COFreiV(void);
+				bool(__vectorcall* pfnWM_Command)(_In_ COTextBox*, _In_  WPARAM);
+				void(__vectorcall* pfnWM_KillFocus)(_In_ COTextBox*);
+				void(__vectorcall* pfnWM_Char_Escape)(_In_ COTextBox*);
+				void(__vectorcall* pfnWM_LButtonUp)(_In_ COTextBox*, _In_ WPARAM, _In_ LPARAM);
 				void __vectorcall Text(_In_ char* pcText);
 				void __vectorcall Text_NewLine(_In_ char* pcText, _In_ bool bDraw);
 				unsigned long __vectorcall LineNumbers(void);

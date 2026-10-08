@@ -58,8 +58,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_LookupBox(_In_ HWND hWnd, _In_ unsigned
 													if(pLookupBox) pLookupBox->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_SETFOCUS		: ((COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
-													return NULL;
+		//case WM_SETFOCUS		: ((COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
+		//											return NULL;
 		case WM_KILLFOCUS		: pLookupBox = (COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													pLookupBox->ThreadSafe_Begin();
 													if(IsWindowVisible(hWnd)) pLookupBox->WM_LButtonUp_LookupBox();
@@ -378,7 +378,7 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::WM_LButtonUp(_In_ WPARAM
 	if(ptlCursor.x >= fButton_left){
 		SetWindowPos(pLookupBox->HWND_Element(), HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
 		SetFocus(pLookupBox->HWND_Element());
-		pLookupBox->ulCharacterPos = vasContent->Length();
+		//pLookupBox->ulCharacterPos = vasContent->Length();
 		pLookupBox->SearchAndSetEntry(vasContent, ucIndex);;
 
 		ifButtonColor->SetColor(crfButton_Move);
@@ -464,8 +464,6 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
 	siScrollInfo.fPage = (float)lWidth - ucScrollBarSize;
 	sbHorizontal->SetVisible(false);
 	sbHorizontal->SetScrollInfo(siScrollInfo);
-
-	rcfSelect.left = rcfSelect.top = rcfSelect.bottom = 0.0f; rcfSelect.right = (float)lWidth;
 
 	if(vasContent->Length()) CreateText();
 

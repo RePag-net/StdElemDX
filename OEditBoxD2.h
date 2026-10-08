@@ -43,11 +43,10 @@ namespace RePag
 			void __vectorcall WM_KillFocus(void);
 			void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_HScroll(void);
+			void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_Char(_In_ WPARAM wParam);
-			bool __vectorcall WM_Command(_In_ WPARAM wParam);
-			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 			void __vectorcall Select_Delete(void);
 
 		protected:

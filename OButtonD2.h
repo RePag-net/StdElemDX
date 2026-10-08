@@ -25,63 +25,65 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 #pragma once
-#include "OTextLineD2.h"
+#include "OTextD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
 namespace RePag
 {
 	namespace DirectX
 	{
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		class __declspec(dllexport) COButton : public COTextLine
+		class __declspec(dllexport) COButton : public COText
 		{
-			friend LRESULT CALLBACK WndProc_Button(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
+				friend LRESULT CALLBACK WndProc_Button(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 			private:
-			D2D1_COLOR_F crfText_1;
-			ID2D1SolidColorBrush* ifTextColor_1;
-			D2D1_COLOR_F crfText_Focus;
-			ID2D1SolidColorBrush* ifTextColor_Focus;
+				D2D1_COLOR_F crfText_1;
+				ID2D1SolidColorBrush* ifTextColor_1;
+				D2D1_COLOR_F crfText_Focus;
+				ID2D1SolidColorBrush* ifTextColor_Focus;
+				ID2D1SolidColorBrush* ifBackgroundColor_1;
+				ID2D1SolidColorBrush* ifBackgroundColor_2;
+				ID2D1SolidColorBrush* ifBackgroundColor_3;
 
 			protected:
-			bool bActive;
-			D2D1_COLOR_F crfBackground_1;
-			ID2D1SolidColorBrush* ifBackgroundColor_1;
-			D2D1_COLOR_F crfBackground_2;
-			ID2D1SolidColorBrush* ifBackgroundColor_2;
-			D2D1_COLOR_F crfBackground_3;
-			ID2D1SolidColorBrush* ifBackgroundColor_3;
-			void __vectorcall WM_Create(void);
-			void __vectorcall WM_SetFocus(void);
-			void __vectorcall WM_KillFocus(void);
-			void __vectorcall WM_Char(_In_ WPARAM wParam);
-			void __vectorcall WM_LButtonDown(void);
-			void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																  _In_ STDeviceResources* pstDeviceResources);
+				bool bActive;
+				D2D1_COLOR_F crfBackground_1;
+				D2D1_COLOR_F crfBackground_2;
+				D2D1_COLOR_F crfBackground_3;
+				void __vectorcall OnRender(void);
+				void __vectorcall WM_Create(void);
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
+				void __vectorcall WM_SetFocus(void);
+				void __vectorcall WM_KillFocus(void);
+				void __vectorcall WM_Char(_In_ WPARAM wParam);
+				void __vectorcall WM_LButtonDown(void);
+				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																		_In_ STDeviceResources* pstDeviceResources);
 
 			public:
-			void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																  _In_ STDeviceResources* pstDeviceResources);
-			VMEMORY __vectorcall COFreiV(void);
-			void(__vectorcall* pfnWM_LButtonDown)(COButton*);
-			void(__vectorcall* pfnWM_LButtonUp)(COButton*);
-			void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
-			void __vectorcall SetTextColor_Focus(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetTextColor_Focus(_In_ D2D1_COLOR_F& crfTextA);
-			void __vectorcall SetBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetBackgroundColor(_In_ D2D1_COLOR_F& crfBackgroundA);
-			void __vectorcall SetBackgroundColor_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetBackgroundColor_1(_In_ D2D1_COLOR_F& crfBackgroundA);
-			void __vectorcall SetBackgroundColor_2(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetBackgroundColor_2(_In_ D2D1_COLOR_F& crfBackgroundA);
-			void __vectorcall SetBackgroundColor_3(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetBackgroundColor_3(_In_ D2D1_COLOR_F& crfBackgroundA);
-			void __vectorcall Label(const char* pcLabel);
-			void __vectorcall SetActive(_In_ bool bActiveA);
-			bool __vectorcall Active(void);
-			void __vectorcall Lock(void);
-			void __vectorcall Release(void);
+				void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																		_In_ STDeviceResources* pstDeviceResources);
+				VMEMORY __vectorcall COFreiV(void);
+				void(__vectorcall* pfnWM_LButtonDown)(COButton*);
+				void(__vectorcall* pfnWM_LButtonUp)(COButton*);
+				void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
+				void __vectorcall SetTextColor_Focus(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetTextColor_Focus(_In_ D2D1_COLOR_F& crfTextA);
+				void __vectorcall SetBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetBackgroundColor(_In_ D2D1_COLOR_F& crfBackgroundA);
+				void __vectorcall SetBackgroundColor_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetBackgroundColor_1(_In_ D2D1_COLOR_F& crfBackgroundA);
+				void __vectorcall SetBackgroundColor_2(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetBackgroundColor_2(_In_ D2D1_COLOR_F& crfBackgroundA);
+				void __vectorcall SetBackgroundColor_3(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetBackgroundColor_3(_In_ D2D1_COLOR_F& crfBackgroundA);
+				void __vectorcall Label(const char* pcLabel);
+				void __vectorcall SetActive(_In_ bool bActiveA);
+				bool __vectorcall Active(void);
+				void __vectorcall Lock(void);
+				void __vectorcall Release(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

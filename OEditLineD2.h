@@ -42,25 +42,8 @@ namespace RePag
 			void __vectorcall Select_Loschen(void);
 
 		protected:
-			D2D1_RECT_F rcfSelect;
 			COStringA* vasCharacterMask;
-			float fTextPos;
-			HMENU hMenu;
-			HANDLE htCaret;
-			HANDLE heCaret;
-			D2D_POINT_2F ptfCaret;
-			BYTE ucCaretStrength;
-			char cSelect;
 			unsigned long ulCharacter_max;
-			unsigned char ucCharacterSpecification;
-			unsigned long ulCharacterPos;
-			unsigned long ulSelectPos;
-			D2D1_COLOR_F crfSelectText;
-			D2D1_COLOR_F crfSelectBack;
-			D2D1_COLOR_F crfCaret;
-			ID2D1SolidColorBrush* ifSelectBackColor;
-			ID2D1SolidColorBrush* ifCaretColor;
-			void __vectorcall OnRender(_In_ bool bCaret);
 			void __vectorcall WM_Create(void);
 			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
@@ -70,20 +53,13 @@ namespace RePag
 			bool __vectorcall WM_Command(_In_ WPARAM wParam);
 			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 			void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall DeSelect(void);
+			void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			bool __vectorcall CharacterMask_FixLeft(void);
 			bool __vectorcall CharacterMask_FixRight(void);
 			bool __vectorcall CharacterMask_Insert(_In_ WPARAM wParam);
 			bool __vectorcall CharacterMask_Delete(void);
-			bool __vectorcall CharacterCheck(_In_ WPARAM wParam);
-			bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
-			inline long __vectorcall FloatToLong(_In_ float fNumber);
-			void __vectorcall DeleteCaretPos(void);
-			void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
 			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 
@@ -98,13 +74,8 @@ namespace RePag
 			void(__vectorcall* pfnWM_LButtonDown)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonUp)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonDBClick)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
-			void __vectorcall OnPaint(void);
 			void __vectorcall SetzVerfugbar(_In_ bool bVerfugbar);
 			void __vectorcall Text(_In_ char* pcText);
-			void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA);
-			void __vectorcall SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-			void __vectorcall SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA);
 			void __vectorcall SetCharacter_Max(_In_ unsigned long ulCharacter);
 			unsigned long __vectorcall Character_Max(void);
 			void __vectorcall CharacterSpecification(_In_ unsigned char ucCharacterSpecificationA);
@@ -112,7 +83,7 @@ namespace RePag
 			COStringA* __vectorcall CharacterMask(_Out_ COStringA* pasCharacterMask);
 			void __vectorcall SelectAlles(void);
 			void __vectorcall SelectEntfernen(void);
-			void __vectorcall CaretStrength(_In_ BYTE ucCaretStrengthA);
+			void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

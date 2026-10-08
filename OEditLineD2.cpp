@@ -118,27 +118,9 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmM
 	 pfnWM_LButtonDown = nullptr;
 	 pfnWM_LButtonUp = nullptr;
 	 pfnWM_LButtonDBClick = nullptr;
-	 ptfCaret = {0};
-	 ucCaretStrength = 1;
-	 cSelect = 0;
-	 rcfSelect = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-	 fTextPos = 0.0f;
-	 ulCharacterPos = 0;
-	 ulSelectPos = 0;
+
 	 ulCharacter_max = 0x7fffffff;
-	 ucCharacterSpecification = ZV_ALLE;
-	 crfSelectText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
-	 crfSelectBack = D2D1::ColorF(RGB(215, 215, 0), 1.0f);
-	 crfCaret = D2D1::ColorF(RGB(255, 255, 255), 1.0f);
-	 htCaret = nullptr;
-	 heCaret = CreateEvent(nullptr, true, true, nullptr);
-
 	 vasCharacterMask = COStringAV(vmMemory);
-
-	 hMenu = CreatePopupMenu();
-	 AppendMenu(hMenu, MF_STRING, IDM_CUT, "Cut		Crtl+X");
-	 AppendMenu(hMenu, MF_STRING, IDM_COPY, "Copy		Crtl+C");
-	 AppendMenu(hMenu, MF_STRING, IDM_PASTE, "Paste		Crtl+V");
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
@@ -158,59 +140,6 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	VMFreiV(vasCharacterMask);
 	DestroyMenu(hMenu);
 	return ((COTextLine*)this)->COFreiV();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::OnRender(_In_ bool bCaret)
-{
-	IDWriteTextLayout* ifTextLayout; float fTextWidth; size_t szBytes_Text; WCHAR wc255Content[255]; D2D1::Matrix3x2F tfPrevTransform;
-
-	WaitForSingleObjectEx(heRender, INFINITE, false);
-	ifTextColor->SetColor(crfText);
-	D2D1_RECT_F rcfText =  D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
-	TextAlignment(ifTextLayout, fTextWidth, rcfText);
-	SafeRelease(&ifTextLayout);
-
-	if(ucTextAlignment & TXA_RIGHT && !fTextPos && rcfText.left >= 0){}
-	else if(ucTextAlignment & TXA_CENTERHORIZONTAL && rcfText.left >= 0){}
-	else rcfText.left = 0;
-  rcfText.right = fTextPos + (float)lWidth;
-
-	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(crfBackground);
-
-  ifD2D1Context6->GetTransform(&tfPrevTransform);
-	ifD2D1Context6->SetTransform(D2D1::Matrix3x2F::Translation(-fTextPos, 0.0f));
-	ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-		
-	if(!cSelect){
-		if(bCaret){	D2D1_POINT_2F ptfTop, ptfBottom;
-			ptfTop.x = ptfCaret.x + fTextPos;
-			ptfTop.y = ptfCaret.y + szfCharacter.height;
-			ptfBottom.x = ptfCaret.x + fTextPos;
-			ptfBottom.y = ptfCaret.y;
-			ifD2D1Context6->DrawLine(ptfTop, ptfBottom, ifCaretColor, (float)ucCaretStrength, nullptr);
-		}
-	}
-	else{	VMBLOCK vbCharacter = nullptr; ULONG ulZeichen; 
-		if(cSelect > 0)	ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
-		else ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
-
-		D2D1_RECT_F rcfSelect_1 = D2D1::RectF(rcfSelect.left + fTextPos, rcfSelect.top, rcfSelect.right + fTextPos, rcfSelect.bottom);
-
-		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
-
-		ifTextColor->SetColor(crfSelectText);
-		mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
-		ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
-	}
-
-	ifD2D1Context6->SetTransform(tfPrevTransform);
-	ifD2D1Context6->EndDraw();
-
-Error:
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnPaint(void)
@@ -354,8 +283,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 													fScrollOffset = fTextPos - szfTextPoint.width;
 													fTextPos = szfTextPoint.width;
 													rclDirty.left = 0; rclDirty.right = lWidth;
-													OnRender(true);
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													//OnRender(true);
+													//ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 													if(cSelect){
 														rcfSelect.right += fScrollOffset;
@@ -395,34 +324,34 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 														rclDirty.right += ucCaretStrength;
 													}
 												}
-
-												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-													if(cSelect < 0){ rcfSelect.left = ptfCaret.x;	rclDirty.left = FloatToLong(ptfCaret.x); }
-													else if(cSelect > 0){
-														if(ulSelectPos < ulCharacterPos){
-															rcfSelect.right = ptfCaret.x;
-															rclDirty.right += ucCaretStrength;
-															rclDirty.left = FloatToLong(ptfCaret.x);
-														}
-														else{ cSelect = 0; SetEvent(heCaret);
-															rclDirty.left = FloatToLong(ptfCaret.x);	}
-													}
-													else{
-														cSelect = -1;
-														ulSelectPos = ulCharacterPos + 1;
-														if(!ptfCaret.x) rclDirty.right = FloatToLong(rcfSelect.right);
-														else{
-															rcfSelect.left = ptfCaret.x;
-															rclDirty.left = FloatToLong(ptfCaret.x);
-															rcfSelect.right = (float)(rclDirty.right - ucCaretStrength);
-														}
-														ResetEvent(heCaret);
-													}
-												}
-												else if(cSelect) DeSelect();
-
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+
+												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
+													//if(cSelect < 0){ rcfSelect.left = ptfCaret.x;	rclDirty.left = FloatToLong(ptfCaret.x); }
+													//else if(cSelect > 0){
+													//	if(ulSelectPos < ulCharacterPos){
+													//		rcfSelect.right = ptfCaret.x;
+													//		rclDirty.right += ucCaretStrength;
+													//		rclDirty.left = FloatToLong(ptfCaret.x);
+													//	}
+													//	else{ cSelect = 0; SetEvent(heCaret);
+													//		rclDirty.left = FloatToLong(ptfCaret.x);	}
+													//}
+													//else{
+													//	cSelect = -1;
+													//	ulSelectPos = ulCharacterPos + 1;
+													//	if(!ptfCaret.x) rclDirty.right = FloatToLong(rcfSelect.right);
+													//	else{
+													//		rcfSelect.left = ptfCaret.x;
+													//		rclDirty.left = FloatToLong(ptfCaret.x);
+													//		rcfSelect.right = (float)(rclDirty.right - ucCaretStrength);
+													//	}
+													//	ResetEvent(heCaret);
+													//}
+													SelectText_Left();
+												}
+												else if(cSelect) DeSelect();
 											}
 											ThreadSafe_End();
 											break;
@@ -435,8 +364,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 													fScrollOffset = (float)lWidth - szfTextPoint.width + fTextPos;
 													fTextPos = szfTextPoint.width - (float)lWidth;
 													rclDirty.left = 0; rclDirty.right = lWidth;
-													OnRender(true);
-													ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+													//OnRender(true);
+													//ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 													if(cSelect){
 														rcfSelect.left += fScrollOffset;
 														rclDirty.left = FloatToLong(rcfSelect.left);
@@ -478,6 +407,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 														rclDirty.right = FloatToLong(ptfCaret.x);
 													}
 												}
+												OnRender(true);
+												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){ 
 													if(cSelect > 0){ rcfSelect.right = ptfCaret.x; rclDirty.right = FloatToLong(rcfSelect.right); }
@@ -495,8 +426,6 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 													}											 
 												}
 												else if(cSelect) DeSelect();
-												OnRender(true);
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
 											ThreadSafe_End();
 											break;
@@ -1159,7 +1088,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 	if(cSelect) DeSelect();
 
 	ulCharacterPos = 0;
-	if(vasContent->Length()){	D2D_SIZE_F szfTextPoint;
+	if(vasContent->Length()){
+		D2D_SIZE_F szfTextPoint;
 		if(fTextPos || ucTextAlignment & TXA_LEFT){
 			do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint); }
 			while(szfTextPoint.width - fTextPos < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
@@ -1183,19 +1113,20 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDown(_In_ WPARAM wParam,
 			else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
 
 			if(GET_X_LPARAM(lParam) > (short)ptfCaret.x){
-				do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);}
+				do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint); }
 				while(szfTextPoint.width + ptfCaret.x < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
-			 
+
 				if(vasCharacterMask->Length()){
 					if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 				}
 				ptfCaret.x += szfTextPoint.width;
-			} 
+			}
 		}
 	}
 	if(ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
 	if(pfnWM_LButtonDown) pfnWM_LButtonDown(this, wParam, lParam);
 	ThreadSafe_End();
+
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -1223,28 +1154,6 @@ void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(_In_ bool bVerfugbar
 		else if(hWndElement == GetFocus()) SendMessage(hWndElement, WM_SETFOCUS, NULL, NULL);
 	}
 	else{ if(hWndElement == GetFocus()) SetFocus(GetParent(hWndElement)); EnableWindow(hWndElement, bVerfugbar); }
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::CharacterCheck(_In_ WPARAM wParam)
-{
-	for(BYTE ucBit = 0; ucBit < 4; ucBit++){
-		switch(ucBit){
-			case 0   : if(ucCharacterSpecification & (1 << ucBit)){
-										if(wParam >= 0x41 && wParam <= 0x5a || wParam >= 0x61 && wParam <= 0x7a || wParam == 0x20) return true;
-									} break;
-			case 1   : if(ucCharacterSpecification & (1 << ucBit)){
-										if(wParam >= 0x30 && wParam <= 0x39) return true;
-									} break;
-			case 2   : if(ucCharacterSpecification & (1 << ucBit)){
-										if(wParam >= 0x80 && wParam <= 0xff) return true;
-									} break;
-			case 3   : if(ucCharacterSpecification & (1 << ucBit)){
-										if(wParam >= 0x20 && wParam <= 0x2f || wParam >= 0x3a && wParam <= 0x40 || 
-											wParam >= 0x5b && wParam <= 0x60 || wParam >= 0x7b && wParam <= 0x7f) return true;
-									} break;
-		}
-	}
-	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Insert(_In_ WPARAM wParam)
@@ -1415,17 +1324,6 @@ void __vectorcall RePag::DirectX::COEditLine::Text(_In_ char* pcText)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::DeSelect(void)
-{
-	cSelect = 0;
-	rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
-	if(rclDirty.left < 0) rclDirty.left = 0;
-	if(rclDirty.right > lWidth) rclDirty.right = lWidth;
-	OnRender(false);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	SetEvent(heCaret);
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::Select_Loschen(void)
 {
 	D2D_SIZE_F szfTextPoint;
@@ -1479,63 +1377,7 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen(void)
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
-{
-	ThreadSafe_Begin();
-	crfSelectText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA)
-{
-	ThreadSafe_Begin();
-	crfSelectText = crfSelectTextA;
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																																			 _In_ unsigned char ucBlue, _In_ float fAlpha)
-{
-	ThreadSafe_Begin();
-	crfSelectBack = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
-	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetSelectBackgroundColor(_In_ D2D1_COLOR_F& crfSelectBackA)
-{
-	ThreadSafe_Begin();
-	crfSelectBack = crfSelectBackA;
-	if(ifSelectBackColor) ifSelectBackColor->SetColor(crfSelectBack);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
-																														_In_ unsigned char ucBlue, _In_ float fAlpha)
-{
-	ThreadSafe_Begin();
-	crfCaret = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
-	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
 
-	rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
-	OnRender(true);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA)
-{
-	ThreadSafe_Begin();
-	crfCaret = crfCaretA;
-	if(ifCaretColor) ifCaretColor->SetColor(crfCaret);
-
-	rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
-	OnRender(true);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSafe_End();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::SetCharacter_Max(_In_ unsigned long ulCharacter)
 {
 	ThreadSafe_Begin();
@@ -1620,42 +1462,6 @@ void __vectorcall RePag::DirectX::COEditLine::SelectEntfernen(void)
 {
 	ThreadSafe_Begin();
 	if(cSelect) DeSelect();
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::DeleteCaretPos(void)
-{
-	rclDirty.left = FloatToLong(ptfCaret.x);	rclDirty.right = rclDirty.left + ucCaretStrength;
-	OnRender(false);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-inline long __vectorcall RePag::DirectX::COEditLine::FloatToLong(_In_ float fNumber)
-{
-	long lZahl = (long)fNumber;
-	fNumber -= (float)lZahl;
-	if(fNumber >= 0.5f) lZahl++;
-	return lZahl;
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COEditLine::GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint)
-{
-	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
-	size_t szBytes_Text; WCHAR wc255Content[255];		
-	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, pcText, ulTextLength)) return false;
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT)szBytes_Text, ifText, fTextLine_maxwidth, (float)lHeight, &ifTextLayout);
-	ifTextLayout->GetMetrics(&stTextMetrics);
-	SafeRelease(&ifTextLayout);
-
-	szfTextPoint.width = stTextMetrics.width;
-	szfTextPoint.height = stTextMetrics.height;
-	return true;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::CaretStrength(_In_ BYTE ucCaretStrengthA)
-{
-	ThreadSafe_Begin();
-	ucCaretStrength = ucCaretStrengthA;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

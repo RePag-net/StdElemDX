@@ -80,7 +80,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Button(_In_ HWND hWnd, _In_ unsigned in
 void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
 																											_In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
-	COTextLineV(vmMemory, pcClassName, pcWindowName, uiIDElement, pstDeviceResources);
+	COTextV(vmMemory, pcClassName, pcWindowName, uiIDElement, pstDeviceResources);
 
 	STFont stFont;
 	stFont.fontFamilyName = L"Arial";
@@ -114,15 +114,36 @@ void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In
 //---------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COButton::COFreiV(void)
 {
+	SafeRelease(&ifTextColor);
 	SafeRelease(&ifTextColor_1);
 	SafeRelease(&ifTextColor_Focus);
 	SafeRelease(&ifBackgroundColor_1);
 	SafeRelease(&ifBackgroundColor_2);
 	SafeRelease(&ifBackgroundColor_3);
 
-	return ((COTextLine*)this)->COFreiV();
+	return ((COText*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COButton::OnRender(void)
+{
+	IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wc255Inhalt[255];
+	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
+
+	WaitForSingleObjectEx(heRender, INFINITE, false);
+	if(mbstowcs_s(&szBytes_Text, wc255Inhalt, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Inhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	TextAlignment(ifTextLayout, fTextWidth, rcfText);
+	SafeRelease(&ifTextLayout);
+
+	ifD2D1Context6->BeginDraw();
+	ifD2D1Context6->Clear(crfBackground);
+	ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
+	ifD2D1Context6->EndDraw();
+
+Error:
+		SetEvent(heRender);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::WM_Create(void)
 {
 	CharacterMetric();
@@ -137,6 +158,18 @@ void __vectorcall RePag::DirectX::COButton::WM_Create(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COButton::WM_Size(_In_ LPARAM lParam)
+{
+	ThreadSafe_Begin();
+	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
+		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
+		CreateWindowSizeDependentResources();
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+	ThreadSafe_End();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
@@ -190,6 +223,7 @@ void __vectorcall RePag::DirectX::COButton::WM_LButtonUp(WPARAM wParam, LPARAM l
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+
 void __vectorcall RePag::DirectX::COButton::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen,
 																												 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {

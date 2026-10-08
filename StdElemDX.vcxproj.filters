@@ -60,6 +60,12 @@
     <ClInclude Include="ODateD2.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="OTextD2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="OSelectD2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HStdElemDX.cpp">
@@ -105,6 +111,12 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="ODateD2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="OTextD2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="OSelectD2.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
