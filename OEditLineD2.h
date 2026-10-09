@@ -53,7 +53,6 @@ namespace RePag
 			bool __vectorcall WM_Command(_In_ WPARAM wParam);
 			void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 			void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			bool __vectorcall CharacterMask_FixLeft(void);

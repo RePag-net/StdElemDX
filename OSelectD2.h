@@ -60,7 +60,6 @@ namespace RePag
 			public:
 				void __vectorcall COSelectV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																	_In_ STDeviceResources* pstDeviceResourcesA);
-				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall SetSelectTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetSelectTextColor(_In_ D2D1_COLOR_F& crfSelectTextA);
 				void __vectorcall SetSelectBackgroundColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
@@ -68,6 +67,7 @@ namespace RePag
 				void __vectorcall SetCaretColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetCaretColor(_In_ D2D1_COLOR_F& crfCaretA);
 				void __vectorcall CaretStrength(_In_ BYTE ucCaretStrengthA);
+				void __vectorcall DoNotCopy(_In_ bool bDoNotCopyA);
 
 		};
 	}

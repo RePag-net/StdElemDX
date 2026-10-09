@@ -114,11 +114,6 @@ void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmMemory, _
 	COListBoxV(vmMemory, pcRePag_ListBox, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-VMEMORY __vectorcall RePag::DirectX::COListBox::COFreiV(void)
-{
-	return ((COTextBox*)this)->COFreiV();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COListBox::OnPaint(void)
 {
 	ThreadSafe_Begin();

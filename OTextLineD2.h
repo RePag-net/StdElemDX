@@ -45,11 +45,16 @@ namespace RePag
 				void __vectorcall OnRender(_In_ bool bCaret);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
+				void __vectorcall WM_SetFocus(void);
+				void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
+				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall CharacterMetric(void);
 				void __vectorcall DeSelect(void);
 				void __vectorcall DeleteCaretPos(void);
 				void __vectorcall SelectText_Left(void);
+				void __vectorcall SelectText_Right(void);
 				void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																			_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 

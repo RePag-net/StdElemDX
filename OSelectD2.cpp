@@ -35,6 +35,7 @@ void __vectorcall RePag::DirectX::COSelect::COSelectV(_In_ const VMEMORY vmMemor
 	ptfCaret = {0};
 	ucCaretStrength = 1;
 	cSelect = 0;
+	bDoNotCopy = false;
 	ulCharacterPos = 0;
 	ucCharacterSpecification = ZV_ALLE;
 	crfSelectText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
@@ -42,17 +43,13 @@ void __vectorcall RePag::DirectX::COSelect::COSelectV(_In_ const VMEMORY vmMemor
 	crfCaret = D2D1::ColorF(RGB(255, 255, 255), 1.0f);
 	htCaret = nullptr;
 	heCaret = CreateEvent(nullptr, true, true, nullptr);
+	ifSelectBackColor = nullptr;
+	ifCaretColor = nullptr;
 
 	hMenu = CreatePopupMenu();
 	AppendMenu(hMenu, MF_STRING, IDM_CUT, "Cut		Crtl+X");
 	AppendMenu(hMenu, MF_STRING, IDM_COPY, "Copy		Crtl+C");
 	AppendMenu(hMenu, MF_STRING, IDM_PASTE, "Paste		Crtl+V");
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-VMEMORY __vectorcall RePag::DirectX::COSelect::COFreiV(void)
-{
-	SafeRelease(&ifText);
-	return ((COText*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COSelect::CharacterCheck(_In_ WPARAM wParam)
@@ -155,3 +152,9 @@ void __vectorcall RePag::DirectX::COSelect::SetCaretColor(_In_ D2D1_COLOR_F& crf
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSelect::DoNotCopy(_In_ bool bDoNotCopyA)
+{
+	ThreadSafe_Begin();
+	bDoNotCopy = bDoNotCopyA;
+	ThreadSafe_End();
+}

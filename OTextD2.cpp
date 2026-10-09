@@ -35,6 +35,7 @@ void __vectorcall RePag::DirectX::COText::COTextV(_In_ const VMEMORY vmMemory, _
 	vasContent = COStringAV(vmMemory);
 	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
 	ucTextAlignment = TXA_LEFT | TXA_CENTERVERTICAL;
+	ifTextColor = nullptr;
 
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 																												 13.0f, L"de-DE", &ifText);

@@ -199,10 +199,9 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::COEntryV(_In_ VMEMORY vm
 //---------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COLookupBox::COEntry::COFreiV(void)
 {
-	SafeRelease(&ifButton); SafeRelease(&ifButtonColor);
+	SafeRelease(&ifButton); SafeRelease(&ifButtonColor); SafeRelease(&ifTextColor);
 	SafeRelease(&ifArrow); SafeRelease(&ifArrowColor);
-
-	return ((COTextLine*)this)->COFreiV();
+	return ((COButton*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLookupBox::COEntry::OnRender(void)

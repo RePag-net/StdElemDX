@@ -124,7 +124,6 @@ void __vectorcall RePag::DirectX::COTextBox::COTextBoxV(_In_ VMEMORY vmMemory, _
 	stSelect_top.lLine = 0; stSelect_top.fPosition = 0.0f;
 	stSelect_bottom.lLine = 0; stSelect_bottom.fPosition = 0.0f;
 
-	bDoNotCopy = false;
   CloseHandle(heCaret); heCaret = nullptr;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
