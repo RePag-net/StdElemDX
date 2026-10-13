@@ -47,6 +47,7 @@ namespace RePag
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_SetFocus(void);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_Command(_In_ WPARAM wParam);
 				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);

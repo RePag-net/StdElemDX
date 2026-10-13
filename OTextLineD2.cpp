@@ -58,6 +58,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 													return NULL;
 		case WM_KEYDOWN			:	((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KeyDown(wParam, lParam);
 													return NULL;
+		case WM_COMMAND			: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_Command(wParam);
+													return NULL;
 		case WM_LBUTTONDOWN	: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDown(wParam, lParam);
 													return NULL;
 		case WM_CONTEXTMENU: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_ContexMenu(lParam);
@@ -204,27 +206,21 @@ void __vectorcall RePag::DirectX::COTextLine::WM_SetFocus(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-	D2D_SIZE_F szfTextPoint;
+	D2D_SIZE_F szfTextPoint, szfTextPoint_1;
 
 	switch(wParam){
 		case VK_LEFT	: ThreadSafe_Begin();
+										if(!ulCharacterPos){ ThreadSafe_End(); break; }
 										if(!bDoNotCopy){
 											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-												rclDirty.right = FloatToLong(ptfCaret.x);
-												if(ucTextAlignment & TXA_LEFT){
-													GetTextPoint(vasContent->c_Str(), --ulCharacterPos, szfTextPoint);
-													ptfCaret.x = szfTextPoint.width;
-													rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
-												}
+												if(!cSelect) rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
+												GetTextPoint(vasContent->c_Str(), --ulCharacterPos, szfTextPoint);
+												if(ucTextAlignment & TXA_LEFT) ptfCaret.x = szfTextPoint.width;
 												else{
-													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-													if(ucTextAlignment & TXA_RIGHT) ptfCaret.x = (float)lWidth - szfTextPoint.width;
-													else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-
-													GetTextPoint(vasContent->c_Str(), --ulCharacterPos, szfTextPoint);
-													ptfCaret.x += szfTextPoint.width;
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_1);
+													if(ucTextAlignment & TXA_RIGHT)	ptfCaret.x = (float)lWidth - szfTextPoint_1.width + szfTextPoint.width;
+													else ptfCaret.x = ((float)lWidth - szfTextPoint_1.width) / 2.0f + szfTextPoint.width;
 												}
-
 												SelectText_Left();
 											}
 											else if(cSelect) DeSelect();
@@ -234,22 +230,20 @@ void __vectorcall RePag::DirectX::COTextLine::WM_KeyDown(_In_ WPARAM wParam, _In
 										ThreadSafe_End();
 										break;
 		case VK_RIGHT	: ThreadSafe_Begin();
+										if(ulCharacterPos >= vasContent->Length()){ ThreadSafe_End(); break; }
 										if(!bDoNotCopy){
 											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam){
-												rclDirty.left = FloatToLong(ptfCaret.x) - ucCaretStrength; // ???
+												if(!cSelect) rclDirty.left = FloatToLong(ptfCaret.x);
+												GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
 												if(ucTextAlignment & TXA_LEFT){
-													GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
-													ptfCaret.x = szfTextPoint.width; rclDirty.left -= ucCaretStrength;
+													rclDirty.left ? rclDirty.left -= ucCaretStrength : rclDirty.left = 0;
+													ptfCaret.x = szfTextPoint.width;
 												}
 												else{
-													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-													if(ucTextAlignment & TXA_RIGHT) ptfCaret.x = (float)lWidth - szfTextPoint.width;
-													else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-
-													GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
-													ptfCaret.x += szfTextPoint.width;
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_1);
+													if(ucTextAlignment & TXA_RIGHT) ptfCaret.x = (float)lWidth - szfTextPoint_1.width + szfTextPoint.width;
+													else ptfCaret.x = ((float)lWidth - szfTextPoint_1.width) / 2 + szfTextPoint.width;
 												}
-												rclDirty.right = FloatToLong(ptfCaret.x);
 												SelectText_Right();
 											}
 											else if(cSelect) DeSelect();
@@ -260,11 +254,29 @@ void __vectorcall RePag::DirectX::COTextLine::WM_KeyDown(_In_ WPARAM wParam, _In
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COTextLine::WM_Command(_In_ WPARAM wParam)
+{
+	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen;
+	if(LOWORD(wParam) == IDM_COPY){
+		ThreadSafe_Begin();
+		OpenClipboard(hWndElement); EmptyClipboard();
+		if(cSelect > 0) ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
+		else ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
+		hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulZeichen + 1);
+		pcAblage = (char*)GlobalLock(hGlobal);
+		MemCopy(pcAblage, vbCharacter, ulZeichen); VMFrei(vbCharacter);
+		pcAblage[ulZeichen] = 0;
+		GlobalUnlock(hGlobal);
+		SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
+		ThreadSafe_End();
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::WM_ContexMenu(_In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_ENABLED);
-	EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_ENABLED);
+	EnableMenuItem(hMenu, IDM_CUT, MF_GRAYED);
+	EnableMenuItem(hMenu, IDM_PASTE, MF_GRAYED);
 
 	POINT ptPosition;
 	ptPosition.x = GET_X_LPARAM(lParam); ptPosition.y = GET_Y_LPARAM(lParam);
@@ -296,7 +308,8 @@ void __vectorcall RePag::DirectX::COTextLine::WM_LButtonDown(_In_ WPARAM wParam,
 		if(fTextPos || ucTextAlignment & TXA_LEFT){
 			do{ GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint); }
 			while(szfTextPoint.width - fTextPos < (float)GET_X_LPARAM(lParam) && ulCharacterPos < vasContent->Length());
-			ptfCaret.x = szfTextPoint.width - fTextPos;
+			if(ulCharacterPos == 1 && szfTextPoint.width > (float)GET_X_LPARAM(lParam)){ ulCharacterPos = 0; ptfCaret.x = 0.0f; }
+			else ptfCaret.x = szfTextPoint.width - fTextPos;
 		}
 		else{
 			GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
@@ -353,43 +366,54 @@ COStringA* __vectorcall RePag::DirectX::COTextLine::Content(_Out_ COStringA* vas
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::SelectText_Left(void)
 {
-	if(cSelect < 0){ rcfSelect.left = ptfCaret.x;	rclDirty.left = FloatToLong(ptfCaret.x); }
+	if(cSelect < 0){ D2D_SIZE_F szfTextPoint; VMBLOCK vbCharacter = nullptr; ULONG ulCharacter; float fTemp, fWidth = (float)lWidth;
+		rcfSelect.left = ptfCaret.x; rclDirty.left = FloatToLong(ptfCaret.x);
+		ulCharacter = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
+		GetTextPoint(vbCharacter, ulCharacter, szfTextPoint); VMFrei(vbCharacter);
+		fTemp = rcfSelect.left + szfTextPoint.width;
+		if(fTemp > rcfSelect.right) rcfSelect.right = fTemp;
+		if(rcfSelect.right > fWidth){
+      fTemp = rcfSelect.right - fWidth;
+			rcfSelect.right = fWidth;
+			rcfSelect.left = ptfCaret.x - fTemp; rclDirty.left = FloatToLong(ptfCaret.x - fTemp);
+		}
+		rclDirty.right = FloatToLong(rcfSelect.right);
+	}
 	else if(cSelect > 0){
-		if(ulSelectPos < ulCharacterPos){
+		if(ulSelectPos == ulCharacterPos){ cSelect = 0; SetEvent(heCaret); rclDirty.left = FloatToLong(rcfSelect.left); }
+		else{
 			rcfSelect.right = ptfCaret.x;
 			rclDirty.right += ucCaretStrength;
-			rclDirty.left = FloatToLong(ptfCaret.x);
-		}
-		else{
-			cSelect = 0; SetEvent(heCaret);
+			if(rclDirty.right > lWidth) rclDirty.right = lWidth;
 			rclDirty.left = FloatToLong(ptfCaret.x);
 		}
 	}
 	else{
 		cSelect = -1;
 		ulSelectPos = ulCharacterPos + 1;
-		if(!ptfCaret.x) rclDirty.right = FloatToLong(rcfSelect.right);
-		else{
-			rcfSelect.left = ptfCaret.x;
-			rclDirty.left = FloatToLong(ptfCaret.x);
-			rcfSelect.right = (float)(rclDirty.right - ucCaretStrength);
-		}
+		rcfSelect.left = ptfCaret.x;
+		rclDirty.left = FloatToLong(ptfCaret.x);
+		rcfSelect.right = (float)rclDirty.right;
 		ResetEvent(heCaret);
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::SelectText_Right(void)
 {
-	if(cSelect > 0){ rcfSelect.right = ptfCaret.x; rclDirty.right = FloatToLong(rcfSelect.right); }
+	if(cSelect > 0){
+		rcfSelect.right = ptfCaret.x + (float)ucCaretStrength; 
+    if(rcfSelect.right > (float)lWidth) rcfSelect.right = (float)lWidth;
+		rclDirty.right = FloatToLong(rcfSelect.right); 
+	}
 	else if(cSelect < 0){
 		if(ulSelectPos > ulCharacterPos) rcfSelect.left = ptfCaret.x;
-		else{ cSelect = 0; SetEvent(heCaret); }
+		else{	cSelect = 0; SetEvent(heCaret);	rclDirty.right = FloatToLong(rcfSelect.right); }
 	}
 	else{
 		cSelect = 1;
 		ulSelectPos = ulCharacterPos - 1;
 		rcfSelect.left = (float)rclDirty.left;
-		rcfSelect.right = ptfCaret.x - (float)ucCaretStrength;
+		rcfSelect.right = ptfCaret.x;
 		rclDirty.right = FloatToLong(rcfSelect.right);
 		ResetEvent(heCaret);
 	}

@@ -238,7 +238,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 {
   D2D_SIZE_F szfTextPoint, szfTextPoint_1; float fScrollOffset; VMBLOCK vbCharacter = nullptr;
 	switch(wParam){
-		case VK_HOME    : ThreadSafe_Begin();
+		case VK_HOME		: ThreadSafe_Begin();
 											DeleteCaretPos();
 											if(cSelect) DeSelect();
 											ulCharacterPos = 0;
@@ -248,16 +248,16 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												OnRender(true);
 												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
-											else if(ucTextAlignment & TXA_LEFT) ptfCaret.x = 0.0f; 
-											else{ 
+											else if(ucTextAlignment & TXA_LEFT) ptfCaret.x = 0.0f;
+											else{
 												GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 												if(szfTextPoint.width > (float)lWidth) ptfCaret.x = 0.0f;
 												else if(ucTextAlignment & TXA_RIGHT) ptfCaret.x = (float)lWidth - szfTextPoint.width;
 												else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-											} 
+											}
 											ThreadSafe_End();
 											break;
-		case VK_END     : ThreadSafe_Begin();
+		case VK_END			: ThreadSafe_Begin();
 											DeleteCaretPos();
 											if(cSelect) DeSelect();
 											ulCharacterPos = vasContent->Length();
@@ -273,122 +273,107 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 											else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f + szfTextPoint.width;
 											ThreadSafe_End();
 											break;
-		case VK_LEFT		: ThreadSafe_Begin();											
-											if(ulCharacterPos){
-												//if(!cSelect) DeleteCaretPos();
-												if(!cSelect) rclDirty.right = FloatToLong(ptfCaret.x);
-												GetTextPoint(vasContent->c_Str(), --ulCharacterPos, szfTextPoint);
-												if(szfTextPoint.width - fTextPos < 0.0f){
-													fScrollOffset = fTextPos - szfTextPoint.width;
-													fTextPos = szfTextPoint.width;
-													rclDirty.left = 0; rclDirty.right = lWidth;
-													//OnRender(true);
-													//ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+		case VK_LEFT		: ThreadSafe_Begin();
+											if(!ulCharacterPos){ ThreadSafe_End(); break; }
+											if(!cSelect) rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
+											GetTextPoint(vasContent->c_Str(), --ulCharacterPos, szfTextPoint);
+											if(szfTextPoint.width - fTextPos < 0.0f){
+												fScrollOffset = fTextPos - szfTextPoint.width;
+												fTextPos = szfTextPoint.width;
+												rclDirty.left = 0; rclDirty.right = lWidth;
 
-													if(cSelect){
-														rcfSelect.right += fScrollOffset;
-														rclDirty.right = FloatToLong(rcfSelect.right);
-													}
-													else rcfSelect.right = szfCharacter.width;
-													ptfCaret.x = 0.0f;
+												if(cSelect)	rcfSelect.right += fScrollOffset;
+												ptfCaret.x = 0.0f;
+											}
+											else if(ucTextAlignment & TXA_LEFT){
+												if(vasCharacterMask->Length()){
+													if(CharacterMask_FixLeft()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 												}
-												else if(ucTextAlignment & TXA_LEFT){
-													if(vasCharacterMask->Length()){
-														if(CharacterMask_FixLeft()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-													}
-													ptfCaret.x = szfTextPoint.width - fTextPos;
+												ptfCaret.x = szfTextPoint.width - fTextPos;
+												rclDirty.left = FloatToLong(ptfCaret.x);
+											}
+											else{
+												if(vasCharacterMask->Length()){
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+													CharacterMask_FixLeft();
 													rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
+
+													ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
+														: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
+
+													GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+													ptfCaret.x += szfTextPoint.width;
 												}
 												else{
-													if(vasCharacterMask->Length()){
-														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-														CharacterMask_FixLeft();
-														rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
-
-														ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
-															: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-
-														GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-														ptfCaret.x += szfTextPoint.width;
+													szfTextPoint_1 = szfTextPoint;
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+													if(szfTextPoint.width < (float)lWidth){
+														if(ucTextAlignment & TXA_RIGHT)	ptfCaret.x = (float)lWidth - szfTextPoint.width + szfTextPoint_1.width;
+														else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f + szfTextPoint_1.width;
 													}
-													else{
-														szfTextPoint_1 = szfTextPoint;
-														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-														if(szfTextPoint.width < (float)lWidth){
-															if(ucTextAlignment & TXA_RIGHT)	ptfCaret.x = (float)lWidth - szfTextPoint.width + szfTextPoint_1.width;
-															else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f + szfTextPoint_1.width;
-														}
-														else ptfCaret.x = szfTextPoint_1.width - fTextPos;
-														rclDirty.left = FloatToLong(ptfCaret.x);
-														rclDirty.right += ucCaretStrength;
-													}
+													else ptfCaret.x = szfTextPoint_1.width - fTextPos;
+													rclDirty.left = FloatToLong(ptfCaret.x);
+													rclDirty.right += ucCaretStrength;
+													if(rclDirty.right > lWidth) rclDirty.right = lWidth;
 												}
-
-												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Left();
-												else if(cSelect) DeSelect();
-												OnRender(true);
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
+
+											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Left();
+											else if(cSelect) DeSelect();
+											OnRender(true);
+											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											ThreadSafe_End();
 											break;
 		case VK_RIGHT		: ThreadSafe_Begin();
-											if(ulCharacterPos < vasContent->Length()){
-												//if(!cSelect) DeleteCaretPos();
-												rclDirty.left = FloatToLong(ptfCaret.x);
-												GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
-												if(szfTextPoint.width - fTextPos > (float)lWidth){
-													fScrollOffset = (float)lWidth - szfTextPoint.width + fTextPos;
-													fTextPos = szfTextPoint.width - (float)lWidth;
-													rclDirty.left = 0; rclDirty.right = lWidth;
-													//OnRender(true);
-													//ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-													if(cSelect){
-														rcfSelect.left += fScrollOffset;
-														rclDirty.left = FloatToLong(rcfSelect.left);
-													}
-													else rcfSelect.left = (float)lWidth - szfCharacter.width - ucCaretStrength;
-													ptfCaret.x = (float)(lWidth - ucCaretStrength);
+											if(ulCharacterPos >= vasContent->Length()){ ThreadSafe_End(); break; }
+											if(!cSelect) rclDirty.left = FloatToLong(ptfCaret.x);
+											GetTextPoint(vasContent->c_Str(), ++ulCharacterPos, szfTextPoint);
+											if(szfTextPoint.width - fTextPos > (float)lWidth){
+												fScrollOffset = (float)lWidth - szfTextPoint.width + fTextPos;
+												fTextPos = szfTextPoint.width - (float)lWidth;
+												rclDirty.left = 0; rclDirty.right = lWidth;
+												if(cSelect)	rcfSelect.left += fScrollOffset;
+												ptfCaret.x = (float)(lWidth - ucCaretStrength);
+											}
+											else if(szfTextPoint.width - fTextPos == (float)lWidth)	ptfCaret.x = (float)(lWidth - ucCaretStrength);
+											else if(ucTextAlignment & TXA_LEFT){
+												if(vasCharacterMask->Length()){
+													if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
 												}
-												else if(szfTextPoint.width - fTextPos == (float)lWidth)	ptfCaret.x = (float)(lWidth - ucCaretStrength);
-												else if(ucTextAlignment & TXA_LEFT){
-													if(vasCharacterMask->Length()){
-														if(CharacterMask_FixRight()) GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-													}
-													rclDirty.left ? rclDirty.left -= ucCaretStrength : rclDirty.left = 0;
-													ptfCaret.x = szfTextPoint.width - fTextPos;
-													rclDirty.right = FloatToLong(ptfCaret.x);
+												rclDirty.left ? rclDirty.left -= ucCaretStrength : rclDirty.left = 0;
+												ptfCaret.x = szfTextPoint.width - fTextPos;
+												rclDirty.right = FloatToLong(ptfCaret.x);
+											}
+											else{
+ 												if(vasCharacterMask->Length()){
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+													CharacterMask_FixRight();
+													rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
+
+													ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
+														: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
+
+													GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+													ptfCaret.x += szfTextPoint.width;
 												}
 												else{
- 													if(vasCharacterMask->Length()){
-														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-														CharacterMask_FixRight();
-														rclDirty.left = FloatToLong(ptfCaret.x); rclDirty.right += ucCaretStrength;
-
-														ucTextAlignment & TXA_RIGHT ? ptfCaret.x = (float)lWidth - szfTextPoint.width
-															: ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2.0f;
-
-														GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
-														ptfCaret.x += szfTextPoint.width;
+													szfTextPoint_1 = szfTextPoint;
+													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+													if(szfTextPoint.width < (float)lWidth){
+														if(ucTextAlignment & TXA_RIGHT)	ptfCaret.x = (float)lWidth - szfTextPoint.width + szfTextPoint_1.width;
+														else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2 + szfTextPoint_1.width;
+														if(!cSelect && ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
 													}
-													else{
-														szfTextPoint_1 = szfTextPoint;
-														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
-														if(szfTextPoint.width < (float)lWidth){
-															if(ucTextAlignment & TXA_RIGHT)	ptfCaret.x = (float)lWidth - szfTextPoint.width + szfTextPoint_1.width;
-															else ptfCaret.x = ((float)lWidth - szfTextPoint.width) / 2 + szfTextPoint_1.width;
-															if(ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
-														}
-														else ptfCaret.x = szfTextPoint_1.width - fTextPos;
-														rclDirty.left -= ucCaretStrength;
-														rclDirty.right = FloatToLong(ptfCaret.x);
-													}
+													else ptfCaret.x = szfTextPoint_1.width - fTextPos;
+													rclDirty.left -= ucCaretStrength;
+													rclDirty.right = FloatToLong(ptfCaret.x);
 												}
-
-												if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Right();
-												else if(cSelect) DeSelect();
-												OnRender(true);
-												ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											}
+
+											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Right();
+											else if(cSelect) DeSelect();
+											OnRender(true);
+											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 											ThreadSafe_End();
 											break;
 		case VK_DELETE	: ThreadSafe_Begin();
@@ -809,7 +794,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 {
-	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard;
+	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen;
+	D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard, szfTextPoint;
 	switch(LOWORD(wParam)){
 		case IDM_COPY   			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
