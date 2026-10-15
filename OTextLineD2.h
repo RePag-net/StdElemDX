@@ -54,8 +54,8 @@ namespace RePag
 				void __vectorcall CharacterMetric(void);
 				void __vectorcall DeSelect(void);
 				void __vectorcall DeleteCaretPos(void);
-				void __vectorcall SelectText_Left(void);
-				void __vectorcall SelectText_Right(void);
+				void __vectorcall SelectText_Left(_In_ bool bScroll);
+				void __vectorcall SelectText_Right(_In_ bool bScroll);
 				void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
 																			_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 

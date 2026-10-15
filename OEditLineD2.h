@@ -39,7 +39,7 @@ namespace RePag
 
 		private:
 			bool __vectorcall CharacterMask_Insert_Check(_In_ WPARAM wParam, _In_ VMBLOCK vbCharacter_Mask);
-			void __vectorcall Select_Loschen(void);
+			void __vectorcall SelectTextDelete(void);
 
 		protected:
 			COStringA* vasCharacterMask;
@@ -73,15 +73,15 @@ namespace RePag
 			void(__vectorcall* pfnWM_LButtonDown)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonUp)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
 			void(__vectorcall* pfnWM_LButtonDBClick)(_In_ COEditLine*, _In_ WPARAM, _In_ LPARAM);
-			void __vectorcall SetzVerfugbar(_In_ bool bVerfugbar);
+			void __vectorcall SetEnable(_In_ bool bEnable);
 			void __vectorcall Text(_In_ char* pcText);
 			void __vectorcall SetCharacter_Max(_In_ unsigned long ulCharacter);
 			unsigned long __vectorcall Character_Max(void);
 			void __vectorcall CharacterSpecification(_In_ unsigned char ucCharacterSpecificationA);
 			void __vectorcall CharacterMask(_In_ const char* pcCharacterMask);
 			COStringA* __vectorcall CharacterMask(_Out_ COStringA* pasCharacterMask);
-			void __vectorcall SelectAlles(void);
-			void __vectorcall SelectEntfernen(void);
+			void __vectorcall SelectAll(void);
+			void __vectorcall SelectDelete(void);
 			void __vectorcall OnPaint(void);
 
 		};

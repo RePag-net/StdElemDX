@@ -236,7 +236,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KillFocus(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-  D2D_SIZE_F szfTextPoint, szfTextPoint_1; float fScrollOffset; VMBLOCK vbCharacter = nullptr;
+	D2D_SIZE_F szfTextPoint, szfTextPoint_1; float fScrollOffset; VMBLOCK vbCharacter = nullptr; bool bScroll = false;
 	switch(wParam){
 		case VK_HOME		: ThreadSafe_Begin();
 											DeleteCaretPos();
@@ -284,6 +284,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 
 												if(cSelect)	rcfSelect.right += fScrollOffset;
 												ptfCaret.x = 0.0f;
+												bScroll = true;
 											}
 											else if(ucTextAlignment & TXA_LEFT){
 												if(vasCharacterMask->Length()){
@@ -318,7 +319,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												}
 											}
 
-											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Left();
+											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Left(bScroll);
 											else if(cSelect) DeSelect();
 											OnRender(true);
 											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -334,6 +335,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												rclDirty.left = 0; rclDirty.right = lWidth;
 												if(cSelect)	rcfSelect.left += fScrollOffset;
 												ptfCaret.x = (float)(lWidth - ucCaretStrength);
+												bScroll = true;
 											}
 											else if(szfTextPoint.width - fTextPos == (float)lWidth)	ptfCaret.x = (float)(lWidth - ucCaretStrength);
 											else if(ucTextAlignment & TXA_LEFT){
@@ -370,7 +372,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 												}
 											}
 
-											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Right();
+											if(GetKeyState(VK_SHIFT) & SHIFTED || !lParam) SelectText_Right(bScroll);
 											else if(cSelect) DeSelect();
 											OnRender(true);
 											ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -379,7 +381,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_KeyDown(_In_ WPARAM wParam, _In
 		case VK_DELETE	: ThreadSafe_Begin();
 											if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 											if(!vasCharacterMask->Length()){
-												if(cSelect) Select_Loschen();
+												if(cSelect) SelectTextDelete();
 												else if(ulCharacterPos < vasContent->Length()){
 													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 													if(ucTextAlignment & TXA_LEFT){
@@ -507,7 +509,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 											if(!ucCharacterSpecification){ ThreadSafe_End(); break; }
 											if(ulCharacterPos || !ulCharacterPos && cSelect){ 
 												if(!vasCharacterMask->Length()){
-													if(cSelect) Select_Loschen();
+													if(cSelect) SelectTextDelete();
 													else{
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 														if(ucTextAlignment & TXA_LEFT){ 
@@ -643,7 +645,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 		default        :  ThreadSafe_Begin();
 											if(CharacterCheck(wParam) && ulCharacterPos < ulCharacter_max){
 												if(!vasCharacterMask->Length()){
-													if(cSelect) Select_Loschen();
+													if(cSelect) SelectTextDelete();
 													GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 													if(ucTextAlignment & TXA_LEFT){
 														if(szfTextPoint.width < (float)lWidth){
@@ -794,8 +796,7 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Char(_In_ WPARAM wParam)
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 {
-	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen;
-	D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard, szfTextPoint;
+	VMBLOCK vbCharacter = nullptr; HGLOBAL hGlobal; char* pcAblage; ULONG ulZeichen; D2D_SIZE_F szfTextPoint_Inhalt, szfTextPoint_Clipboard;
 	switch(LOWORD(wParam)){
 		case IDM_COPY   			: ThreadSafe_Begin();
 														OpenClipboard(hWndElement); EmptyClipboard();
@@ -812,17 +813,11 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 		case IDM_CUT				  : ThreadSafe_Begin();
 														if(vasCharacterMask->Length() || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
 														OpenClipboard(hWndElement); EmptyClipboard();
-														DeSelect();
+
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_Inhalt);
-														if(ulSelectPos <= ulCharacterPos){
-															ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos);
-															vasContent->Delete(ulSelectPos, ulZeichen);
-															ulCharacterPos = ulSelectPos;
-														}
-														else{
-															ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
-															vasContent->Delete(ulCharacterPos, ulZeichen);
-														}
+														ulSelectPos <= ulCharacterPos ?
+																ulZeichen = vasContent->SubString(vbCharacter, ulSelectPos + 1, ulCharacterPos)
+															: ulZeichen = vasContent->SubString(vbCharacter, ulCharacterPos + 1, ulSelectPos);
 
 														hGlobal = GlobalAlloc(GMEM_MOVEABLE, ulZeichen + 1);
 														pcAblage = (char*)GlobalLock(hGlobal);
@@ -830,80 +825,14 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 														pcAblage[ulZeichen] = 0;
 														GlobalUnlock(hGlobal);
 														SetClipboardData(CF_TEXT, hGlobal); CloseClipboard();
-														GetTextPoint(pcAblage, ulZeichen, szfTextPoint_Clipboard);						
-														if(ucTextAlignment & TXA_LEFT){
-															if(!fTextPos){
-																szfTextPoint_Inhalt.width <= (float)lWidth ? rclDirty.right = FloatToLong(szfTextPoint_Inhalt.width)
-																																					 : rclDirty.right = lWidth;
-																GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
-																ptfCaret.x = szfTextPoint_Inhalt.width;
-																rclDirty.left = FloatToLong(szfTextPoint_Inhalt.width);
-															}
-															else{
-																rclDirty.left = 0;
-																if(fTextPos > szfTextPoint_Clipboard.width){
-																	GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
-																	ptfCaret.x = szfTextPoint_Inhalt.width + szfTextPoint_Clipboard.width - fTextPos;
-																	rclDirty.right = FloatToLong(ptfCaret.x);																	
-																	fTextPos -= szfTextPoint_Clipboard.width;
-																}
-																else{
-																	GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
-																	ptfCaret.x = szfTextPoint_Inhalt.width;
-																	rclDirty.right = lWidth;
-																	fTextPos = 0.0f;
-																}
-															}
-															OnRender(true);
-															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														}
-														else if(ucTextAlignment & TXA_RIGHT){														
-															if(szfTextPoint_Inhalt.width - fTextPos < (float)lWidth){
-																rclDirty.right = FloatToLong(rcfSelect.right);
-																ptfCaret.x = rcfSelect.right;
-																rclDirty.left = lWidth - FloatToLong(szfTextPoint_Inhalt.width);
-															}
-															else{
-																if(szfTextPoint_Inhalt.width - fTextPos == (float)lWidth){
-																	rclDirty.right = FloatToLong(rcfSelect.right);
-																	ptfCaret.x = rcfSelect.right;
-																	rclDirty.left = 0;
-																	fTextPos -= szfTextPoint_Clipboard.width;
-																	if(fTextPos < 0.0f) fTextPos = 0.0f;
-																}
-																else{
-																	if(szfTextPoint_Inhalt.width - fTextPos - (float)lWidth < szfTextPoint_Clipboard.width){
-																		rclDirty.left = 0; rclDirty.right = lWidth;
-																		ptfCaret.x += szfTextPoint_Clipboard.width - (szfTextPoint_Inhalt.width - fTextPos - (float)lWidth);
-																		fTextPos -= szfTextPoint_Clipboard.width - (szfTextPoint_Inhalt.width - fTextPos - (float)lWidth);
-																	}
-																	else{
-																		rclDirty.right = lWidth;
-																		rclDirty.left = FloatToLong(rcfSelect.left);
-																		ptfCaret.x = rcfSelect.left;
-																	}
-																}
-															}
-															OnRender(true);
-															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														}
-														else{ // TXA_MITTE
-															fTextPos = ((szfTextPoint_Inhalt.width - szfTextPoint_Clipboard.width) - (float)lWidth) / 2.0f;
-															GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
-															ptfCaret.x = szfTextPoint_Inhalt.width - fTextPos;
-															if(fTextPos < 0.0f) fTextPos = 0.0f;
-															rclDirty.left = 0;
-															rclDirty.right = lWidth;
 
-															OnRender(true);
-															ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-														}
+														SelectTextDelete();
 														ThreadSafe_End();
 														return false;
 		case IDM_PASTE		:			ThreadSafe_Begin();
 														if(!IsClipboardFormatAvailable(CF_TEXT) || !ucCharacterSpecification){ ThreadSafe_End(); return false; }
 														if(vasCharacterMask->Length()){ ThreadSafe_End(); return false; }
-														if(cSelect) Select_Loschen();
+														if(cSelect) SelectTextDelete();
 														GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint_Inhalt);
 
 														OpenClipboard(hWndElement);
@@ -921,7 +850,8 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 																ulCharacterPos += ulZeichen;
 																rclDirty.left = FloatToLong(ptfCaret.x);
 																rclDirty.right = FloatToLong(szfTextPoint_Inhalt.width + szfTextPoint_Clipboard.width);
-																ptfCaret.x += szfTextPoint_Clipboard.width;
+																GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint_Inhalt);
+																ptfCaret.x = szfTextPoint_Inhalt.width;
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
@@ -975,18 +905,20 @@ bool __vectorcall RePag::DirectX::COEditLine::WM_Command(_In_ WPARAM wParam)
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
 															else if(ucCharacterSpecification & ZV_UBERLANGE){
+																rclDirty.left = 0;
+																fTextPos += szfTextPoint_Clipboard.width;
 																if(ulCharacterPos == vasContent->Length()){
 																	*vasContent += pcAblage;
-																	fTextPos = (szfTextPoint_Inhalt.width + szfTextPoint_Clipboard.width) - (float)lWidth;
 																	ptfCaret.x = (float)(lWidth - ucCaretStrength);
+																	rclDirty.right = lWidth;
 																}
 																else{
 																	vasContent->Insert(pcAblage, ulCharacterPos);
-																	fTextPos = ((szfTextPoint_Inhalt.width + szfTextPoint_Clipboard.width) - (float)lWidth) / 2.0f;
-																	ptfCaret.x += szfTextPoint_Clipboard.width / 2.0f;
+																	GetTextPoint(vasContent->c_Str(), ulCharacterPos + ulZeichen, szfTextPoint_Inhalt);
+																	ptfCaret.x = szfTextPoint_Inhalt.width - fTextPos;
+																	rclDirty.right = FloatToLong(ptfCaret.x) + ucCaretStrength;
 																}
 																ulCharacterPos += ulZeichen;
-																rclDirty.left = 0; rclDirty.right = lWidth;
 																OnRender(true);
 																ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 															}
@@ -1078,19 +1010,19 @@ void __vectorcall RePag::DirectX::COEditLine::WM_LButtonUp(_In_ WPARAM wParam, _
 void __vectorcall RePag::DirectX::COEditLine::WM_LButtonDBClick(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
-	SelectAlles();
+	SelectAll();
 	if(pfnWM_LButtonDBClick) pfnWM_LButtonDBClick(this, wParam, lParam);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SetzVerfugbar(_In_ bool bVerfugbar)
+void __vectorcall RePag::DirectX::COEditLine::SetEnable(_In_ bool bEnable)
 {
-	if(bVerfugbar){ 
+	if(bEnable){
 		if(!IsWindowVisible(hWndElement)) ShowWindow(hWndElement, SW_SHOW);
-		if(!IsWindowEnabled(hWndElement)) EnableWindow(hWndElement, bVerfugbar);
+		if(!IsWindowEnabled(hWndElement)) EnableWindow(hWndElement, bEnable);
 		else if(hWndElement == GetFocus()) SendMessage(hWndElement, WM_SETFOCUS, NULL, NULL);
 	}
-	else{ if(hWndElement == GetFocus()) SetFocus(GetParent(hWndElement)); EnableWindow(hWndElement, bVerfugbar); }
+	else{ if(hWndElement == GetFocus()) SetFocus(GetParent(hWndElement)); EnableWindow(hWndElement, bEnable); }
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COEditLine::CharacterMask_Insert(_In_ WPARAM wParam)
@@ -1261,30 +1193,74 @@ void __vectorcall RePag::DirectX::COEditLine::Text(_In_ char* pcText)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::Select_Loschen(void)
+void __vectorcall RePag::DirectX::COEditLine::SelectTextDelete(void)
 {
-	D2D_SIZE_F szfTextPoint;
+  D2D_SIZE_F szfTextPoint; float fSelect_width = rcfSelect.right - rcfSelect.left, fRight;
 
-	DeSelect();
 	GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 	if(ulSelectPos <= ulCharacterPos){ vasContent->Delete(ulSelectPos, ulCharacterPos - ulSelectPos); ulCharacterPos = ulSelectPos; }
 	else vasContent->Delete(ulCharacterPos, ulSelectPos - ulCharacterPos);
 
+	cSelect = 0;
 	if(ucTextAlignment & TXA_LEFT){
-		szfTextPoint.width - fTextPos < (float)lWidth ? rclDirty.right = FloatToLong(szfTextPoint.width - fTextPos) : rclDirty.right = lWidth;
-		rclDirty.left = FloatToLong(rcfSelect.left);
-		ptfCaret.x = rcfSelect.left;
-		OnRender(true);
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+		if(!fTextPos){
+			szfTextPoint.width <= (float)lWidth ? rclDirty.right = FloatToLong(szfTextPoint.width) : rclDirty.right = lWidth;
+			GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+			ptfCaret.x = szfTextPoint.width;
+			rclDirty.left = FloatToLong(rcfSelect.left);
+		}
+		else{
+			rclDirty.left = 0;
+			if(fTextPos > fSelect_width){
+				GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				ptfCaret.x = szfTextPoint.width + fSelect_width - fTextPos;
+				rclDirty.right = FloatToLong(ptfCaret.x);
+				fTextPos -= fSelect_width;
+			}
+			else{
+				GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				ptfCaret.x = szfTextPoint.width;
+				rclDirty.right = lWidth;
+				fTextPos = 0.0f;
+			}
+		}
 	}
 	else if(ucTextAlignment & TXA_RIGHT){
-		if(!fTextPos) rclDirty.left = lWidth - FloatToLong(szfTextPoint.width);
-		else{	rclDirty.left = 0; fTextPos -= rcfSelect.right - rcfSelect.left - (float)ucCaretStrength; }
-		rclDirty.right = FloatToLong(rcfSelect.right);
-		ptfCaret.x = rcfSelect.right;
-		OnRender(true);
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-		if(fTextPos < 0.0f) fTextPos = 0.0f;
+		rclDirty.right = lWidth;
+		if(!fTextPos){
+			rclDirty.left = lWidth - FloatToLong(szfTextPoint.width);
+			GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+			ptfCaret.x = (float)lWidth - szfTextPoint.width;
+			GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+			ptfCaret.x += szfTextPoint.width;
+		}
+		else if(szfTextPoint.width - fTextPos > (float)lWidth){
+      fRight = szfTextPoint.width - fTextPos - (float)lWidth;
+			if(fSelect_width <= fRight){
+				rclDirty.left = FloatToLong(rcfSelect.left); 
+			}
+			else{
+				rclDirty.left = 0;
+				fTextPos -= fSelect_width - fRight - (float)ucCaretStrength;
+				GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				ptfCaret.x = szfTextPoint.width - fTextPos;
+			}
+		}
+		else{
+			rclDirty.left = 0; 
+			fTextPos -= fSelect_width - (float)ucCaretStrength;
+			if(fTextPos < 0.0f){ fTextPos = 0.0f;
+				GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
+				ptfCaret.x = (float)lWidth - szfTextPoint.width;
+				GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				ptfCaret.x += szfTextPoint.width;
+			}
+			else{
+				GetTextPoint(vasContent->c_Str(), ulCharacterPos, szfTextPoint);
+				ptfCaret.x = szfTextPoint.width - fTextPos;
+			}
+		}
+		if(ptfCaret.x == (float)lWidth) ptfCaret.x -= (float)ucCaretStrength;
 	}
 	else{ // TXA_MITTE
 		if(szfTextPoint.width < (float)lWidth){
@@ -1309,12 +1285,12 @@ void __vectorcall RePag::DirectX::COEditLine::Select_Loschen(void)
 				ptfCaret.x = szfTextPoint.width - fTextPos;
 			}
 		}
-		OnRender(true);
-		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
+	OnRender(true);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	SetEvent(heCaret);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-
 void __vectorcall RePag::DirectX::COEditLine::SetCharacter_Max(_In_ unsigned long ulCharacter)
 {
 	ThreadSafe_Begin();
@@ -1369,7 +1345,7 @@ COStringA* __vectorcall RePag::DirectX::COEditLine::CharacterMask(_Out_ COString
 	return pasCharacterMask;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)
+void __vectorcall RePag::DirectX::COEditLine::SelectAll(void)
 {
 	if(hWndElement){
 		D2D_SIZE_F szfTextPoint;
@@ -1378,24 +1354,36 @@ void __vectorcall RePag::DirectX::COEditLine::SelectAlles(void)
 
 		GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
 		ResetEvent(heCaret);
-
-		if(ucTextAlignment & TXA_LEFT){ rcfSelect.right = szfTextPoint.width; rcfSelect.left = 0.0f; ptfCaret.x = szfTextPoint.width; }
-		else if(ucTextAlignment & TXA_RIGHT){ rcfSelect.right = (float)lWidth; ptfCaret.x = (float)lWidth;
-			(szfTextPoint.width > (float)lWidth ? rcfSelect.left = 0.0f : rcfSelect.left = (float)lWidth - szfTextPoint.width);
+		
+		if(ucTextAlignment & TXA_LEFT){ 
+			ptfCaret.x = 0.0f;
+			rcfSelect.left = 0.0f; rcfSelect.right = szfTextPoint.width;
+			rclDirty.left = 0;
+			rcfSelect.right < (float)lWidth ? rclDirty.right = FloatToLong(rcfSelect.right) : rclDirty.right = lWidth;
 		}
-		else{
-			if(szfTextPoint.width > (float)lWidth){ rcfSelect.left = 0.0f; rcfSelect.right = (float)lWidth; }
-			else{ rcfSelect.left = ((float)lWidth - szfTextPoint.width) / 2.0f; rcfSelect.right = rcfSelect.left + szfTextPoint.width; }
+		else if(ucTextAlignment & TXA_RIGHT){
+			ptfCaret.x = (float)(lWidth - ucCaretStrength);
+			if(szfTextPoint.width > (float)lWidth){	rcfSelect.left = 0.0f; rcfSelect.right = szfTextPoint.width; }
+			else{	rcfSelect.left = (float)lWidth - szfTextPoint.width; rcfSelect.right = (float)lWidth;	}
+			rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = lWidth;
 		}
-
-		rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
+		else{ // TXA_MIDDLE
+			if(szfTextPoint.width > (float)lWidth){ 
+				rcfSelect.left = 0.0f; rcfSelect.right = szfTextPoint.width;
+				rclDirty.left = 0; rclDirty.right = lWidth;
+			}
+			else{
+				rcfSelect.left = ((float)lWidth - szfTextPoint.width) / 2.0f;	rcfSelect.right = rcfSelect.left + szfTextPoint.width; 
+				rclDirty.left = FloatToLong(rcfSelect.left); rclDirty.right = FloatToLong(rcfSelect.right);
+			}
+		}
 		OnRender(true);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		ThreadSafe_End();
 	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::SelectEntfernen(void)
+void __vectorcall RePag::DirectX::COEditLine::SelectDelete(void)
 {
 	ThreadSafe_Begin();
 	if(cSelect) DeSelect();
