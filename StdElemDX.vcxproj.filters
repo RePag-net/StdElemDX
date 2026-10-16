@@ -66,6 +66,9 @@
     <ClInclude Include="OSelectD2.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="OLightD2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HStdElemDX.cpp">
@@ -117,6 +120,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="OSelectD2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="OLightD2.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

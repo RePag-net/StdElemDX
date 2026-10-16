@@ -38,6 +38,7 @@ SOFTWARE.
 #include "OSwitchGroupD2.h"
 #include "OProgressBarD2.h"
 #include "ODateD2.h"
+#include "OLightD2.h"
 
 using namespace RePag::DirectX;
 //---------------------------------------------------------------------------
@@ -59,6 +60,7 @@ char pcRePag_Two_waySwitch[] = "RePag_Two_waySwitch";
 char pcRePag_ProgressBar[] = "RePag_ProgressBar";
 char pcRePag_Date[] = "RePag_Date";
 char pcRePag_EditDate[] = "RePag_EditDate";
+char pcRePag_Light[] = "RePag_Light";
 
 //---------------------------------------------------------------------------
 void __vectorcall RegisterClassName(void)
@@ -141,6 +143,10 @@ void __vectorcall RegisterClassName(void)
   wndClass.lpfnWndProc = WndProc_Date;
   RegisterClassEx(&wndClass);
 
+  wndClass.lpszClassName = pcRePag_Light;
+  wndClass.lpfnWndProc = WndProc_Light;
+  RegisterClassEx(&wndClass);
+
   wndClass.lpszClassName = pcRePag_EditDate;
   wndClass.lpfnWndProc = WndProc_EditDate;
   wndClass.style |= CS_DBLCLKS;
@@ -182,5 +188,6 @@ void __vectorcall UnRegisterClassName(void)
   UnregisterClass(pcRePag_ProgressBar, wndClass.hInstance);
   UnregisterClass(pcRePag_Date, wndClass.hInstance);
   UnregisterClass(pcRePag_EditDate, wndClass.hInstance);
+  UnregisterClass(pcRePag_Light, wndClass.hInstance);
 }
 //---------------------------------------------------------------------------

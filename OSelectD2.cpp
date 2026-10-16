@@ -52,6 +52,12 @@ void __vectorcall RePag::DirectX::COSelect::COSelectV(_In_ const VMEMORY vmMemor
 	AppendMenu(hMenu, MF_STRING, IDM_PASTE, "Paste		Crtl+V");
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+VMEMORY __vectorcall RePag::DirectX::COSelect::COFreiV(void)
+{
+	CloseHandle(heCaret);
+	return ((COText*)this)->COFreiV();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 bool __vectorcall RePag::DirectX::COSelect::CharacterCheck(_In_ WPARAM wParam)
 {
 	for(BYTE ucBit = 0; ucBit < 4; ucBit++){

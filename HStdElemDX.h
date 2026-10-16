@@ -64,6 +64,7 @@ extern char pcRePag_Two_waySwitch[];
 extern char pcRePag_ProgressBar[];
 extern char pcRePag_Date[];
 extern char pcRePag_EditDate[];
+extern char pcRePag_Light[];
 
 constexpr BYTE  TXA_TOP = 0;
 constexpr BYTE  TXA_LEFT = 1;

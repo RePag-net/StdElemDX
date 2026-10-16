@@ -132,10 +132,7 @@ void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmM
 VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 {
 	SafeRelease(&ifSelectBackColor); SafeRelease(&ifTextColor); SafeRelease(&ifCaretColor);
-	CloseHandle(heCaret);
-	if(htCaret){
-		CloseHandle(htCaret);
-		DeleteTimerQueueTimer(TimerQueue(), htCaret, NULL); }
+	if(htCaret){ SetEvent(heCaret); DeleteTimerQueueTimer(TimerQueue(), htCaret, INVALID_HANDLE_VALUE); }
 	VMFreiV(vasCharacterMask);
 	DestroyMenu(hMenu);
 	return ((COTextLine*)this)->COFreiV();
