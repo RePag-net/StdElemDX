@@ -95,9 +95,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_LookupBox(_In_ HWND hWnd, _In_ unsigned
 													return NULL;
 		case WM_MOUSEWHEEL	: ((COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: pLookupBox = (COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pLookupBox->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pLookupBox->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pLookupBox);
+		case WM_NCDESTROY		: VMFreiV((COLookupBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -133,9 +131,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Entry(_In_ HWND hWnd, _In_ unsigned int
 													return NULL;
 		case WM_LBUTTONUP		: ((COLookupBox::COEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonUp(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: pEntry = (COLookupBox::COEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pEntry->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEntry->htEffect_Timer, INVALID_HANDLE_VALUE);
-													pEntry->pLookupBox->eEntry = NULL;	VMFreiV(pEntry);
+		case WM_NCDESTROY		: VMFreiV((COLookupBox::COEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -208,9 +204,8 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::OnRender(void)
 {
 	IDWriteTextLayout* ifTextLayout; WCHAR wcContent[255]; size_t szBytes_Text; float fTextWidth;	D2D1_RECT_F rcfText;
 
-	WaitForSingleObjectEx(heRender, INFINITE, false);
-	if(mbstowcs_s(&szBytes_Text, wcContent, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcContent, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	if(mbstowcs_s(&szBytes_Text, wcContent, 255, vasContent->c_Str(), vasContent->Length())) return;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcContent, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) return;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -223,9 +218,6 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::OnRender(void)
 	ifD2D1Context6->DrawGeometry(ifArrow, ifArrowColor, 1);
 	ifD2D1Context6->FillGeometry(ifArrow, ifArrowColor);
 	ifD2D1Context6->EndDraw();
-
-Error:
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLookupBox::COEntry::Geometry(void)
@@ -284,6 +276,10 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor);
+
+	bEnabled ? EnableWindow(hWndElement, true) : EnableWindow(hWndElement, false);
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	ButtonSize();
 	Geometry();
@@ -405,28 +401,6 @@ void __vectorcall RePag::DirectX::COLookupBox::COEntry::Text(_In_z_ char* pcText
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::COEntry::Lock(void)
-{
-	ThreadSafe_Begin();
-	bActive = false;
-	crfBackground = crfBackground_3;
-	EnableWindow(hWndElement, false);
-	OnRender();
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::COEntry::Release(void)
-{
-	ThreadSafe_Begin();
-	bActive = true;
-	crfBackground = crfBackground_1;
-	EnableWindow(hWndElement, true);
-	OnRender();
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLookupBox::OnPaint(void)
 {
 	ThreadSafe_Begin();
@@ -444,13 +418,13 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
 
-	eEntry->CreateWindowGraphic(GetParent(hWndElement), ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y);
+	eEntry->CreateWindowGraphic(this, GetParent(hWndElement), ucHeight_Entry, lWidth, ptPosition.x, ptPosition.y);
   ptPosition.y += ucHeight_Entry; lHeight -= ucHeight_Entry;
 	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 	CreateWindowSizeDependentResources();
 
-	sbVertical->CreateWindowGraphic(hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
-	sbHorizontal->CreateWindowGraphic(hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+	sbVertical->CreateWindowGraphic(this, hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+	sbHorizontal->CreateWindowGraphic(this, hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
 	STScrollInfo siScrollInfo{};
 	siScrollInfo.ucMask = SBI_ALL;
@@ -465,6 +439,8 @@ void __vectorcall RePag::DirectX::COLookupBox::WM_Create(void)
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
 	if(vasContent->Length()) CreateText();
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -675,21 +651,16 @@ void __vectorcall RePag::DirectX::COLookupBox::SetArrowColor_Click(_In_ D2D1_COL
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::Lock(void)
+void __vectorcall RePag::DirectX::COLookupBox::Enable(_In_ bool bEnable)
 {
-	eEntry->Lock();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLookupBox::Release(void)
-{
-	eEntry->Release();
+	eEntry->Enable(bEnable);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLookupBox::Text(_In_z_ char* pcText)
 {
 	ThreadSafe_Begin();
 	((COTextBox*)this)->Text(pcText);
-	if(eEntry->Active() && vliText->Number()) eEntry->Text(SetAndSearchEnum(0, vasContent)->c_Str());
+	if(IsWindowEnabled(eEntry->HWND_Element()) && vliText->Number()) eEntry->Text(SetAndSearchEnum(0, vasContent)->c_Str());
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

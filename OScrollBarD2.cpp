@@ -552,6 +552,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonDown(_In_ WPARAM wParam
 {
 	POINTS ptlCursor = MAKEPOINTS(lParam);
 	ThreadSafe_Begin();
+	SetCapture(hWndElement);
 	switch(ucDirty){
 		case ARROW_UP			:	if(ptlCursor.y <= lWidth){
 													ifButtonColor_Up->SetColor(crfButton_Click);
@@ -884,6 +885,7 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_LButtonUp(_In_ WPARAM wParam, 
 													SendMessage(GetParent(hWndElement), WM_HSCROLL, SB_PAGELEFT, NULL);
 												}
 	}
+	ReleaseCapture();
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

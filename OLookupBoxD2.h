@@ -113,8 +113,7 @@ namespace RePag
 				void __vectorcall SetArrowColor_Move(_In_ D2D1_COLOR_F& crfArrow_MoveA);
 				void __vectorcall SetArrowColor_Click(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetArrowColor_Click(_In_ D2D1_COLOR_F& crfArrow_ClickA);
-				void __vectorcall Lock(void);
-				void __vectorcall Release(void);
+				void __vectorcall Enable(_In_ bool bEnable);
 				void __vectorcall Text(_In_z_ char* pcText);
 				bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndex);
 				bool __vectorcall SearchAndSetEntry(_In_ COStringA* vasEnum, _In_ unsigned char& ucIndexA);

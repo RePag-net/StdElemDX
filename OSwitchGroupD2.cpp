@@ -63,9 +63,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_SwitchGroup(HWND hWnd, unsigned int uiM
 													return NULL;
 		case WM_MOUSEMOVE		: ((COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseMove(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: pSwitchGroup = (COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pSwitchGroup->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pSwitchGroup->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pSwitchGroup);
+		case WM_NCDESTROY		: VMFreiV((COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -107,7 +105,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 	COGraphicV(vmMemory, pcRePag_SwitchGroup, pcWindowName, uiIDElementA, pstDeviceResources);
 
 	ExtendStyle(WS_EX_STATICEDGE | WS_EX_NOPARENTNOTIFY);
-	crfBackground = {RGB(100, 100, 100), 1.0f};
+	crfBackground = D2D1::ColorF(RGB(90, 90, 90), 0.0f);
 
 	ucModus = ucWechselmodus;
 	pfnChangeColumnWidth = nullptr;
@@ -115,7 +113,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 	sMausPos_x = 0;
 	ucIndex = 0xFF;
 
-	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
+	crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 																												 13.0f, L"de-DE", &ifText);
 
@@ -132,9 +130,9 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 		vpTwo_waySwitch[ucCount]->COTwo_waySwitchV(vmMemory, asName.c_Str(), uiIDElementA + ucCount, this, pstDeviceResources);
 		if(ucWechselmodus) vpTwo_waySwitch[ucCount]->bGroup = true;
 		vpTwo_waySwitch[ucCount]->SetTextColor(100, 100, 100, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetBackgroundColor(150, 150, 150, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetBackgroundColor_2(250, 250, 250, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetBackgroundColor_3(200, 200, 200, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_1_0(140, 140, 140, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_2_0(220, 220, 220, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_3(200, 200, 200, 1.0f);
 		vpTwo_waySwitch[ucCount]->TextAlignment(TXA_CENTERVERTICAL | TXA_CENTERHORIZONTAL);
 		(ucCount < 10 ? asName.Delete(asName.Length() - 1, 1) : asName.Delete(asName.Length(), 2));
 		ucCount++;
@@ -153,12 +151,10 @@ VMEMORY __vectorcall RePag::DirectX::COSwitchGroup::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::OnRender(void)
 {
-	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 	if(pfnOnRender) pfnOnRender(this);
 	ifD2D1Context6->EndDraw();
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::OnPaint(void)
@@ -175,6 +171,8 @@ void __vectorcall RePag::DirectX::COSwitchGroup::OnPaint(void)
 void __vectorcall RePag::DirectX::COSwitchGroup::WM_Create(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -244,7 +242,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COTwo_waySwitch::WM_LButtonUp(_
 			else{
 				SetSwitch(!IsOn());
 				if(pSwitchGroup->ucIndex != ucIndexA && pSwitchGroup->vpTwo_waySwitch[pSwitchGroup->ucIndex]->bGroup)
-					pSwitchGroup->vpTwo_waySwitch[pSwitchGroup->ucIndex]->SetActive(false);
+					pSwitchGroup->vpTwo_waySwitch[pSwitchGroup->ucIndex]->Enable(false);
 			}
 		}
 		else Switch(true);
@@ -307,20 +305,13 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_MouseMove(_In_ WPARAM wParam
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::CreateSwitchInGroup(unsigned char ucSwitchA, long lHeight, long lWidth, long lPos_x, long lPos_y)
 {
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->CreateWindowGraphic(hWndElement, lHeight, lWidth, lPos_x, lPos_y);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->CreateWindowGraphic(this, hWndElement, lHeight, lWidth, lPos_x, lPos_y);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::SetAllSwitch_Off(void)
+void __vectorcall RePag::DirectX::COSwitchGroup::SetAllSwitch_On(_In_ bool bOn)
 {
 	ThreadSafe_Begin();
 	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->SetSwitch(false);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::SetAllSwitch_Active(_In_ bool bActive)
-{
-	ThreadSafe_Begin();
-	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->SetSwitch(bActive);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -332,19 +323,19 @@ unsigned char __vectorcall RePag::DirectX::COSwitchGroup::SelectSwitch(void)
 	return ucIndexA;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Lock(void)
+void __vectorcall RePag::DirectX::COSwitchGroup::Enable(_In_ bool bEnable)
 {
 	ThreadSafe_Begin();
-	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Lock();
+	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Enable(bEnable);
 	EnableWindow(hWndElement, false);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Release(void)
+void __vectorcall RePag::DirectX::COSwitchGroup::Edge(_In_ float fRadius_X, _In_ float fRadius_Y)
 {
 	ThreadSafe_Begin();
-	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Release();
-	EnableWindow(hWndElement, true);
+	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Edge(fRadius_X, fRadius_Y);
+	EnableWindow(hWndElement, false);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -376,19 +367,19 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetSwitch(_In_ unsigned 
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-bool __vectorcall RePag::DirectX::COSwitchGroup::Switch_Active(_In_ unsigned char ucSwitchA)
+bool __vectorcall RePag::DirectX::COSwitchGroup::Switch_IsEnabled(_In_ unsigned char ucSwitchA)
 {
 	ThreadSafe_Begin();
 	bool bReturn = false;
-	if(ucSwitchA < ucCount) bReturn = vpTwo_waySwitch[ucSwitchA]->Active();
+	if(ucSwitchA < ucCount) bReturn = IsWindowEnabled(vpTwo_waySwitch[ucSwitchA]->HWND_Element());
 	ThreadSafe_End();
 	return bReturn;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetActive(_In_ unsigned char ucSwitchA, _In_ bool bActive)
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_Enable(_In_ unsigned char ucSwitchA, _In_ bool bEnable)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetActive(bActive);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->Enable(bEnable);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -437,55 +428,85 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor(_In_ 
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA)
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackroundColorA)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor(crfBackgroundA);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor(crfBackroundColorA);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_1(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_1_0(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
 																																					 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_1(ucRed, ucGreen, ucBlue, fAlpha);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_1_0(ucRed, ucGreen, ucBlue, fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_1(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA)
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_1_0(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_1(crfBackgroundA);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_1_0(crfSwitchColor);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_2(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_1_1(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
 																																					 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_2(ucRed, ucGreen, ucBlue, fAlpha);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_1_1(ucRed, ucGreen, ucBlue, fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_2(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA)
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_1_1(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_2(crfBackgroundA);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_1_1(crfSwitchColor);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_3(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_2_0(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
 																																					 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_3(ucRed, ucGreen, ucBlue, fAlpha);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_2_0(ucRed, ucGreen, ucBlue, fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetBackgroundColor_3(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfBackgroundA)
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_2_0(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor)
 {
 	ThreadSafe_Begin();
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetBackgroundColor_3(crfBackgroundA);
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_2_0(crfSwitchColor);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_2_1(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+																																					 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_2_1(ucRed, ucGreen, ucBlue, fAlpha);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_2_1(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_2_1(crfSwitchColor);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_3(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+																																					 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_3(ucRed, ucGreen, ucBlue, fAlpha);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_3(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetButtonColor_3(crfSwitchColor);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

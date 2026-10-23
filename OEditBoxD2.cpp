@@ -89,9 +89,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditBox(_In_ HWND hWnd, _In_ unsigned i
 														return NULL;
 		case WM_MOUSEWHEEL    : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 														return NULL;
-		case WM_NCDESTROY     : pEditBox = (COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditBox->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditBox->htEffect_Timer, INVALID_HANDLE_VALUE);
-														VMFreiV(pEditBox);
+		case WM_NCDESTROY     : VMFreiV((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 														return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -813,8 +811,8 @@ void __vectorcall RePag::DirectX::COEditBox::WM_Char(_In_ WPARAM wParam)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-	ReleaseCapture();
 	ThreadSafe_Begin();
+	ReleaseCapture();
 	if(pfnWM_LButtonUp) pfnWM_LButtonUp(this, wParam, lParam);
 	else PostMessage(GetParent(hWndElement), WM_COMMAND, MAKEWPARAM(GetWindowLongPtr(hWndElement, GWLP_ID), wParam), WM_LBUTTONUP);
 	ThreadSafe_End();
@@ -822,8 +820,8 @@ void __vectorcall RePag::DirectX::COEditBox::WM_LButtonUp(_In_ WPARAM wParam, _I
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditBox::WM_LButtonDown(_In_ LPARAM lParam)
 {
-	SetCapture(hWndElement);
 	ThreadSafe_Begin();
+	SetCapture(hWndElement);
 	if(hWndElement != GetFocus()) SetFocus(hWndElement);
 	if(cSelect) DeSelect();
 

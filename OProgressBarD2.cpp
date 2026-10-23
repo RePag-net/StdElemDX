@@ -60,9 +60,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ProgressBar(_In_ HWND hWnd, _In_ unsign
 													return NULL;
 		case WM_MOUSEMOVE		: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseMove(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: vProgressBar = (COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(vProgressBar->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), vProgressBar->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(vProgressBar);
+		case WM_NCDESTROY		: VMFreiV((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -73,7 +71,7 @@ void __vectorcall RePag::DirectX::COProgressBar::COProgressBarV(_In_ VMEMORY vmS
 {
 	COGraphicV(vmSpeicher, pcRePag_ProgressBar, pcFensterName, uiIDElementA, pstDeviceResources);
 
-	crfBackground = {RGB(100, 100, 100), 1.0f};
+	crfBackground = D2D1::ColorF(RGB(100, 100, 100), 1.0f);
 
 	crfFillColor = D2D1::ColorF(RGB(140, 85, 0), 1.0f);
 	dStep = ulPosition_max = ulPosition_min = ulPosition = 0;
@@ -90,7 +88,6 @@ VMEMORY __vectorcall RePag::DirectX::COProgressBar::COFreiV(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COProgressBar::OnRender(void)
 {
-	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifD2D1Context6->BeginDraw();
 	ifD2D1Context6->Clear(crfBackground);
 
@@ -103,7 +100,6 @@ void __vectorcall RePag::DirectX::COProgressBar::OnRender(void)
 		SafeRelease(&ifProgressBar);
 	}
 	ifD2D1Context6->EndDraw();
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COProgressBar::OnPaint(void)

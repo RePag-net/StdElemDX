@@ -28,12 +28,13 @@ SOFTWARE.
 #include "OTextD2.h"
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COText::COTextV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
-													_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA)
+																									_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COGraphicV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	vasContent = COStringAV(vmMemory);
-	crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
+	crfBackground = D2D1::ColorF(RGB(110, 110, 110), 0.0f);
+	crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
 	ucTextAlignment = TXA_LEFT | TXA_CENTERVERTICAL;
 	ifTextColor = nullptr;
 

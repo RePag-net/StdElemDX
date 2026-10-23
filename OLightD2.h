@@ -31,13 +31,21 @@ namespace RePag
 	namespace DirectX
 	{
 		//---------------------------------------------------------------------------------------------------------------------------------------
+		#define _Light ((RePag::DirectX::COLight*)pvParam)
+		constexpr BYTE  LIGHT_TRIGGER = 0;
+		constexpr BYTE  LIGHT_BYPASS = 1;
+		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport) COLight : public COGraphic
 		{
 				friend LRESULT CALLBACK WndProc_Light(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 				friend void CALLBACK Timer_Light(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
+				friend DWORD WINAPI thRender_Light(void* pvParam);
 
 			private:
-				HANDLE heBlink;
+				HANDLE htTimer_Light;
+				HANDLE he2Render[2];
+				HANDLE hRenderThread;
+				bool bThreadEnd;
 				bool bLight_On;
 				float fEllipseRadius_X;
 				float fEllipseRadius_Y;
@@ -46,13 +54,16 @@ namespace RePag
 				D2D1_POINT_2F ptfRadialGradientOriginOffset;
 				float fRadialGradientRadius_X;
 				float fRadialGradientRadius_Y;
-				D2D1_COLOR_F crfLight_1;
-				D2D1_COLOR_F crfLight_2;
-				ID2D1SolidColorBrush* ifLight_1;
-				ID2D1SolidColorBrush* ifLight_2;
+				D2D1_COLOR_F crfLight_1_0;
+				D2D1_COLOR_F crfLight_2_1;
+				ID2D1SolidColorBrush* ifLight_1_0;
+				ID2D1SolidColorBrush* ifLight_2_1;
 				D2D1_ELLIPSE ellipse;
 				ID2D1EllipseGeometry* ifEllipseLight;
-				void __vectorcall OnRender(_In_ bool bBlink);
+				D2D1_COLOR_F crfStroke;
+				ID2D1SolidColorBrush* ifStroke;
+				float fStroke_Width;
+				void __vectorcall OnRender(_In_ bool bLight_On);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 
@@ -62,10 +73,13 @@ namespace RePag
 				void __vectorcall COLightV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																	 _In_ STDeviceResources* pstDeviceResources);
 				VMEMORY __vectorcall COFreiV(void);
-				void __vectorcall Lightcolor_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-				void __vectorcall Lightcolor_1(_In_ D2D1_COLOR_F& crfLightColor);
-				void __vectorcall Lightcolor_2(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
-				void __vectorcall Lightcolor_2(_In_ D2D1_COLOR_F& crfLightColor);
+				void __vectorcall Lightcolor_1_0(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Lightcolor_1_0(_In_ D2D1_COLOR_F& crfLightColor);
+				void __vectorcall Lightcolor_2_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Lightcolor_2_1(_In_ D2D1_COLOR_F& crfLightColor);
+				void __vectorcall Strokecolor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Strokecolor(_In_ D2D1_COLOR_F& crfStrokeColor);
+				void __vectorcall StokeWidth(_In_ float fStroke);
 				void __vectorcall EllipseRadius(_In_ float fRadius_X, _In_ float fRadius_Y);
 				void __vectorcall RadialGradientCenter(_In_ float fCenter_X, _In_ float fCenter_Y);
 				void __vectorcall RadialGradientCenter(_In_ D2D1_POINT_2F ptfCenter);

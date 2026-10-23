@@ -143,6 +143,7 @@
     <ClInclude Include="OTextD2.h" />
     <ClInclude Include="OTextLineD2.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="TStdElemDX.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HStdElemDX.cpp">
@@ -167,6 +168,7 @@
     <ClCompile Include="OTextD2.cpp" />
     <ClCompile Include="OTextLineD2.cpp" />
     <ClCompile Include="StdElemDX.cpp" />
+    <ClCompile Include="TStdElemDX.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="StdElemD2.rc" />

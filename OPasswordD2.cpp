@@ -65,9 +65,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Password(_In_ HWND hWnd, _In_ unsigned 
 													return NULL;
 		case WM_LBUTTONDOWN	: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDown(lParam);
 													return NULL;
-		case WM_NCDESTROY		: pPassword = (COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pPassword->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pPassword->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pPassword);
+		case WM_NCDESTROY		: VMFreiV((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -108,11 +106,10 @@ void __vectorcall RePag::DirectX::COPassword::OnRender(_In_ bool bCaret)
 {
 	IDWriteTextLayout* ifTextLayout; float fTextWidth; size_t szBytes_Text; WCHAR wcInhalt[255]; D2D1::Matrix3x2F tfPrevTransform;
 
-	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
 	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasPassword->c_Str(), vasPassword->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	if(mbstowcs_s(&szBytes_Text, wcInhalt, 255, vasPassword->c_Str(), vasPassword->Length())) return;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wcInhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) return;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -154,9 +151,6 @@ void __vectorcall RePag::DirectX::COPassword::OnRender(_In_ bool bCaret)
 
 	ifD2D1Context6->SetTransform(tfPrevTransform);
 	ifD2D1Context6->EndDraw();
-
-Error:
-	SetEvent(heRender);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COPassword::OnPaint(void)

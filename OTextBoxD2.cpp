@@ -88,9 +88,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextBox(_In_ HWND hWnd, _In_ unsigned i
 													return NULL;
 		case WM_MOUSEWHEEL	: ((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: pTextBox = (COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pTextBox->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pTextBox->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pTextBox);
+		case WM_NCDESTROY		: VMFreiV((COTextBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -143,7 +141,6 @@ VMEMORY __vectorcall RePag::DirectX::COTextBox::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::OnRender(_In_ bool bCaret)
 {
-	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
 	bool bTextClip = false, bTextTransform = false;
 	D2D1::Matrix3x2F tfPrevTransform;
@@ -257,7 +254,6 @@ Error:
 	if(bTextTransform) ifD2D1Context6->SetTransform(tfPrevTransform);
 	if(bTextClip) ifD2D1Context6->PopAxisAlignedClip();
 	ifD2D1Context6->EndDraw();
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextBox::OnPaint(void)
@@ -276,8 +272,8 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
 
-	sbVertical->CreateWindowGraphic(hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
-	sbHorizontal->CreateWindowGraphic(hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
+	sbVertical->CreateWindowGraphic(this, hWndElement, lHeight - ucScrollBarSize, ucScrollBarSize, lWidth - ucScrollBarSize, 0);
+	sbHorizontal->CreateWindowGraphic(this, hWndElement, ucScrollBarSize, lWidth - ucScrollBarSize, 0, lHeight - ucScrollBarSize);
 
 	STScrollInfo siScrollInfo{};
 	siScrollInfo.ucMask = SBI_ALL;
@@ -292,6 +288,8 @@ void __vectorcall RePag::DirectX::COTextBox::WM_Create(void)
 	sbHorizontal->SetScrollInfo(siScrollInfo);
 
 	if(vasContent->Length()) CreateText();
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);

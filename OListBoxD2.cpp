@@ -86,9 +86,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 													return NULL;
 		case WM_MOUSEWHEEL  : ((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_MouseWheel(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY   : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pListBox->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pListBox->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pListBox);
+		case WM_NCDESTROY   : VMFreiV((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);

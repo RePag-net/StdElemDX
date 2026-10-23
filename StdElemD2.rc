@@ -52,7 +52,7 @@ END
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ PRODUCTVERSION 0,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,13 +68,13 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "CompanyName", "RePag"
-            VALUE "FileDescription", "TODO: <Dateibeschreibung>"
+            VALUE "FileDescription", "Visuelle Standardelemente 64bit"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "StdElemD.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2022"
-            VALUE "OriginalFilename", "StdElemD.dll"
-            VALUE "ProductName", "TODO: <Produktname>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "InternalName", "StdElemDX.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2026 René Pagel"
+            VALUE "OriginalFilename", "StdElemDX.dll"
+            VALUE "ProductName", "StdElemDX"
+            VALUE "ProductVersion", "0.0.0.0"
         END
     END
     BLOCK "VarFileInfo"

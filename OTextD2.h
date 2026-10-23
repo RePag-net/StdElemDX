@@ -31,17 +31,6 @@ namespace RePag
 	namespace DirectX
 	{
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		typedef struct STFont
-		{
-			const WCHAR* fontFamilyName;
-			IDWriteFontCollection* fontCollection;
-			DWRITE_FONT_WEIGHT fontWeight;
-			DWRITE_FONT_STYLE fontSytle;
-			DWRITE_FONT_STRETCH fontStretch;
-			float fontSize;
-			const WCHAR* localeName;
-		} STFont;
-		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport)  COText : public COGraphic
 		{
 			private:
@@ -61,8 +50,6 @@ namespace RePag
 																	_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
 
 			public:
-				void __vectorcall COTextV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																	_In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall SetFont(STFont& stFont);
 				void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);

@@ -62,9 +62,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Switch(_In_ HWND hWnd, _In_ unsigned in
 													return NULL;
 		case WM_LBUTTONUP		: ((COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonUp(wParam, lParam);
 													return NULL;
-		case WM_NCDESTROY		: pSwitch = (COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pSwitch->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pSwitch->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pSwitch);
+		case WM_NCDESTROY		: VMFreiV((COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -75,7 +73,9 @@ void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In
 {
 	COButtonV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResources);
 
-	bOn = false;
+	asLabel_On = "Switch On";
+	asLabel_Off = "Switch Off";
+	bOn = false; *vasContent = asLabel_Off;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
@@ -83,7 +83,9 @@ void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In
 {
 	COButtonV(vmMemory, pcRePag_Switch, pcWindowName, uiIDElementA, pstDeviceResources);
 
-	bOn = false;
+	asLabel_On = "Switch On";
+	asLabel_Off = "Switch Off";
+	bOn = false; *vasContent = asLabel_Off;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitch::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -99,12 +101,16 @@ void __vectorcall RePag::DirectX::COSwitch::WM_LButtonUp(_In_ WPARAM wParam, _In
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitch::Switch(_In_ bool	bOnA)
 {
-	if(bOnA){ bOn = true;	*vasContent = asLabel_On;
-						crfBackground = crfBackground_2; if(ifBackColor) ifBackColor->SetColor(crfBackground); }
-	else{			bOn = false; *vasContent = asLabel_Off;
-						crfBackground = crfBackground_1; if(ifBackColor) ifBackColor->SetColor(crfBackground); }
-	bActive = true;
-
+	if(bOnA){
+		bOn = true;	*vasContent = asLabel_On;
+		if(!bLinearGradient) ifButtonColor->SetColor(crfButtonColor_2_0); 
+		else{	crfGradientStopsColor_0 = crfButtonColor_2_0;	crfGradientStopsColor_1 = crfButtonColor_2_1; }
+	}
+	else{
+		bOn = false; *vasContent = asLabel_Off;
+		if(!bLinearGradient) ifButtonColor->SetColor(crfButtonColor_1_0);
+		else{ crfGradientStopsColor_0 = crfButtonColor_1_0;	crfGradientStopsColor_1 = crfButtonColor_1_1; }
+	}
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }

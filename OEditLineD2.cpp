@@ -83,9 +83,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned 
 														return NULL;
 		case WM_LBUTTONDBLCLK : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDBClick(wParam, lParam);
 														return NULL;
-		case WM_NCDESTROY     : pEditLine = (COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditLine->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditLine->htEffect_Timer, INVALID_HANDLE_VALUE);
-														VMFreiV(pEditLine);
+		case WM_NCDESTROY     : VMFreiV((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 														return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -169,6 +167,8 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 			fTextPos /= 2;
 		}
 	}
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);

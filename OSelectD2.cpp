@@ -44,7 +44,7 @@ void __vectorcall RePag::DirectX::COSelect::COSelectV(_In_ const VMEMORY vmMemor
 	htCaret = nullptr;
 	heCaret = CreateEvent(nullptr, true, true, nullptr);
 	ifSelectBackColor = nullptr;
-	//ifCaretColor = nullptr;
+	ifCaretColor = nullptr;
 
 	hMenu = CreatePopupMenu();
 	AppendMenu(hMenu, MF_STRING, IDM_CUT, "Cut		Crtl+X");

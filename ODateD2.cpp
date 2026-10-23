@@ -86,9 +86,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Date(_In_ HWND hWnd, _In_ unsigned int 
 													}
 													pCalendar->ThreadSafe_End();
 													return NULL;
-		case WM_NCDESTROY		: pCalendar = (CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-													if(pCalendar->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pCalendar->htEffect_Timer, INVALID_HANDLE_VALUE);
-													VMFreiV(pCalendar);
+		case WM_NCDESTROY		: VMFreiV((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 													return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -137,9 +135,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditDate(_In_ HWND hWnd, _In_ unsigned 
 														return NULL;
 		case WM_LBUTTONDBLCLK	: ((CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDBClick(lParam);
 														return NULL;
-		case WM_NCDESTROY			: pEditDate = (CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-														if(pEditDate->htEffect_Timer) DeleteTimerQueueTimer(TimerQueue(), pEditDate->htEffect_Timer, INVALID_HANDLE_VALUE);
-														VMFreiV(pEditDate);
+		case WM_NCDESTROY			: VMFreiV((CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 														return NULL;
 	}
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
@@ -162,8 +158,8 @@ void __vectorcall RePag::DirectX::CODate::CODateV(_In_ VMEMORY vmMemory, _In_ co
 
 	asTemp = pcWindowName; asTemp += "_lbMonth";
 	lbMonth = COListBoxV(vmMemory, asTemp.c_Str(), ++uiIDElementA, pstDeviceResources);
-	lbMonth->SetBackgroundColor(255, 255, 255, 1.0f);
-	lbMonth->SetTextColor(0, 0, 128, 1.0f);
+	lbMonth->SetBackgroundColor(200, 200, 200, 1.0f);
+	lbMonth->SetTextColor(50, 50, 128, 1.0f);
 
 	DWORD dwCalendarInfo = CAL_SMONTHNAME1; int iBytes; char c20Month[20];
 	for(BYTE ucMonth = 0; ucMonth < 12; ucMonth++){
@@ -174,7 +170,8 @@ void __vectorcall RePag::DirectX::CODate::CODateV(_In_ VMEMORY vmMemory, _In_ co
 		dwCalendarInfo++;
 	}
 
-  crfText = D2D1::ColorF(RGB(0, 0, 0), 1.0f);
+	crfBackground = D2D1::ColorF(RGB(110, 110, 110), 0.0f);
+  crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
 	STFont stFont;
 	stFont.fontFamilyName = L"Arial";
 	stFont.fontCollection = NULL;
@@ -250,6 +247,8 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::COEditDateV(_In_ VMEMORY v
 	crfButton_Click = D2D1::ColorF(RGB(255, 50, 50), 1.0f);
 	crfArrow_Click = D2D1::ColorF(RGB(255, 255, 0), 1.0f);
 
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
+
 	bMouseTracking = false;
 	ucDirty = NONCLIENT;
 
@@ -267,8 +266,6 @@ VMEMORY __vectorcall RePag::DirectX::CODate::COEditDate::COFreiV(void)
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::OnRender(void)
 {
-	WaitForSingleObjectEx(heRender, INFINITE, false);
-
 	SYSTEMTIME stMonth = stDate; stMonth.wDay = 1; DWORD dwCalendarInfo = CAL_SABBREVDAYNAME1;
 	WCHAR pwcWeekday_1[3]; pwcWeekday_1[2] = 0; WCHAR pwcWeekday_2[3]; pwcWeekday_2[2] = 0;
 	GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_USE_ALT_CALENDAR, &stMonth, L"ddd", pwcWeekday_1, 3, nullptr);
@@ -402,8 +399,6 @@ void __vectorcall RePag::DirectX::CODate::OnRender(void)
 		ucWeekday = 0; fText_left = 0.0f; rcfText.top += fRowHeight; rcfText.bottom += fRowHeight;
 	}
 	ifD2D1Context6->EndDraw();
-
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::OnPaint(void)
@@ -419,10 +414,9 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::OnRender(_In_ bool bCaret)
 {
 	IDWriteTextLayout* ifTextLayout; WCHAR wc255Content[255]; size_t szBytes_Text; float fTextWidth;	D2D1_RECT_F rcfText;
 
-	WaitForSingleObjectEx(heRender, INFINITE, false);
 	ifTextColor->SetColor(crfText);
-	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())) goto Error;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) goto Error;
+	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())) return;
+	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) return;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	if(ucTextAlignment & TXA_RIGHT){
 		rcfText.left -= (float)pCalendar->lHeight_EditDate; rcfText.right -= (float)pCalendar->lHeight_EditDate;
@@ -456,7 +450,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::OnRender(_In_ bool bCaret)
 		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
 
 		ifTextColor->SetColor(crfSelectText);
-		if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen)){ VMFrei(vbCharacter); goto Error; }
+		if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen)){ VMFrei(vbCharacter); return; }
 		ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor);
 	}
 
@@ -492,9 +486,6 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->FillGeometry(ifArrow, ifArrowColor);
 
 	ifD2D1Context6->EndDraw();
-
-Error:
-	SetEvent(heRender);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::ButtonSize(void)
@@ -1028,7 +1019,7 @@ void __vectorcall RePag::DirectX::CODate::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfHead_Background, &ifHead_Background);
 
-	edEditDate->CreateWindowGraphic(GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
+	edEditDate->CreateWindowGraphic(this, GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
 	SetDayOfWeek();
 	edEditDate->DateTimeText();
 
@@ -1040,10 +1031,12 @@ void __vectorcall RePag::DirectX::CODate::WM_Create(void)
 	}
 	else MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
+
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
-	lbMonth->CreateWindowGraphic(hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+	lbMonth->CreateWindowGraphic(this, hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
 	lbMonth->SetVisible(false);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
