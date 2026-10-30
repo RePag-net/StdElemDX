@@ -55,6 +55,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Button(_In_ HWND hWnd, _In_ unsigned in
 													if(pButton) pButton->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_SETFOCUS		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
 		case WM_KILLFOCUS		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();
@@ -97,14 +99,15 @@ void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In
 	stFont.fontSize = 15.0f;
 	stFont.localeName = L"en-en";
   SetFont(stFont);
+	*vasContent = "Button";
 
-	crfButtonColor_1_0 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
-	crfButtonColor_1_1 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
-	crfButtonColor_2_0 = D2D1::ColorF(RGB(100, 140, 100), 1.0f);
-	crfButtonColor_2_1 = D2D1::ColorF(RGB(0, 255, 0), 1.0f);
-	crfButtonColor_3 = D2D1::ColorF(RGB(200, 200, 200), 1.0f);
-	crfGradientStopsColor_0 = crfButtonColor_1_0;
-	crfGradientStopsColor_1 = crfButtonColor_1_1;
+	crfButton_1_0 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
+	crfButton_1_1 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
+	crfButton_2_0 = D2D1::ColorF(RGB(100, 140, 100), 1.0f);
+	crfButton_2_1 = D2D1::ColorF(RGB(0, 255, 0), 1.0f);
+	crfButton_3 = D2D1::ColorF(RGB(200, 200, 200), 1.0f);
+	crfGradientStop_0 = crfButton_1_0;
+	crfGradientStop_1 = crfButton_1_1;
   crfText_Focus = D2D1::ColorF(RGB(10, 250, 250), 1.0f);
 	ucTextAlignment = TXA_CENTERVERTICAL | TXA_CENTERHORIZONTAL;
 	bEnabled = true;
@@ -138,87 +141,90 @@ VMEMORY __vectorcall RePag::DirectX::COButton::COFreiV(void)
 	DeleteTimerQueueTimer(TimerQueue(), htTimer_Button, INVALID_HANDLE_VALUE);
 	CloseHandle(he2Render[BUTTON_TRIGGER]); CloseHandle(he2Render[BUTTON_BYPASS]);
 	CloseHandle(hRenderThread);
-	SafeRelease(&ifTextColor); SafeRelease(&ifButtonColor); SafeRelease(&ifButtom);
+	SafeRelease(&ifTextColor); SafeRelease(&ifButtonColor);
 	return ((COText*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::OnRender(void)
+void __vectorcall RePag::DirectX::COButton::OnRender(_In_ bool bBlinkA)
 {
-	IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wc255Inhalt[255];
-	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
-	D2D1_RECT_F rcfButton = {0.0f, 0.0f, (float)lWidth, (float)lHeight};
-	D2D1_ROUNDED_RECT rrcfButton = {rcfButton, fEdgeRadius_X, fEdgeRadius_Y};
-
-	if(mbstowcs_s(&szBytes_Text, wc255Inhalt, 255, vasContent->c_Str(), vasContent->Length())) return;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Inhalt, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) return;
-	TextAlignment(ifTextLayout, fTextWidth, rcfText);
-	SafeRelease(&ifTextLayout);
-
 	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(crfBackground);
-
-	SafeRelease(&ifButtom);
-	pstDeviceResources->ifd2d1Factory7->CreateRoundedRectangleGeometry(rrcfButton, &ifButtom);
-	ifD2D1Context6->DrawGeometry(ifButtom, ifButtonColor, 0);
-	if(!bLinearGradient || !bEnabled) ifD2D1Context6->FillGeometry(ifButtom, ifButtonColor);
-	else{
-		D2D1_GRADIENT_STOP gradientStops[2];
-		gradientStops[0].color = crfGradientStopsColor_0; gradientStops[0].position = 0.0f;
-		gradientStops[1].color = crfGradientStopsColor_1; gradientStops[1].position = 1.0f;
-
-		ID2D1GradientStopCollection* ifGradientStops = nullptr;
-		ifD2D1Context6->CreateGradientStopCollection(gradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops);
-
-		ifD2D1Context6->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(ptfStartPoint, ptfEndPoint),
-			D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()), ifGradientStops, &ifLinearGradientBrush);
-
-
-		ifD2D1Context6->FillGeometry(ifButtom, ifLinearGradientBrush);
-		SafeRelease(&ifGradientStops); SafeRelease(&ifLinearGradientBrush);
-	}
-
-	ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
-
+	Background();
+	OnRender_Rectangle(bBlinkA);
 	ifD2D1Context6->EndDraw();
 }
-//-------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COButton::OnRender_Rectangle(_In_ bool bBlinkA)
+{
+	if(!bBlinkA){
+		IDWriteTextLayout* ifTextLayout; float fTextWidth; 	size_t szBytes_Text; WCHAR wc255Inhalt[255];
+		D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
+		D2D1_RECT_F rcfButton = {0.0f, 0.0f, (float)lWidth, (float)lHeight};
+		D2D1_ROUNDED_RECT rrcfButton = {rcfButton, fEdgeRadius_X, fEdgeRadius_Y};
+
+		if(mbstowcs_s(&szBytes_Text, wc255Inhalt, 255, vasContent->c_Str(), vasContent->Length())) return;
+		if(FAILED(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Inhalt, (UINT32)szBytes_Text, ifText,
+																																		 (float)lWidth, (float)lHeight, &ifTextLayout))) return;
+		TextAlignment(ifTextLayout, fTextWidth, rcfText);
+		SafeRelease(&ifTextLayout);
+
+		if(!bLinearGradient || !bEnabled){
+			ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifButtonColor);
+			ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
+		}
+		else{
+			D2D1_GRADIENT_STOP gradientStops[2];
+			gradientStops[0].color = crfGradientStop_0; gradientStops[0].position = 0.0f;
+			gradientStops[1].color = crfGradientStop_1; gradientStops[1].position = 1.0f;
+
+			ID2D1GradientStopCollection* ifGradientStops = nullptr;
+			if(SUCCEEDED(ifD2D1Context6->CreateGradientStopCollection(gradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops))){
+				if(SUCCEEDED(ifD2D1Context6->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(ptfStartPoint, ptfEndPoint),
+																															 D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()), ifGradientStops, &ifLinearGradientBrush))){
+					ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifLinearGradientBrush);
+					ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
+					SafeRelease(&ifLinearGradientBrush);
+				}
+			}
+			SafeRelease(&ifGradientStops); 
+		}
+	}
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::OnPaint(void)
 {
 	ThreadSafe_Begin();
-	OnRender();
+	OnRender(false);
 	rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::WM_Create(void)
+void __vectorcall RePag::DirectX::COButton::InitPaint(void)
 {
-	CharacterMetric();
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfButtonColor_1_0, &ifButtonColor);
-
-	if(bEnabled) EnableWindow(hWndElement, true);
-	else{
-		EnableWindow(hWndElement, false);
-		ifButtonColor->SetColor(crfButtonColor_3);
-		ResetEvent(he2Render[BUTTON_BYPASS]);
-	} 
-
-	if(crfBackground.a == 0.0f){
-		D2D1_COLOR_F crfBackground_Main;
-		((CODialog*)pMainElement)->GetBackgroundColor(crfBackground_Main);
-		crfBackground = crfBackground_Main;
-	}
+	ifD2D1Context6->CreateSolidColorBrush(crfButton_1_0, &ifButtonColor);
 
 	if(ptfStartPoint.x == 0.0f && ptfStartPoint.y == 0.0f && ptfEndPoint.x == 0.0f && ptfEndPoint.y == 0.0f){
 		ptfStartPoint = {(float)lWidth / 2.0f, 0.0f}; ptfEndPoint = {(float)lWidth / 2.0f, (float)lHeight};
 	};
 
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 	hRenderThread = CreateThread(NULL, 0, thRender_Button, this, NULL, NULL);
 	CreateTimerQueueTimer(&htTimer_Button, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Button, this, 0, 500, 0);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COButton::WM_Create(void)
+{
+	CharacterMetric();
+
+	if(bEnabled) EnableWindow(hWndElement, true);
+	else{
+		EnableWindow(hWndElement, false);
+		ifButtonColor->SetColor(crfButton_3);
+		ResetEvent(he2Render[BUTTON_BYPASS]);
+	} 
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::WM_Size(_In_ LPARAM lParam)
@@ -227,7 +233,7 @@ void __vectorcall RePag::DirectX::COButton::WM_Size(_In_ LPARAM lParam)
 	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
 		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
 		CreateWindowSizeDependentResources();
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	ThreadSafe_End();
@@ -237,7 +243,7 @@ void __vectorcall RePag::DirectX::COButton::WM_SetFocus(void)
 {
 	ThreadSafe_Begin();
 	ifTextColor->SetColor(crfText_Focus);
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -246,7 +252,7 @@ void __vectorcall RePag::DirectX::COButton::WM_KillFocus(void)
 {
 	ThreadSafe_Begin();
 	ifTextColor->SetColor(crfText);
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -266,12 +272,12 @@ void __vectorcall RePag::DirectX::COButton::WM_LButtonDown(void)
 	SetCapture(hWndElement);
 	if(IsWindowEnabled(hWndElement)){
 		ResetEvent(he2Render[BUTTON_BYPASS]);
-		ifButtonColor->SetColor(crfButtonColor_2_0);
+		ifButtonColor->SetColor(crfButton_2_0);
 		bLinearGradient_LButton = bLinearGradient;
 		bLinearGradient = false;
 		if(hWndElement != GetFocus()) SetFocus(hWndElement);
 		else{
-			OnRender();
+			OnRender(false);
 			ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		}
 		if(pfnWM_LButtonDown) pfnWM_LButtonDown(this);
@@ -283,9 +289,9 @@ void __vectorcall RePag::DirectX::COButton::WM_LButtonUp(WPARAM wParam, LPARAM l
 {
 	ThreadSafe_Begin();
 	if(IsWindowEnabled(hWndElement)){
-		ifButtonColor->SetColor(crfButtonColor_1_0);
+		ifButtonColor->SetColor(crfButton_1_0);
 		bLinearGradient = bLinearGradient_LButton;
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 		if(bBlink) SetEvent(he2Render[BUTTON_BYPASS]);
 		if(pfnWM_LButtonUp) pfnWM_LButtonUp(this);
@@ -331,28 +337,28 @@ void __vectorcall RePag::DirectX::COButton::SetButtonColor_1_0(_In_ unsigned cha
 																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_0 = crfButtonColor_1_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	crfGradientStop_0 = crfButton_1_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_1_0(_In_ D2D1_COLOR_F& crfButtonColor)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_0 = crfButtonColor_1_0 = crfButtonColor;
+	crfGradientStop_0 = crfButton_1_0 = crfButtonColor;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_1_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_1 = crfButtonColor_1_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	crfGradientStop_1 = crfButton_1_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_1_1(_In_ D2D1_COLOR_F& crfButtonColor)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_1 = crfButtonColor_1_1 = crfButtonColor;
+	crfGradientStop_1 = crfButton_1_1 = crfButtonColor;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -360,14 +366,14 @@ void __vectorcall RePag::DirectX::COButton::SetButtonColor_2_0(_In_ unsigned cha
 																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_0 = crfButtonColor_2_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	crfGradientStop_0 = crfButton_2_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_2_0(_In_ D2D1_COLOR_F& crfButtonColor)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_0 = crfButtonColor_2_0 = crfButtonColor;
+	crfGradientStop_0 = crfButton_2_0 = crfButtonColor;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -375,14 +381,14 @@ void __vectorcall RePag::DirectX::COButton::SetButtonColor_2_1(_In_ unsigned cha
 																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_1 = crfButtonColor_2_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	crfGradientStop_1 = crfButton_2_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_2_1(_In_ D2D1_COLOR_F& crfButtonColor)
 {
 	ThreadSafe_Begin();
-	crfGradientStopsColor_1 = crfButtonColor_2_1 = crfButtonColor;
+	crfGradientStop_1 = crfButton_2_1 = crfButtonColor;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -390,14 +396,14 @@ void __vectorcall RePag::DirectX::COButton::SetButtonColor_3(_In_ unsigned char 
 																																 _In_ unsigned char ucBlue, _In_ float fAlpha)
 {
 	ThreadSafe_Begin();
-	crfButtonColor_3 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	crfButton_3 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::SetButtonColor_3(_In_ D2D1_COLOR_F& crfButtonColor)
 {
 	ThreadSafe_Begin();
-	crfButtonColor_3 = crfButtonColor;
+	crfButton_3 = crfButtonColor;
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -427,7 +433,7 @@ void __vectorcall RePag::DirectX::COButton::Label(const char* pcLabel)
 	ThreadSafe_Begin();
 	*vasContent = pcLabel;
 	if(hWndElement){
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	ThreadSafe_End();
@@ -441,15 +447,15 @@ void __vectorcall RePag::DirectX::COButton::Enable(_In_ bool bEnable)
 		EnableWindow(hWndElement, bEnable);
 		if(!bEnabled){
 			ResetEvent(he2Render[BUTTON_BYPASS]);
-			ifButtonColor->SetColor(crfButtonColor_3);
+			ifButtonColor->SetColor(crfButton_3);
 		}
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::Edge(_In_ float fRadius_X, _In_ float fRadius_Y)
+void __vectorcall RePag::DirectX::COButton::EdgeRadius(_In_ float fRadius_X, _In_ float fRadius_Y)
 {
 	ThreadSafe_Begin();
 	fEdgeRadius_X = fRadius_X;
@@ -470,7 +476,7 @@ void __vectorcall RePag::DirectX::COButton::Blink_Stop(void)
 	if(hWndElement){
 		bBlink = false;
 		ResetEvent(he2Render[BUTTON_BYPASS]);
-		OnRender();
+		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}
 	else ResetEvent(he2Render[BUTTON_BYPASS]);

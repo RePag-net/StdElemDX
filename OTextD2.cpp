@@ -52,23 +52,27 @@ VMEMORY __vectorcall RePag::DirectX::COText::COFreiV(void)
 void __vectorcall RePag::DirectX::COText::CharacterMetric(void)
 {
 	IDWriteTextLayout* ifTextLayout; DWRITE_TEXT_METRICS stTextMetrics;
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-																												 63, ifText, 5000.0f, (float)lHeight, &ifTextLayout);
+	if(FAILED(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+																																	 63, ifText, 5000.0f, (float)lHeight, &ifTextLayout))) goto Error;
 	ifTextLayout->GetMetrics(&stTextMetrics);
 	szfCharacter.height = stTextMetrics.height;
 	szfCharacter.width = stTextMetrics.width / 62.0f;
 	fTextLine_maxwidth = stTextMetrics.width / 62.0f * 255.0f;
+
+Error:
 	SafeRelease(&ifTextLayout);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COText::SetFont(STFont& stFont)
+HRESULT __vectorcall RePag::DirectX::COText::SetFont(STFont& stFont)
 {
 	ThreadSafe_Begin();
 	SafeRelease(&ifText);
-	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(stFont.fontFamilyName, stFont.fontCollection, stFont.fontWeight, stFont.fontSytle,
-																												 stFont.fontStretch, stFont.fontSize, stFont.localeName, &ifText);
+	HRESULT hr;
+	if(SUCCEEDED(hr = pstDeviceResources->ifdwriteFactory7->CreateTextFormat(stFont.fontFamilyName, stFont.fontCollection, stFont.fontWeight, stFont.fontSytle,
+																												 stFont.fontStretch, stFont.fontSize, stFont.localeName, &ifText)))
 	CharacterMetric();
 	ThreadSafe_End();
+	return hr;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COText::SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)

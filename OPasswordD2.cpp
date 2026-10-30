@@ -55,6 +55,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Password(_In_ HWND hWnd, _In_ unsigned 
 													if(pPassword) pPassword->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_SETFOCUS		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
 		case WM_KILLFOCUS		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();

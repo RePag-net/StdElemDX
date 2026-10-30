@@ -43,7 +43,7 @@ namespace RePag
 				D2D1_COLOR_F crfFillColor;
 				ID2D1SolidColorBrush* ifFillColor;
 				ID2D1RectangleGeometry* ifProgressBar;
-				void __vectorcall WM_Create(void);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);

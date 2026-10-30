@@ -44,6 +44,7 @@ namespace RePag
 		protected:
 			COStringA* vasCharacterMask;
 			unsigned long ulCharacter_max;
+			void __vectorcall InitPaint(void);
 			void __vectorcall WM_Create(void);
 			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);

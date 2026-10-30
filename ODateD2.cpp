@@ -66,6 +66,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Date(_In_ HWND hWnd, _In_ unsigned int 
 													if(pCalendar) pCalendar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_KILLFOCUS		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();
 													return NULL;
 		case WM_COMMAND			: pCalendar = (CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
@@ -488,6 +490,18 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->EndDraw();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::COEditDate::InitPaint(void)
+{
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
+
+	OnRender(true);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::ButtonSize(void)
 {
 	ThreadSafe_Begin();
@@ -516,15 +530,6 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Create(void)
 	stTrackMouseEvent.dwHoverTime = 10;
 
 	ButtonSize();
-
-	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
-
-	OnRender(true);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::WM_Size(_In_ LPARAM lParam)
@@ -545,28 +550,30 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::WM_SetFocus(void)
 	ThreadSafe_Begin();
 	IDWriteTextLayout* ifTextLayout; size_t szBytes_Text; WCHAR wc255Content[255]; D2D1_POINT_2F ptfText = {0}; float fTextWidth;
 
-	mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length());
-	pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout);
+	if(!mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())){
+		if(SUCCEEDED(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText,
+																																				(float)lWidth, (float)lHeight, &ifTextLayout))){
+			TextAlignment(ifTextLayout, fTextWidth, ptfText);
+			SafeRelease(&ifTextLayout);
 
-	TextAlignment(ifTextLayout, fTextWidth, ptfText);
-	SafeRelease(&ifTextLayout);
+			rcfSelect.top = ptfCaret.y = ptfText.y;
+			rclDirty.top = FloatToLong(ptfText.y);
+			rcfSelect.bottom = (float)lHeight - ptfCaret.y;
+			rclDirty.bottom = FloatToLong(rcfSelect.bottom);
 
-	rcfSelect.top = ptfCaret.y = ptfText.y;
-	rclDirty.top = FloatToLong(ptfText.y);
-	rcfSelect.bottom = (float)lHeight - ptfCaret.y;
-	rclDirty.bottom = FloatToLong(rcfSelect.bottom);
+			if(vasCharacterMask->Length()){
+				if(ucTextAlignment & TXA_RIGHT) ptfText.x -= pCalendar->lHeight_EditDate + ucCaretStrength;
+				else if(ucTextAlignment & TXA_CENTERHORIZONTAL) ptfText.x -= pCalendar->lHeight_EditDate / 2.0f + ucCaretStrength;
+				ptfCaret.x = ptfText.x;
+				if(!cSelect) ulCharacterPos = 0;
+				EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_GRAYED);
+				EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_GRAYED);
+			}
 
-	if(vasCharacterMask->Length()){
-    if(ucTextAlignment & TXA_RIGHT) ptfText.x -= pCalendar->lHeight_EditDate + ucCaretStrength;
-    else if(ucTextAlignment & TXA_CENTERHORIZONTAL) ptfText.x -= pCalendar->lHeight_EditDate / 2.0f + ucCaretStrength;
-		ptfCaret.x = ptfText.x;
-		if(!cSelect) ulCharacterPos = 0;
-		EnableMenuItem(hMenu, IDM_CUT, MF_BYCOMMAND | MF_GRAYED);
-		EnableMenuItem(hMenu, IDM_PASTE, MF_BYCOMMAND | MF_GRAYED);
-	}
-
-	if(!cSelect){
-		if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret_EditDate, this, 0, 500, 0);
+			if(!cSelect){
+				if(!htCaret) CreateTimerQueueTimer(&htCaret, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Caret_EditDate, this, 0, 500, 0);
+			}
+		}
 	}
 	ThreadSafe_End();
 }
@@ -1006,12 +1013,9 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DeSelect(void)
 	SetEvent(heCaret);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::CODate::WM_Create(void)
+void __vectorcall RePag::DirectX::CODate::InitPaint(void)
 {
-	stTrackMouseEvent.cbSize = sizeof(stTrackMouseEvent);
-	stTrackMouseEvent.dwFlags = TME_HOVER | TME_LEAVE;
-	stTrackMouseEvent.hwndTrack = hWndElement;
-	stTrackMouseEvent.dwHoverTime = 10;
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
 	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_left);
 	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_right);
@@ -1019,8 +1023,8 @@ void __vectorcall RePag::DirectX::CODate::WM_Create(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfHead_Background, &ifHead_Background);
 
-	edEditDate->CreateWindowGraphic(this, GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
-	SetDayOfWeek();
+	edEditDate->CreateWindowGraphic(GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
+	edEditDate->InitPaint();
 	edEditDate->DateTimeText();
 
 	ptPosition.y += lHeight_EditDate; lHeight -= lHeight_EditDate;
@@ -1031,13 +1035,21 @@ void __vectorcall RePag::DirectX::CODate::WM_Create(void)
 	}
 	else MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
 
-	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
-
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
-	lbMonth->CreateWindowGraphic(this, hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+	lbMonth->CreateWindowGraphic(hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
 	lbMonth->SetVisible(false);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::WM_Create(void)
+{
+	stTrackMouseEvent.cbSize = sizeof(stTrackMouseEvent);
+	stTrackMouseEvent.dwFlags = TME_HOVER | TME_LEAVE;
+	stTrackMouseEvent.hwndTrack = hWndElement;
+	stTrackMouseEvent.dwHoverTime = 10;
+
+	SetDayOfWeek();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::WM_Size(_In_ LPARAM lParam)
@@ -1908,7 +1920,6 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DateTimeText(void)
 
 	if(!iBytes_Zeit) (vbDatum_A ? *vasContent = vbDatum_A, VMFrei(vbDatum_A) : *vasContent = vbDatum, VMFrei(vbDatum));
 	else{
-		//COStringA asDatumZeit;
 		if(pCalendar->bOrder_DateTime){
 			(vbDatum_A ? *vasContent = vbDatum_A, VMFrei(vbDatum_A) : *vasContent = vbDatum, VMFrei(vbDatum));
 			(vbZeit_A ? *vasContent += vbZeit_A, VMFrei(vbZeit_A) : *vasContent += vbZeit, VMFrei(vbZeit));
@@ -1916,7 +1927,6 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DateTimeText(void)
 		else{
 			(vbZeit_A ? *vasContent = vbZeit_A, VMFrei(vbZeit_A) : *vasContent = vbZeit, VMFrei(vbZeit));
 			(vbDatum_A ? *vasContent += vbDatum_A, VMFrei(vbDatum_A) : *vasContent += vbDatum, VMFrei(vbDatum));
-		//Text(asDatumZeit.c_Str());
 		}
 	}
 	if(hWndElement){

@@ -63,8 +63,18 @@ namespace RePag
 				D2D1_COLOR_F crfStroke;
 				ID2D1SolidColorBrush* ifStroke;
 				float fStroke_Width;
+				bool bBackgroundGradient;
+				bool bBackgroundGradientRadial;
+				D2D1_COLOR_F crfBackgroundGradient_0;
+				D2D1_COLOR_F crfBackgroundGradient_1;
+				D2D1_POINT_2F ptfBackgroundGradient_StartPoint;
+				D2D1_POINT_2F ptfBackgroundGradient_EndPoint;
+				D2D1_POINT_2F ptfBackgroundGradient_Center;
+				D2D1_POINT_2F ptfBackgroundGradient_OriginOffset;
+				float fBackgroundGradient_Radius_X;
+				float fBackgroundGradient_Radius_Y;
 				void __vectorcall OnRender(_In_ bool bLight_On);
-				void __vectorcall WM_Create(void);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 
 			protected:
@@ -86,7 +96,7 @@ namespace RePag
 				void __vectorcall RadialGradientOriginOffset(_In_ float fOffset_X, _In_ float fOffset_Y);
 				void __vectorcall RadialGradientOriginOffset(_In_ D2D1_POINT_2F ptfOffset);
 				void __vectorcall RadialGradientRadius(_In_ float fRadiusA_X, _In_ float fRadiusA_Y);
-				void __vectorcall RadialGradient(_In_ bool bRadialGradientA);
+				void __vectorcall SetRadialGradient(_In_ bool bRadialGradientA);
 				void __vectorcall BlinkPeriod(_In_ unsigned long ulPeriod_msec);
 				void __vectorcall Blink_Stop(void);
 				void __vectorcall Blink_Go(void);

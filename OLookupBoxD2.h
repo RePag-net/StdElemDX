@@ -53,6 +53,7 @@ namespace RePag
 						ID2D1PathGeometry* ifArrow;
 						ID2D1SolidColorBrush* ifArrowColor;
 						COLookupBox* pLookupBox;
+
 						void __vectorcall WM_Create(void);
 						void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
 						void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
@@ -67,6 +68,7 @@ namespace RePag
 						void __vectorcall COEntryV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																			 _In_ COLookupBox* pLookupBoxA, _In_ STDeviceResources* pstDeviceResourcesA);
 						VMEMORY __vectorcall COFreiV(void);
+						void __vectorcall InitPaint(void);
 						void __vectorcall ButtonSize(void);
 						void __vectorcall Geometry(void);
 						void __vectorcall OnPaint(void);
@@ -81,6 +83,7 @@ namespace RePag
 						D2D1_COLOR_F crfArrow_Click;
 				}; COEntry* eEntry;
 				unsigned char ucHeight_Entry;
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_LButtonUp_LookupBox(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);

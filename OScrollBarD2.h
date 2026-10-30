@@ -102,6 +102,7 @@ namespace RePag
 				void __vectorcall COScrollBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																			 _In_ STDeviceResources* pstDeviceResources, bool bHorizontalA);
 				VMEMORY __vectorcall COFreiV(void);
+				void __vectorcall InitPaint(void);
 				void __vectorcall GetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall SetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall ScaleArrowThumb(_In_ float fScale);

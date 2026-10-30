@@ -58,16 +58,26 @@ namespace RePag
 				IDWriteTextFormat* ifText;
 				D2D1_COLOR_F crfText;
 				ID2D1SolidColorBrush* ifTextColor;
+				bool bLinearGradient;
+				D2D1_COLOR_F crfGradientColor_1_0;
+				D2D1_COLOR_F crfGradientColor_2_1;
+				ID2D1SolidColorBrush* ifBackground;
+				ID2D1LinearGradientBrush* ifLinearGradientBrush;
+				D2D1_POINT_2F ptfStartPoint;
+				D2D1_POINT_2F ptfEndPoint;
+				D2D1_GRADIENT_STOP gs2GradientStops[2];
+				float fEdgeRadius_X;
+				float fEdgeRadius_Y;
 				unsigned char ucModus;
 				unsigned char ucCount;
 				unsigned char ucIndex;
 				short sMausPos_x;
 				unsigned char ucSwitch;
-				void __vectorcall WM_Create(void);
+				void __vectorcall OnRender(void);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
-				void __vectorcall OnRender(void);
 
 			protected:
 
@@ -117,6 +127,11 @@ namespace RePag
 				void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
 				void __vectorcall DrawText(_In_z_ const wchar_t* wcInhalt, _In_ size_t szBytes_Text, _In_ const D2D1_RECT_F& rcfText);
+				void __vectorcall SetLinearGradient(_In_ bool bLinearGradientA);
+				bool __vectorcall GetLinearGradient(void);
+				void __vectorcall LinearGradientStartPoint(_Out_ D2D1_POINT_2F& ptfStartPointA);
+				void __vectorcall LinearGradientEndPoint(_Out_ D2D1_POINT_2F& ptfEndPointA);
+				void __vectorcall GradientStops(_Out_ D2D1_GRADIENT_STOP GradientStopsA[2]);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------

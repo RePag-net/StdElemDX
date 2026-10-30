@@ -43,32 +43,33 @@ namespace RePag
 				friend DWORD WINAPI thRender_Button(void* pvParam);
 
 			private:
-				HANDLE htTimer_Button;
-				HANDLE he2Render[2];
-				HANDLE hRenderThread;
 				bool bThreadEnd;
 				bool bBlink;
+				bool bLinearGradient_LButton;
+				HANDLE he2Render[2];
 				D2D1_COLOR_F crfText_Focus;
-				ID2D1RoundedRectangleGeometry* ifButtom;
 				float fEdgeRadius_X;
 				float fEdgeRadius_Y;
-				bool bLinearGradient_LButton;
 				ID2D1LinearGradientBrush* ifLinearGradientBrush;
-				D2D1_POINT_2F ptfStartPoint;
-				D2D1_POINT_2F ptfEndPoint;
 
 			protected:
 				bool bEnabled;
 				bool bLinearGradient;
-				D2D1_COLOR_F crfButtonColor_1_0;
-				D2D1_COLOR_F crfButtonColor_1_1;
-				D2D1_COLOR_F crfButtonColor_2_0;
-				D2D1_COLOR_F crfButtonColor_2_1;
-				D2D1_COLOR_F crfButtonColor_3;
+				HANDLE htTimer_Button;
+				HANDLE hRenderThread;
+				D2D1_POINT_2F ptfStartPoint;
+				D2D1_POINT_2F ptfEndPoint;
+				D2D1_COLOR_F crfButton_1_0;
+				D2D1_COLOR_F crfButton_1_1;
+				D2D1_COLOR_F crfButton_2_0;
+				D2D1_COLOR_F crfButton_2_1;
+				D2D1_COLOR_F crfButton_3;
 				ID2D1SolidColorBrush* ifButtonColor;
-				D2D1_COLOR_F crfGradientStopsColor_0;
-				D2D1_COLOR_F crfGradientStopsColor_1;
-				void __vectorcall OnRender(void);
+				D2D1_COLOR_F crfGradientStop_0;
+				D2D1_COLOR_F crfGradientStop_1;
+				void __vectorcall OnRender(_In_ bool bBlinkA);
+				void __vectorcall OnRender_Rectangle(_In_ bool bBlinkA);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_SetFocus(void);
@@ -104,7 +105,7 @@ namespace RePag
 				void __vectorcall EndPoint(D2D1_POINT_2F ptfEndPointA);
 				void __vectorcall Label(const char* pcLabel);
 				void __vectorcall Enable(_In_ bool bEnable);
-				void __vectorcall Edge(_In_ float fRadius_X, _In_ float fRadius_Y);
+				void __vectorcall EdgeRadius(_In_ float fRadius_X, _In_ float fRadius_Y);
 				void __vectorcall BlinkPeriod(_In_ unsigned long ulPeriod_msec);
 				void __vectorcall Blink_Stop(void);
 				void __vectorcall Blink_Go(void);

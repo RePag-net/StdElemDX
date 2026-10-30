@@ -55,6 +55,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 													if(pListBox) pListBox->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_KILLFOCUS   : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pListBox->pfnWM_KillFocus){ pListBox->ThreadSafe_Begin(); pListBox->pfnWM_KillFocus(pListBox); pListBox->ThreadSafe_End(); }
 													return NULL;

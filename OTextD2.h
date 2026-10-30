@@ -51,7 +51,7 @@ namespace RePag
 
 			public:
 				VMEMORY __vectorcall COFreiV(void);
-				void __vectorcall SetFont(STFont& stFont);
+				HRESULT __vectorcall SetFont(STFont& stFont);
 				void __vectorcall SetTextColor(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetTextColor(_In_ D2D1_COLOR_F& crfTextA);
 				void __vectorcall TextAlignment(_In_ unsigned char ucTextAlignmentA);

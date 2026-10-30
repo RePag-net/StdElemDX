@@ -58,6 +58,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditBox(_In_ HWND hWnd, _In_ unsigned i
 														if(pEditBox) pEditBox->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
+		case WM_INITPAINT			: ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+														return NULL;
 		case WM_VSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam, lParam);
 														return NULL;
 		case WM_HSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_HScroll();

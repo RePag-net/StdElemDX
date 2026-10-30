@@ -34,25 +34,25 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport) COPassword : public COEditLine
 		{
-			friend LRESULT CALLBACK WndProc_Password(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
-			friend void CALLBACK Timer_Caret_Password(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
+				friend LRESULT CALLBACK WndProc_Password(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
+				friend void CALLBACK Timer_Caret_Password(_In_ void* pvParam, _In_ bool bTimerOrWaitFired);
 
 			private:
-			COStringA* vasPassword;
-			void __vectorcall WM_Size(_In_ LPARAM lParam);
-			void __vectorcall WM_SetFocus(void);
-			void __vectorcall WM_Char(_In_ WPARAM wParam);
-			void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
-			void __vectorcall OnRender(_In_ bool bCaret);
+				COStringA* vasPassword;
+				void __vectorcall WM_Size(_In_ LPARAM lParam);
+				void __vectorcall WM_SetFocus(void);
+				void __vectorcall WM_Char(_In_ WPARAM wParam);
+				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
+				void __vectorcall OnRender(_In_ bool bCaret);
 
 			protected:
 
 			public:
-			void __vectorcall COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResources);
-			VMEMORY __vectorcall COFreiV(void);
-			void __vectorcall Text(_In_z_ const char* pcText);
-			void __vectorcall OnPaint(void);
+				void __vectorcall COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																			_In_ STDeviceResources* pstDeviceResources);
+				VMEMORY __vectorcall COFreiV(void);
+				void __vectorcall Text(_In_z_ const char* pcText);
+				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------

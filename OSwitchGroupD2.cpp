@@ -49,10 +49,12 @@ LRESULT CALLBACK RePag::DirectX::WndProc_SwitchGroup(HWND hWnd, unsigned int uiM
 	COSwitchGroup* pSwitchGroup;
 	switch(uiMessage){
 		case WM_CREATE			: ((COSwitchGroup*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_Element(hWnd);
-													((COSwitchGroup*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
+													return NULL;
 		case WM_SIZE				: pSwitchGroup = (COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pSwitchGroup) pSwitchGroup->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
+													return NULL;
+		case WM_INITPAINT		: ((COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													return NULL;
@@ -78,6 +80,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Two_waySwitch(HWND hWnd, unsigned int u
 													return NULL;
 		case WM_SIZE				: pTwo_waySwitch = (COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pTwo_waySwitch) pTwo_waySwitch->WM_Size(lParam);
+													return NULL;
+		case WM_INITPAINT		: ((COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
@@ -105,7 +109,6 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 	COGraphicV(vmMemory, pcRePag_SwitchGroup, pcWindowName, uiIDElementA, pstDeviceResources);
 
 	ExtendStyle(WS_EX_STATICEDGE | WS_EX_NOPARENTNOTIFY);
-	crfBackground = D2D1::ColorF(RGB(90, 90, 90), 0.0f);
 
 	ucModus = ucWechselmodus;
 	pfnChangeColumnWidth = nullptr;
@@ -116,6 +119,19 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 	crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
 	pstDeviceResources->ifdwriteFactory7->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 																												 13.0f, L"de-DE", &ifText);
+
+	crfBackground = D2D1::ColorF(RGB(90, 90, 90), 0.0f);
+	crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
+	crfGradientColor_1_0 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
+	crfGradientColor_2_1 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
+	ifBackground = nullptr;
+
+	ifLinearGradientBrush = nullptr;
+	ptfStartPoint = D2D1::Point2F(0.0f, 0.0f);
+	ptfEndPoint = D2D1::Point2F(0.0f, 0.0f);
+
+	fEdgeRadius_X = 15.0f;
+	fEdgeRadius_Y = 15.0f;
 
 #ifndef _64bit
 	vpTwo_waySwitch = (COTwo_waySwitch**)VMBlock(vmMemory, ucNumberOfSwitches * 4);
@@ -141,7 +157,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 //---------------------------------------------------------------------------------------------------------------------------------------
 VMEMORY __vectorcall RePag::DirectX::COSwitchGroup::COFreiV(void)
 {
-	SafeRelease(&ifText); SafeRelease(&ifTextColor);
+	SafeRelease(&ifText); SafeRelease(&ifTextColor); SafeRelease(&ifBackground);
 
 	while(--ucCount){ if(vpTwo_waySwitch[ucCount]) DestroyWindow(vpTwo_waySwitch[ucCount]->HWND_Element()); }
 	if(vpTwo_waySwitch[ucCount]) DestroyWindow(vpTwo_waySwitch[ucCount]->HWND_Element());
@@ -152,7 +168,23 @@ VMEMORY __vectorcall RePag::DirectX::COSwitchGroup::COFreiV(void)
 void __vectorcall RePag::DirectX::COSwitchGroup::OnRender(void)
 {
 	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(crfBackground);
+	Background();
+
+	D2D1_RECT_F rcfButton = {0.0f, 0.0f, (float)lWidth, (float)lHeight};
+	D2D1_ROUNDED_RECT rrcfButton = {rcfButton, fEdgeRadius_X, fEdgeRadius_Y};
+	if(!bLinearGradient) ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifBackground);
+	else{
+		gs2GradientStops[0].color = crfGradientColor_1_0; gs2GradientStops[0].position = 0.0f;
+		gs2GradientStops[1].color = crfGradientColor_2_1; gs2GradientStops[1].position = 1.0f;
+		ID2D1GradientStopCollection* ifGradientStops = nullptr;
+		ifD2D1Context6->CreateGradientStopCollection(gs2GradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops);
+
+		ifD2D1Context6->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(ptfStartPoint, ptfEndPoint),
+			D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()), ifGradientStops, &ifLinearGradientBrush);
+
+		ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifLinearGradientBrush);
+		SafeRelease(&ifGradientStops); SafeRelease(&ifLinearGradientBrush);
+	}
 	if(pfnOnRender) pfnOnRender(this);
 	ifD2D1Context6->EndDraw();
 }
@@ -168,11 +200,16 @@ void __vectorcall RePag::DirectX::COSwitchGroup::OnPaint(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::WM_Create(void)
+void __vectorcall RePag::DirectX::COSwitchGroup::InitPaint(void)
 {
-	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
-
 	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
+
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfBackground, &ifBackground);
+
+	if(ptfStartPoint.x == 0.0f && ptfStartPoint.y == 0.0f && ptfEndPoint.x == 0.0f && ptfEndPoint.y == 0.0f){
+		ptfStartPoint = {(float)lWidth / 2.0f, 0.0f}; ptfEndPoint = {(float)lWidth / 2.0f, (float)lHeight};
+	};
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
@@ -258,7 +295,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COTwo_waySwitch::WM_LButtonUp(_
 void __vectorcall RePag::DirectX::COSwitchGroup::COTwo_waySwitch::OnPaint(void)
 {
 	ThreadSafe_Begin();
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
@@ -305,7 +342,10 @@ void __vectorcall RePag::DirectX::COSwitchGroup::WM_MouseMove(_In_ WPARAM wParam
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::CreateSwitchInGroup(unsigned char ucSwitchA, long lHeight, long lWidth, long lPos_x, long lPos_y)
 {
-	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->CreateWindowGraphic(this, hWndElement, lHeight, lWidth, lPos_x, lPos_y);
+	if(ucSwitchA < ucCount){
+		vpTwo_waySwitch[ucSwitchA]->bSwitchGroup = true;
+		vpTwo_waySwitch[ucSwitchA]->CreateWindowGraphic(hWndElement, lHeight, lWidth, lPos_x, lPos_y);
+	}
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::SetAllSwitch_On(_In_ bool bOn)
@@ -334,7 +374,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Enable(_In_ bool bEnable)
 void __vectorcall RePag::DirectX::COSwitchGroup::Edge(_In_ float fRadius_X, _In_ float fRadius_Y)
 {
 	ThreadSafe_Begin();
-	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Edge(fRadius_X, fRadius_Y);
+	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->EdgeRadius(fRadius_X, fRadius_Y);
 	EnableWindow(hWndElement, false);
 	ThreadSafe_End();
 }
@@ -554,3 +594,41 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Switch_pfnWM_LButtonDown(_In_ u
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetLinearGradient(_In_ bool bLinearGradientA)
+{
+	ThreadSafe_Begin();
+	bLinearGradient = bLinearGradientA;
+	ThreadSafe_End();
+	if(hWndElement) OnPaint();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+bool __vectorcall RePag::DirectX::COSwitchGroup::GetLinearGradient(void)
+{
+	bool bLinearGradientA;
+	ThreadSafe_Begin();
+	bLinearGradientA = bLinearGradient;
+	ThreadSafe_End();
+	return bLinearGradientA;
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::LinearGradientStartPoint(_Out_ D2D1_POINT_2F& ptfStartPointA)
+{
+	ThreadSafe_Begin();
+	ptfStartPointA = ptfStartPoint;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::LinearGradientEndPoint(_Out_ D2D1_POINT_2F& ptfEndPointA)
+{
+	ThreadSafe_Begin();
+	ptfEndPointA = ptfEndPoint;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::GradientStops(_Out_ D2D1_GRADIENT_STOP gs2GradientStopsA[2])
+{
+	ThreadSafe_Begin();
+	gs2GradientStopsA[0] = gs2GradientStops[0];
+	gs2GradientStopsA[1] = gs2GradientStops[1];
+	ThreadSafe_End();
+}

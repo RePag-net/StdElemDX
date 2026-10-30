@@ -35,16 +35,19 @@ namespace RePag
 		 class __declspec(dllexport) COSwitch : public COButton
 		{
 			friend LRESULT CALLBACK WndProc_Switch(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
+			friend LRESULT CALLBACK WndProc_Two_waySwitch(HWND hWnd, unsigned int uiMessage, WPARAM wParam, LPARAM lParam);
 
 			private:
 				bool bOn;
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall Background(void);
 
 			protected:
 				COStringA asLabel_On;
 				COStringA asLabel_Off;
+				void __vectorcall OnRender(_In_ bool bBlinkA);
 				void __vectorcall Switch(_In_ bool bOn);
-
 				void __vectorcall COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																		_In_ STDeviceResources* pstDeviceResourcesA);
 
@@ -58,6 +61,7 @@ namespace RePag
 				void __vectorcall Label(_In_z_ const char* pcLabel);
 				void __vectorcall Label_On(_In_z_ const char* pcLabel);
 				void __vectorcall Label_Off(_In_z_ const char* pcLabel);
+				bool bSwitchGroup;
 		
 		};
 //---------------------------------------------------------------------------------------------------------------------------------------

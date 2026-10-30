@@ -68,6 +68,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(_In_ HWND hWnd, _In_ unsigned
 													if(pScrollBar) pScrollBar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_VSCROLL			: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam);
 													return NULL;
 		case WM_HSCROLL			: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_HScroll(wParam);
@@ -155,6 +157,22 @@ void __vectorcall RePag::DirectX::COScrollBar::OnRender(void)
 	ifD2D1Context6->EndDraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COScrollBar::InitPaint(void)
+{
+	if(!ifButtonColor_Up){
+		ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor_Up);
+		ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_Up);
+		ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor_Down);
+		ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_Down);
+		ifD2D1Context6->CreateSolidColorBrush(crfThumb, &ifThumbColor);
+
+		Geometry();
+
+		OnRender();
+		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::OnPaint(void)
 {
 	ThreadSafe_Begin();
@@ -170,17 +188,6 @@ void __vectorcall RePag::DirectX::COScrollBar::WM_Create(void)
 	stTrackMouseEvent.dwFlags = TME_HOVER | TME_LEAVE;
 	stTrackMouseEvent.hwndTrack = hWndElement;
 	stTrackMouseEvent.dwHoverTime = 10;
-
-	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor_Up);
-	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_Up);
-	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor_Down);
-	ifD2D1Context6->CreateSolidColorBrush(crfArrow, &ifArrowColor_Down);
-	ifD2D1Context6->CreateSolidColorBrush(crfThumb, &ifThumbColor);
-
-	Geometry();
-
-	OnRender();
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COScrollBar::WM_Size(_In_ LPARAM lParam)

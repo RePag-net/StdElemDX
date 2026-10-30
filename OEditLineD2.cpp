@@ -56,6 +56,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned 
 														if(pEditLine)	pEditLine->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
+		case WM_INITPAINT			: ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+														return NULL;
 		case WM_SETFOCUS      : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 														return NULL;
 		case WM_KILLFOCUS     : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();
@@ -136,6 +138,20 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	return ((COTextLine*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COEditLine::InitPaint(void)
+{
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
+
+	ifText->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
+
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::OnPaint(void)
 {
 	ThreadSafe_Begin();
@@ -149,12 +165,6 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 {
 	CharacterMetric();
 
-	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
-
-	ifText->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-
 	D2D_SIZE_F szfTextPoint;
 	if(ucTextAlignment & TXA_RIGHT){
 		GetTextPoint(vasContent->c_Str(), vasContent->Length(), szfTextPoint);
@@ -167,11 +177,6 @@ void __vectorcall RePag::DirectX::COEditLine::WM_Create(void)
 			fTextPos /= 2;
 		}
 	}
-
-	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
-
-	OnRender(false);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COEditLine::WM_Size(_In_ LPARAM lParam)

@@ -50,11 +50,12 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Light(_In_ HWND hWnd, _In_ unsigned int
 	COLight* pLight;
 	switch(uiMessage){
 		case WM_CREATE		: ((COLight*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_Element(hWnd);
-												((COLight*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 												return NULL;
 		case WM_SIZE			: pLight = (COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 												if(pLight) pLight->WM_Size(lParam);
 												else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
+												return NULL;
+		case WM_INITPAINT	: ((COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
 												return NULL;
 		case WM_NCDESTROY	: pLight = (COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 												VMFreiV(pLight);
@@ -90,6 +91,16 @@ void __vectorcall RePag::DirectX::COLight::COLightV(_In_ VMEMORY vmMemory, _In_z
 
 	crfStroke = D2D1::ColorF(RGB(100, 100, 100), 1.0f);
 	fStroke_Width = 0.0f;
+	bBackgroundGradient = false;
+	bBackgroundGradientRadial = false;
+	crfBackgroundGradient_0 = D2D1::ColorF(0.0f, 0.0f, 0.0f, 1.0f);
+	crfBackgroundGradient_1 = D2D1::ColorF(0.0f, 0.0f, 0.0f, 1.0f);
+	ptfBackgroundGradient_StartPoint = D2D1::Point2F(0.0f, 0.0f);
+	ptfBackgroundGradient_EndPoint = D2D1::Point2F(0.0f, 0.0f);
+	ptfBackgroundGradient_Center = D2D1::Point2F(0.0f, 0.0f);
+	ptfBackgroundGradient_OriginOffset = D2D1::Point2F(0.0f, 0.0f);
+	fBackgroundGradient_Radius_X = 0.0f;
+	fBackgroundGradient_Radius_Y = 0.0f;
 
 	bLight_On = true;
 	bThreadEnd = false;
@@ -109,36 +120,32 @@ VMEMORY __vectorcall RePag::DirectX::COLight::COFreiV(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLight::OnRender(_In_ bool bLight_On)
 {
-	ifD2D1Context6->BeginDraw();
-	ifD2D1Context6->Clear(crfBackground);
+  ifD2D1Context6->BeginDraw();
+	Background();
 
-	if(bLight_On){
-		ellipse = D2D1::Ellipse(D2D1::Point2F((float)lWidth / 2.0f, (float)lHeight / 2.0f), fEllipseRadius_X, fEllipseRadius_Y);
-		SafeRelease(&ifEllipseLight);
-		pstDeviceResources->ifd2d1Factory7->CreateEllipseGeometry(ellipse, &ifEllipseLight);
-		ifD2D1Context6->DrawGeometry(ifEllipseLight, ifStroke, fStroke_Width);
-
-		if(!bRadialGradient) ifD2D1Context6->FillGeometry(ifEllipseLight, ifLight_1_0);
-		else{
-			D2D1_GRADIENT_STOP gradientStops[2];
-			gradientStops[0].color = crfLight_1_0; gradientStops[0].position = 0.0f;
-			gradientStops[1].color = crfLight_2_1; gradientStops[1].position = 1.0f;
+  ellipse = D2D1::Ellipse(D2D1::Point2F((float)lWidth / 2.0f, (float)lHeight / 2.0f), fEllipseRadius_X, fEllipseRadius_Y);
+  if(bLight_On){
+    if(!bRadialGradient) ifD2D1Context6->FillEllipse(ellipse, ifLight_1_0);
+    else{
+			D2D1_GRADIENT_STOP gs2GradientStops[2];
+			gs2GradientStops[0].color = crfLight_1_0; gs2GradientStops[0].position = 0.0f;
+			gs2GradientStops[1].color = crfLight_2_1; gs2GradientStops[1].position = 1.0f;
 
 			ID2D1GradientStopCollection* ifGradientStops = nullptr;
-			ifD2D1Context6->CreateGradientStopCollection(gradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops);
-
-			ID2D1RadialGradientBrush* ifRadialGradientBrush = nullptr;
-			ifD2D1Context6->CreateRadialGradientBrush(
-				D2D1::RadialGradientBrushProperties(ptfRadialGradientCenter, ptfRadialGradientOriginOffset,
-																						fRadialGradientRadius_X, fRadialGradientRadius_Y),
-											D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()),
-																						ifGradientStops, &ifRadialGradientBrush);
-
-			ifD2D1Context6->FillGeometry(ifEllipseLight, ifRadialGradientBrush);
-			SafeRelease(&ifGradientStops); SafeRelease(&ifRadialGradientBrush);
-		}
-	}
-	ifD2D1Context6->EndDraw();
+      if(SUCCEEDED(ifD2D1Context6->CreateGradientStopCollection(gs2GradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops))){
+        ID2D1RadialGradientBrush* ifRadialGradientBrush = nullptr;
+        if(SUCCEEDED(ifD2D1Context6->CreateRadialGradientBrush(
+              D2D1::RadialGradientBrushProperties(ptfRadialGradientCenter, ptfRadialGradientOriginOffset,
+																                  fRadialGradientRadius_X, fRadialGradientRadius_Y),
+              D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()), ifGradientStops, &ifRadialGradientBrush))){
+					ifD2D1Context6->FillEllipse(ellipse, ifRadialGradientBrush);
+          SafeRelease(&ifRadialGradientBrush);
+        }
+        SafeRelease(&ifGradientStops);
+      }
+    }
+  }
+  ifD2D1Context6->EndDraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLight::OnPaint(void)
@@ -150,7 +157,7 @@ void __vectorcall RePag::DirectX::COLight::OnPaint(void)
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLight::WM_Create(void)
+void __vectorcall RePag::DirectX::COLight::InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfLight_1_0, &ifLight_1_0);
 	ifD2D1Context6->CreateSolidColorBrush(crfLight_2_1, &ifLight_2_1);
@@ -167,12 +174,6 @@ void __vectorcall RePag::DirectX::COLight::WM_Create(void)
 	if(fRadialGradientRadius_X == 0.0f && fRadialGradientRadius_Y == 0.0f){
 		fRadialGradientRadius_X = (float)lWidth / 2.0f;
 		fRadialGradientRadius_Y = (float)lHeight / 2.0f;
-	}
-
-	if(crfBackground.a == 0.0f){
-		D2D1_COLOR_F crfBackground_Main;
-		((CODialog*)pMainElement)->GetBackgroundColor(crfBackground_Main);
-		crfBackground = crfBackground_Main;
 	}
 
 	OnRender(bLight_On);
@@ -289,7 +290,7 @@ void __vectorcall RePag::DirectX::COLight::RadialGradientRadius(_In_ float fRadi
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLight::RadialGradient(_In_ bool bRadialGradientA)
+void __vectorcall RePag::DirectX::COLight::SetRadialGradient(_In_ bool bRadialGradientA)
 {
 	ThreadSafe_Begin();
 	bRadialGradient = bRadialGradientA;

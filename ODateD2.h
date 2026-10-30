@@ -57,6 +57,7 @@ namespace RePag
 					ID2D1PathGeometry* ifArrow;
 					ID2D1SolidColorBrush* ifArrowColor;
 					CODate* pCalendar;
+					void __vectorcall OnRender(_In_ bool bCaret);
 					void __vectorcall WM_Create(void);
 					void __vectorcall WM_Size(_In_ LPARAM lParam);
 					void __vectorcall WM_SetFocus(void);
@@ -71,7 +72,6 @@ namespace RePag
 					void __vectorcall WM_MouseLeave(void);
 					void __vectorcall WM_MouseOver(_In_ LPARAM lParam);
 					void __vectorcall ButtonSize(void);
-					void __vectorcall OnRender(_In_ bool bCaret);
 					void __vectorcall DeleteCaretPos(void);
 					void __vectorcall DeSelect(void);
 					bool __vectorcall DateTextToSYSTEMTIME(_In_ SYSTEMTIME& stSystemTime, _In_ unsigned char& ucPosition_DateTime);
@@ -85,6 +85,7 @@ namespace RePag
 																				_In_ STDeviceResources* pstDeviceResources);
 					// Note: five numbers uiIDElement, because COEditDate and COListBox !!!
 					VMEMORY __vectorcall COFreiV(void);
+					void __vectorcall InitPaint(void);
 					void __vectorcall OnPaint(void);
 					void __vectorcall DateTimeText(void);
 					COStringA asFormat_Date;
@@ -124,6 +125,8 @@ namespace RePag
 				float fRowHeight;
 				unsigned char ucFirstDayOfWeek;
 				unsigned char ucLastDay;
+				void __vectorcall OnRender(void);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -133,7 +136,6 @@ namespace RePag
 				bool __vectorcall WM_Command(_In_ WPARAM wParam);
 				bool __vectorcall WM_LButtonUp(_In_ LPARAM lParam);
 				void __vectorcall SetDayOfWeek(void);
-				void __vectorcall OnRender(void);
 				bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 
 			protected:

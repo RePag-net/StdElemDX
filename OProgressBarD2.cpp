@@ -48,11 +48,12 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ProgressBar(_In_ HWND hWnd, _In_ unsign
 	COProgressBar* vProgressBar;
 	switch(uiMessage){
 		case WM_CREATE			: ((COProgressBar*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create_Element(hWnd);
-													((COProgressBar*)((LPCREATESTRUCT)lParam)->lpCreateParams)->WM_Create();
 													return NULL;
 		case WM_SIZE				: vProgressBar = (COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(vProgressBar) vProgressBar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
+													return NULL;
+		case WM_INITPAINT		: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
 													return NULL;
 		case WM_LBUTTONDOWN	: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDown(wParam, lParam);
 													return NULL;
@@ -102,6 +103,14 @@ void __vectorcall RePag::DirectX::COProgressBar::OnRender(void)
 	ifD2D1Context6->EndDraw();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COProgressBar::InitPaint(void)
+{
+	ifD2D1Context6->CreateSolidColorBrush(crfFillColor, &ifFillColor);
+
+	OnRender();
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COProgressBar::OnPaint(void)
 {
 	ThreadSafe_Begin();
@@ -109,14 +118,6 @@ void __vectorcall RePag::DirectX::COProgressBar::OnPaint(void)
   rclDirty.left = 0; rclDirty.top = 0; rclDirty.right = lWidth; rclDirty.bottom = lHeight;
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COProgressBar::WM_Create(void)
-{
-	ifD2D1Context6->CreateSolidColorBrush(crfFillColor, &ifFillColor);
-
-	OnRender();
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COProgressBar::WM_Size(_In_ LPARAM lParam)

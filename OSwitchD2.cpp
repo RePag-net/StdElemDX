@@ -26,6 +26,7 @@ SOFTWARE.
 ******************************************************************************/
 #include "HStdElemDX.h"
 #include "OSwitchD2.h"
+#include "OSwitchGroupD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
 RePag::DirectX::COSwitch* __vectorcall RePag::DirectX::COSwitchV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																																 _In_ STDeviceResources* pstDeviceResources)
@@ -53,6 +54,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Switch(_In_ HWND hWnd, _In_ unsigned in
 		case WM_SIZE				: pSwitch = (COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pSwitch) pSwitch->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
+													return NULL;
+		case WM_INITPAINT		: ((COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
@@ -88,6 +91,53 @@ void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In
 	bOn = false; *vasContent = asLabel_Off;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitch::OnRender(_In_ bool bBlinkA)
+{
+	ifD2D1Context6->BeginDraw();
+	Background();
+	OnRender_Rectangle(bBlinkA);
+	ifD2D1Context6->EndDraw();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitch::InitPaint(void)
+{
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfButton_1_0, &ifButtonColor);
+
+	if(ptfStartPoint.x == 0.0f && ptfStartPoint.y == 0.0f && ptfEndPoint.x == 0.0f && ptfEndPoint.y == 0.0f){
+		ptfStartPoint = {(float)lWidth / 2.0f, 0.0f}; ptfEndPoint = {(float)lWidth / 2.0f, (float)lHeight};
+	};
+
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+
+	hRenderThread = CreateThread(NULL, 0, thRender_Button, this, NULL, NULL);
+	CreateTimerQueueTimer(&htTimer_Button, TimerQueue(), (WAITORTIMERCALLBACK)Timer_Button, this, 0, 500, 0);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitch::Background(void)
+{
+	ID2D1GradientStopCollection* ifGradientStops = nullptr;
+	D2D1_POINT_2F ptfStartPoint = D2D1::Point2F(0.0f, 0.0f); D2D1_POINT_2F ptfEndPoint = D2D1::Point2F(0.0f, 0.0f);
+	if(bSwitchGroup){
+		COSwitchGroup* pSwitchGroup = (COSwitchGroup*)GetWindowLongPtr(GetParent(hWndElement), GWLP_USERDATA);
+		if(!pSwitchGroup->GetLinearGradient()) ifD2D1Context6->Clear(pSwitchGroup->GetBackgroundColor(crfBackground));
+		else{
+			D2D1_GRADIENT_STOP gs2GradientStops[2];
+			pSwitchGroup->GradientStops(gs2GradientStops);
+			if(FAILED(ifD2D1Context6->CreateGradientStopCollection(gs2GradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops))) goto Error;
+			pSwitchGroup->LinearGradientStartPoint(ptfStartPoint);
+			ptfStartPoint.x -= (float)ptPosition.x; ptfStartPoint.y -= (float)ptPosition.y;
+			pSwitchGroup->LinearGradientEndPoint(ptfEndPoint);
+			ptfEndPoint.x -= (float)ptPosition.x; ptfEndPoint.y -= (float)ptPosition.y;
+		}
+	}
+	else if(!Background_Dialog(ifGradientStops, ptfStartPoint, ptfEndPoint)) goto Error;
+	Background_Rectangle(ifGradientStops, ptfStartPoint, ptfEndPoint);
+Error:
+	SafeRelease(&ifGradientStops);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitch::WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam)
 {
 	ThreadSafe_Begin();
@@ -103,15 +153,15 @@ void __vectorcall RePag::DirectX::COSwitch::Switch(_In_ bool	bOnA)
 {
 	if(bOnA){
 		bOn = true;	*vasContent = asLabel_On;
-		if(!bLinearGradient) ifButtonColor->SetColor(crfButtonColor_2_0); 
-		else{	crfGradientStopsColor_0 = crfButtonColor_2_0;	crfGradientStopsColor_1 = crfButtonColor_2_1; }
+		if(!bLinearGradient) ifButtonColor->SetColor(crfButton_2_0); 
+		else{	crfGradientStop_0 = crfButton_2_0;	crfGradientStop_1 = crfButton_2_1; }
 	}
 	else{
 		bOn = false; *vasContent = asLabel_Off;
-		if(!bLinearGradient) ifButtonColor->SetColor(crfButtonColor_1_0);
-		else{ crfGradientStopsColor_0 = crfButtonColor_1_0;	crfGradientStopsColor_1 = crfButtonColor_1_1; }
+		if(!bLinearGradient) ifButtonColor->SetColor(crfButton_1_0);
+		else{ crfGradientStop_0 = crfButton_1_0;	crfGradientStop_1 = crfButton_1_1; }
 	}
-	OnRender();
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

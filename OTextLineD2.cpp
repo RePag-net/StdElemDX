@@ -54,6 +54,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 													if(pTextZeile) pTextZeile->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
+		case WM_INITPAINT		: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+													return NULL;
 		case WM_SETFOCUS		: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
 		case WM_KEYDOWN			:	((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KeyDown(wParam, lParam);
@@ -101,7 +103,8 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(_In_ bool bCaret)
 	ifTextColor->SetColor(crfText);
 	D2D1_RECT_F rcfText = D2D1::RectF(0.0f, 0.0f, 0.0f, 0.0f);
 	if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vasContent->c_Str(), vasContent->Length())) return;
-	if(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText, (float)lWidth, (float)lHeight, &ifTextLayout)) return;
+	if(FAILED(pstDeviceResources->ifdwriteFactory7->CreateTextLayout(wc255Content, (UINT32)szBytes_Text, ifText,
+																																	 (float)lWidth, (float)lHeight, &ifTextLayout))) return;
 	TextAlignment(ifTextLayout, fTextWidth, rcfText);
 	SafeRelease(&ifTextLayout);
 
@@ -137,12 +140,23 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(_In_ bool bCaret)
 		ifD2D1Context6->FillRectangle(&rcfSelect_1, ifSelectBackColor);
 
 		ifTextColor->SetColor(crfSelectText);
-		mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen); VMFrei(vbCharacter);
+		if(mbstowcs_s(&szBytes_Text, wc255Content, 255, vbCharacter, ulZeichen)){	VMFrei(vbCharacter); return; }
 		ifD2D1Context6->DrawText(wc255Content, (UINT32)szBytes_Text, ifText, rcfSelect_1, ifTextColor, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 	}
 
 	ifD2D1Context6->SetTransform(tfPrevTransform);
 	ifD2D1Context6->EndDraw();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COTextLine::InitPaint(void)
+{
+	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
+	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
+
+	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
+
+	OnRender(false);
+	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::OnPaint(void)
@@ -157,13 +171,6 @@ void __vectorcall RePag::DirectX::COTextLine::OnPaint(void)
 void __vectorcall RePag::DirectX::COTextLine::WM_Create(void)
 {
 	CharacterMetric();
-	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
-	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
-
-	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
-
-	OnRender(false);
-	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::WM_Size(_In_ LPARAM lParam)

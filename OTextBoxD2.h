@@ -54,8 +54,8 @@ namespace RePag
 				COList* vliText;
 				long lLine;
 				void* pvLine;
-				void __vectorcall CreateText(void);
 				void __vectorcall OnRender(_In_ bool bCaret);
+				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);
@@ -65,6 +65,7 @@ namespace RePag
 				void __vectorcall WM_ContexMenu(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseWheel(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall CreateText(void);
 				void __vectorcall ChangeSizeVisibleScrollBars(void);
 				void __vectorcall SetScrollBarPos(_In_ BYTE ucBar, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall GetScrollBar(_In_ BYTE ucBar, _Out_ STScrollInfo& stScrollInfo);
