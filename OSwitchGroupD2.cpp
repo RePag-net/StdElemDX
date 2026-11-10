@@ -27,17 +27,18 @@ SOFTWARE.
 #include "HStdElemDX.h"
 #include "OSwitchGroupD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COSwitchGroup* __vectorcall RePag::DirectX::COSwitchGroupV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ unsigned char ucNumberOfSwitches,
-																																					 _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COSwitchGroup* __vectorcall RePag::DirectX::COSwitchGroupV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																					 _In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus,
+																																					 _In_ STDeviceResources* pstDeviceResources)
 {
 	COSwitchGroup* vSwitchGroup = (COSwitchGroup*)VMBlock(VMDialog(), sizeof(COSwitchGroup));
 	vSwitchGroup->COSwitchGroupV(VMDialog(), pcWindowName, uiIDElement, ucNumberOfSwitches, ucWechselmodus, pstDeviceResources);
 	return vSwitchGroup;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COSwitchGroup* __vectorcall RePag::DirectX::COSwitchGroupV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																					 _In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus,
-																																					 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COSwitchGroup* __vectorcall RePag::DirectX::COSwitchGroupV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																					 _In_ unsigned int uiIDElement, _In_ unsigned char ucNumberOfSwitches,
+																																					 _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResources)
 {
 	COSwitchGroup* vSwitchGroup = (COSwitchGroup*)VMBlock(vmMemory, sizeof(COSwitchGroup));
 	vSwitchGroup->COSwitchGroupV(vmMemory, pcWindowName, uiIDElement, ucNumberOfSwitches, ucWechselmodus, pstDeviceResources);
@@ -54,7 +55,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_SwitchGroup(HWND hWnd, unsigned int uiM
 													if(pSwitchGroup) pSwitchGroup->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COSwitchGroup*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													return NULL;
@@ -81,7 +82,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Two_waySwitch(HWND hWnd, unsigned int u
 		case WM_SIZE				: pTwo_waySwitch = (COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pTwo_waySwitch) pTwo_waySwitch->WM_Size(lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COSwitchGroup::COTwo_waySwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
@@ -104,9 +105,9 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Two_waySwitch(HWND hWnd, unsigned int u
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
 																																_In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus,
-																																_In_ STDeviceResources* pstDeviceResources)
+																																_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COGraphicV(vmMemory, pcRePag_SwitchGroup, pcWindowName, uiIDElementA, pstDeviceResources);
+	COGraphicV(vmMemory, pcRePag_SwitchGroup, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	ExtendStyle(WS_EX_STATICEDGE | WS_EX_NOPARENTNOTIFY);
 
@@ -122,8 +123,10 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 
 	crfBackground = D2D1::ColorF(RGB(90, 90, 90), 0.0f);
 	crfText = D2D1::ColorF(RGB(240, 240, 240), 1.0f);
-	crfGradientColor_1_0 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
-	crfGradientColor_2_1 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
+	crfGradient_1_0 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
+	crfGradient_2_1 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
+	//crfGradient_2_1 = D2D1::ColorF(RGB(35, 35, 35), 1.0f);
+	//crfGradient_1_0 = D2D1::ColorF(RGB(110, 110, 110), 1.0f);
 	ifBackground = nullptr;
 
 	ifLinearGradientBrush = nullptr;
@@ -145,10 +148,12 @@ void __vectorcall RePag::DirectX::COSwitchGroup::COSwitchGroupV(_In_ VMEMORY vmM
 		vpTwo_waySwitch[ucCount] = (COTwo_waySwitch*)VMBlock(vmMemory, sizeof(COTwo_waySwitch));
 		vpTwo_waySwitch[ucCount]->COTwo_waySwitchV(vmMemory, asName.c_Str(), uiIDElementA + ucCount, this, pstDeviceResources);
 		if(ucWechselmodus) vpTwo_waySwitch[ucCount]->bGroup = true;
-		vpTwo_waySwitch[ucCount]->SetTextColor(100, 100, 100, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetButtonColor_1_0(140, 140, 140, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetButtonColor_2_0(220, 220, 220, 1.0f);
-		vpTwo_waySwitch[ucCount]->SetButtonColor_3(200, 200, 200, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetTextColor(90, 90, 90, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_1_0(180, 180, 180, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_1_1(35, 35, 35, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_2_0(240, 240, 240, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_2_1(0, 250, 0, 1.0f);
+		vpTwo_waySwitch[ucCount]->SetButtonColor_3(120, 120, 120, 1.0f);
 		vpTwo_waySwitch[ucCount]->TextAlignment(TXA_CENTERVERTICAL | TXA_CENTERHORIZONTAL);
 		(ucCount < 10 ? asName.Delete(asName.Length() - 1, 1) : asName.Delete(asName.Length(), 2));
 		ucCount++;
@@ -174,8 +179,8 @@ void __vectorcall RePag::DirectX::COSwitchGroup::OnRender(void)
 	D2D1_ROUNDED_RECT rrcfButton = {rcfButton, fEdgeRadius_X, fEdgeRadius_Y};
 	if(!bLinearGradient) ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifBackground);
 	else{
-		gs2GradientStops[0].color = crfGradientColor_1_0; gs2GradientStops[0].position = 0.0f;
-		gs2GradientStops[1].color = crfGradientColor_2_1; gs2GradientStops[1].position = 1.0f;
+		gs2GradientStops[0].color = crfGradient_1_0; gs2GradientStops[0].position = 0.0f;
+		gs2GradientStops[1].color = crfGradient_2_1; gs2GradientStops[1].position = 1.0f;
 		ID2D1GradientStopCollection* ifGradientStops = nullptr;
 		ifD2D1Context6->CreateGradientStopCollection(gs2GradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops);
 
@@ -200,7 +205,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::OnPaint(void)
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::InitPaint(void)
+void __vectorcall RePag::DirectX::COSwitchGroup::WM_InitPaint(void)
 {
 	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
@@ -257,10 +262,11 @@ void __vectorcall RePag::DirectX::COSwitchGroup::DrawText(_In_z_ const wchar_t* 
 	ifD2D1Context6->DrawText(wcInhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::COTwo_waySwitch::COTwo_waySwitchV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																																									 _In_ COSwitchGroup* pSwitchGroupA, _In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COSwitchGroup::COTwo_waySwitch::COTwo_waySwitchV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName,
+																																									 _In_ unsigned int uiIDElementA, _In_ COSwitchGroup* pSwitchGroupA, 
+																																									 _In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COSwitchV(vmMemory, pcRePag_Two_waySwitch, pcWindowName, uiIDElementA, pstDeviceResources);
+	COSwitchV(vmMemory, pcRePag_Two_waySwitch, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 	pSwitchGroup = pSwitchGroupA;
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -367,7 +373,7 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Enable(_In_ bool bEnable)
 {
 	ThreadSafe_Begin();
 	for(BYTE ucNummer = 0; ucNummer < ucCount; ucNummer++) vpTwo_waySwitch[ucNummer]->Enable(bEnable);
-	EnableWindow(hWndElement, false);
+	EnableWindow(hWndElement, bEnable);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -550,6 +556,28 @@ void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetButtonColor_3(_In_ un
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetTextColor(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed,
+																																		 _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetTextColor(ucRed, ucGreen, ucBlue, fAlpha);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetTextColor(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfTextA)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetTextColor(crfTextA);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::Switch_SetGradient(_In_ unsigned char ucSwitchA, _In_ bool bLinearGradient)
+{
+	ThreadSafe_Begin();
+	if(ucSwitchA < ucCount) vpTwo_waySwitch[ucSwitchA]->SetLinearGradient(bLinearGradient);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 long& __vectorcall RePag::DirectX::COSwitchGroup::Switch_Pos_X(_In_ unsigned char ucSwitchA, _Out_ long& lPos_x)
 {
 	ThreadSafe_Begin();
@@ -625,10 +653,46 @@ void __vectorcall RePag::DirectX::COSwitchGroup::LinearGradientEndPoint(_Out_ D2
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitchGroup::GradientStops(_Out_ D2D1_GRADIENT_STOP gs2GradientStopsA[2])
+void __vectorcall RePag::DirectX::COSwitchGroup::GetGradientStops(_Out_ D2D1_GRADIENT_STOP gs2GradientStopsA[2])
 {
 	ThreadSafe_Begin();
 	gs2GradientStopsA[0] = gs2GradientStops[0];
 	gs2GradientStopsA[1] = gs2GradientStops[1];
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetGradientStops(_In_ D2D1_GRADIENT_STOP gs2GradientStopsA[2])
+{
+	ThreadSafe_Begin();
+	gs2GradientStops[0] = gs2GradientStopsA[0];
+	gs2GradientStops[1] = gs2GradientStopsA[1];
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetGradientColor_1_0(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
+{
+	ThreadSafe_Begin();
+	crfGradient_1_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetGradientColor_1_0(_In_ D2D1_COLOR_F& crfGradient)
+{
+	ThreadSafe_Begin();
+	crfGradient_1_0 = crfGradient;
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetGradientColor_2_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha)
+{
+	ThreadSafe_Begin();
+	crfGradient_2_1 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::COSwitchGroup::SetGradientColor_2_1(_In_ D2D1_COLOR_F& crfGradient)
+{
+	ThreadSafe_Begin();
+	crfGradient_2_1 = crfGradient;
 	ThreadSafe_End();
 }

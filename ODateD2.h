@@ -59,6 +59,7 @@ namespace RePag
 					CODate* pCalendar;
 					void __vectorcall OnRender(_In_ bool bCaret);
 					void __vectorcall WM_Create(void);
+					void __vectorcall WM_InitPaint(void);
 					void __vectorcall WM_Size(_In_ LPARAM lParam);
 					void __vectorcall WM_SetFocus(void);
 					void __vectorcall WM_KillFocus(void);
@@ -81,11 +82,10 @@ namespace RePag
 				protected:
 
 				public:
-					void __vectorcall COEditDateV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ CODate* pDateA,
-																				_In_ STDeviceResources* pstDeviceResources);
-					// Note: five numbers uiIDElement, because COEditDate and COListBox !!!
+					void __vectorcall COEditDateV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																				_In_ CODate* pDateA, _In_ STDeviceResources* pstDeviceResourcesA);
+																					// Note: five numbers uiIDElement, because COEditDate and COListBox !!!
 					VMEMORY __vectorcall COFreiV(void);
-					void __vectorcall InitPaint(void);
 					void __vectorcall OnPaint(void);
 					void __vectorcall DateTimeText(void);
 					COStringA asFormat_Date;
@@ -126,8 +126,8 @@ namespace RePag
 				unsigned char ucFirstDayOfWeek;
 				unsigned char ucLastDay;
 				void __vectorcall OnRender(void);
-				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseOver(_In_ LPARAM lParam);
@@ -142,7 +142,7 @@ namespace RePag
 
 			public:
 				void __vectorcall CODateV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																	 _In_ STDeviceResources* pstDeviceResources);
+																	 _In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				long& __vectorcall GetHeight(_In_ long& lHeightA);
 				long& __vectorcall GetHeight_EditDate(_In_ long& lHeightA);
@@ -150,7 +150,7 @@ namespace RePag
 				RECT& __vectorcall GetWindow(_In_ RECT& rcWindow);
 				void __vectorcall NewWindowPosition(_In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewWindowPosition(_In_ POINT& ptPositionA);
-				//void __vectorcall NewWindow(_In_ long lHoheA, _In_ long lBreiteA, _In_ long lPos_x, _In_ long lPos_y);
+				void __vectorcall NewWindow(_In_ long lHoheA, _In_ long lBreiteA, _In_ long lPos_x, _In_ long lPos_y);
 				void __vectorcall NewWindowSize(_In_ long lHoheA, _In_ long lBreiteA);
 				void __vectorcall NewWindowHeight(_In_ long lHoheA);
 				void __vectorcall NewWindowWidth(_In_ long lBreiteA);
@@ -199,8 +199,9 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) CODate* __vectorcall CODateV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) CODate* __vectorcall CODateV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) CODate* __vectorcall CODateV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
+																											 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) CODate* __vectorcall CODateV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																											 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}

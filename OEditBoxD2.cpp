@@ -31,7 +31,7 @@ SOFTWARE.
 #define _EditBox ((RePag::DirectX::COEditBox*)pvParam)
 #define _DeleteLine ((COStringA*)vliText->Element(pvIterator))
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																																	 _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditBox* vEditBox = (COEditBox*)VMBlock(VMDialog(), sizeof(COEditBox));
@@ -39,8 +39,8 @@ RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_z_ const 
 	return vEditBox;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																	 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COEditBox* __vectorcall RePag::DirectX::COEditBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName,
+																																	 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditBox* vEditBox = (COEditBox*)VMBlock(vmSpeicher, sizeof(COEditBox));
 	vEditBox->COEditBoxV(vmSpeicher, pcWindowName, uiIDElement, pstDeviceResources);
@@ -58,7 +58,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditBox(_In_ HWND hWnd, _In_ unsigned i
 														if(pEditBox) pEditBox->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
-		case WM_INITPAINT			: ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT			: ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 														return NULL;
 		case WM_VSCROLL       : ((COEditBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam, lParam);
 														return NULL;
@@ -116,11 +116,11 @@ void CALLBACK RePag::DirectX::Timer_Caret_EditBox(_In_ void* pvParam, _In_ bool 
 	_EditBox->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																												_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COEditBox::COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																												_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
-	COTextBoxV(vmMemory, pcRePag_EditBox, pcWindowName, uiIDElementA, pstDeviceResources);
+	COTextBoxV(vmMemory, pcRePag_EditBox, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	heCaret = CreateEvent(nullptr, true, true, nullptr);
 	pfnWM_Char_ShiftReturn = nullptr;
@@ -185,71 +185,6 @@ void __vectorcall RePag::DirectX::COEditBox::WM_KillFocus(void)
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
 	if(pfnWM_KillFocus) pfnWM_KillFocus(this);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::WM_HScroll(void)
-{
-	ThreadSafe_Begin();
-
-	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = lWidth; rclDirty.bottom = lHeight;
-	OnRender(true);
-	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
-	ThreadSafe_End();
-}
-//---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditBox::WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam)
-{
-	ThreadSafe_Begin();
-	STScrollInfo siLine{}; siLine.ucMask = SBI_PAGE | SBI_POS | SBI_MAX | SBI_CHARACTER_HEIGHT; GetScrollBar(SB_VERT, siLine);
-	bool bScrollChanged = lParam != NULL;
-	float fScrollPage = siLine.fPage;
-	if(siLine.szfCharacter.height > 0.0f){
-		long lScrollLines = (long)(siLine.fPage / siLine.szfCharacter.height) + 1;
-		fScrollPage = (float)lScrollLines * siLine.szfCharacter.height;
-	}
-	switch(LOWORD(wParam)){
-		case SB_LINEUP		: if(!lParam && siLine.fPos > 0.0f){
-													siLine.fPos -= szfCharacter.height;
-													if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-													siLine.ucMask = SBI_POS;
-													SetScrollBar(SB_VERT, siLine);
-													bScrollChanged = true;
-												}
-												if(bScrollChanged) ptfCaret.y += szfCharacter.height;
-												break;
-		case SB_LINEDOWN	: if(!lParam && siLine.fPos + siLine.fPage < siLine.fMax){
-													siLine.fPos += szfCharacter.height;
-													if(siLine.fPos + siLine.fPage > siLine.fMax) siLine.fPos = siLine.fMax - siLine.fPage;
-													if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-													siLine.ucMask = SBI_POS;
-													SetScrollBar(SB_VERT, siLine);
-													bScrollChanged = true;
-												}
-												if(bScrollChanged) ptfCaret.y -= szfCharacter.height;
-												break;
-		case SB_PAGEUP		: if(!lParam && siLine.fPos > 0.0f){
-													siLine.fPos -= fScrollPage;
-													if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-													siLine.ucMask = SBI_POS;
-													SetScrollBar(SB_VERT, siLine);
-												}
-												break;
-		case SB_PAGEDOWN	: if(!lParam && siLine.fPos + siLine.fPage < siLine.fMax){
-													siLine.fPos += fScrollPage;
-													if(siLine.fPos + siLine.fPage > siLine.fMax) siLine.fPos = siLine.fMax - siLine.fPage;
-													if(siLine.fPos < 0.0f) siLine.fPos = 0.0f;
-													siLine.ucMask = SBI_POS;
-													SetScrollBar(SB_VERT, siLine);
-												}
-												break;
-	}
-
-	rclDirty.left = rclDirty.top = 0;
-	rclDirty.right = lWidth; rclDirty.bottom = FloatToLong(siLine.fPage);
-	OnRender(true);
-	ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

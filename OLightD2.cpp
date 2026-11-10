@@ -29,7 +29,7 @@ SOFTWARE.
 
 #define _Light ((RePag::DirectX::COLight*)pvParam)
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COLight* __vectorcall RePag::DirectX::COLightV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COLight* __vectorcall RePag::DirectX::COLightV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																															 _In_ STDeviceResources* pstDeviceResources)
 {
 	COLight* vLight = (COLight*)VMBlock(VMDialog(), sizeof(COLight));
@@ -55,7 +55,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Light(_In_ HWND hWnd, _In_ unsigned int
 												if(pLight) pLight->WM_Size(lParam);
 												else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 												return NULL;
-		case WM_INITPAINT	: ((COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT	: ((COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 												return NULL;
 		case WM_NCDESTROY	: pLight = (COLight*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 												VMFreiV(pLight);
@@ -73,9 +73,9 @@ void CALLBACK RePag::DirectX::Timer_Light(_In_ void* pvParam, _In_ bool bTimerOr
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COLight::COLightV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																										_In_ STDeviceResources* pstDeviceResources)
+																										_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COGraphicV(vmMemory, pcRePag_Light, pcWindowName, uiIDElementA, pstDeviceResources);
+	COGraphicV(vmMemory, pcRePag_Light, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	crfLight_1_0 = D2D1::ColorF(RGB(0, 0, 255), 1.0f);
 	crfLight_2_1 = D2D1::ColorF(RGB(0, 255, 255), 1.0f);
@@ -83,7 +83,7 @@ void __vectorcall RePag::DirectX::COLight::COLightV(_In_ VMEMORY vmMemory, _In_z
 	fEllipseRadius_X = 0.0f;
 	fEllipseRadius_Y = 0.0f;
 
-	bRadialGradient = true;
+	bRadialGradient = false;
 	ptfRadialGradientCenter = D2D1::Point2F(0.0f, 0.0f);
 	ptfRadialGradientOriginOffset = D2D1::Point2F(0.0f, 0.0f);
 	fRadialGradientRadius_X = 0.0f;
@@ -125,7 +125,7 @@ void __vectorcall RePag::DirectX::COLight::OnRender(_In_ bool bLight_On)
 
   ellipse = D2D1::Ellipse(D2D1::Point2F((float)lWidth / 2.0f, (float)lHeight / 2.0f), fEllipseRadius_X, fEllipseRadius_Y);
   if(bLight_On){
-    if(!bRadialGradient) ifD2D1Context6->FillEllipse(ellipse, ifLight_1_0);
+		if(!bRadialGradient) ifD2D1Context6->FillEllipse(ellipse, ifLight_1_0);
     else{
 			D2D1_GRADIENT_STOP gs2GradientStops[2];
 			gs2GradientStops[0].color = crfLight_1_0; gs2GradientStops[0].position = 0.0f;
@@ -157,7 +157,7 @@ void __vectorcall RePag::DirectX::COLight::OnPaint(void)
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COLight::InitPaint(void)
+void __vectorcall RePag::DirectX::COLight::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfLight_1_0, &ifLight_1_0);
 	ifD2D1Context6->CreateSolidColorBrush(crfLight_2_1, &ifLight_2_1);
@@ -199,6 +199,7 @@ void __vectorcall RePag::DirectX::COLight::Lightcolor_1_0(_In_ unsigned char ucR
 {
 	ThreadSafe_Begin();
 	crfLight_1_0 = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
+	if(ifLight_1_0) ifLight_1_0->SetColor(crfLight_1_0);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,6 +207,7 @@ void __vectorcall RePag::DirectX::COLight::Lightcolor_1_0(_In_ D2D1_COLOR_F& crf
 {
 	ThreadSafe_Begin();
 	crfLight_1_0 = crfLightColor;
+	if(ifLight_1_0) ifLight_1_0->SetColor(crfLight_1_0);
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------

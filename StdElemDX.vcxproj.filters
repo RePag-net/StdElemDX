@@ -133,7 +133,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="StdElemD2.rc">
+    <ResourceCompile Include="StdElemDX.rc">
       <Filter>Ressourcendateien</Filter>
     </ResourceCompile>
   </ItemGroup>

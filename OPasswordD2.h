@@ -49,7 +49,7 @@ namespace RePag
 
 			public:
 				void __vectorcall COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																			_In_ STDeviceResources* pstDeviceResources);
+																			_In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall Text(_In_z_ const char* pcText);
 				void __vectorcall OnPaint(void);

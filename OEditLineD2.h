@@ -44,8 +44,8 @@ namespace RePag
 		protected:
 			COStringA* vasCharacterMask;
 			unsigned long ulCharacter_max;
-			void __vectorcall InitPaint(void);
 			void __vectorcall WM_Create(void);
+			void __vectorcall WM_InitPaint(void);
 			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_KillFocus(void);
@@ -60,8 +60,8 @@ namespace RePag
 			bool __vectorcall CharacterMask_FixRight(void);
 			bool __vectorcall CharacterMask_Insert(_In_ WPARAM wParam);
 			bool __vectorcall CharacterMask_Delete(void);
-			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResourcesA);
+			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																		_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
 
 		public:
 			void __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
@@ -87,9 +87,10 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																															 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COEditLine* __vectorcall COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																															 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

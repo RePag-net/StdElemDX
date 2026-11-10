@@ -34,7 +34,7 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		class __declspec(dllexport) COTextLine : public COSelect
 		{
-				friend LRESULT CALLBACK WndProc_TextLine(HWND hWnd, unsigned int uiMessage, WPARAM wParam, LPARAM lParam);
+				friend LRESULT CALLBACK WndProc_TextLine(_In_ HWND hWnd, _In_ unsigned int uiMessage, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 			private:			
 
@@ -43,8 +43,8 @@ namespace RePag
 				unsigned long ulSelectPos;
 				D2D1_RECT_F rcfSelect;
 				void __vectorcall OnRender(_In_ bool bCaret);
-				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_SetFocus(void);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -61,7 +61,7 @@ namespace RePag
 																			_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 
 			public:
-				void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+				void __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,	_In_ unsigned int uiIDElementA, 
 																			_In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall Text(_In_z_ char* pcText);
@@ -70,9 +70,10 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																															 _In_ STDeviceResources* pstDeviceResourcesA);
+		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																															 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COTextLine* __vectorcall COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																															 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResourcesA);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

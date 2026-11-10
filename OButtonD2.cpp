@@ -28,7 +28,7 @@ SOFTWARE.
 #include "OButtonD2.h"
 #include "TStdElemDX.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COButton* __vectorcall RePag::DirectX::COButtonV(_In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COButton* __vectorcall RePag::DirectX::COButtonV(_In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement, 
 																																 _In_ STDeviceResources* pstDeviceResources)
 {
 	COButton* vButton = (COButton*)VMBlock(VMDialog(), sizeof(COButton));
@@ -36,11 +36,10 @@ RePag::DirectX::COButton* __vectorcall RePag::DirectX::COButtonV(_In_z_ const ch
 	return vButton;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COButton* __vectorcall RePag::DirectX::COButtonV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement,
-																																 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COButton* __vectorcall RePag::DirectX::COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
-	COButton* vButton = (COButton*)VMBlock(vmSpeicher, sizeof(COButton));
-	vButton->COButtonV(vmSpeicher, pcWindowsName, uiIDElement, pstDeviceResources);
+	COButton* vButton = (COButton*)VMBlock(vmMemory, sizeof(COButton));
+	vButton->COButtonV(vmMemory, pcWindowsName, uiIDElement, pstDeviceResources);
 	return vButton;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Button(_In_ HWND hWnd, _In_ unsigned in
 													if(pButton) pButton->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_SETFOCUS		: ((COButton*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
@@ -86,9 +85,9 @@ void CALLBACK RePag::DirectX::Timer_Button(_In_ void* pvParam, _In_ bool bTimerO
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
-																											_In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
+																											_In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COTextV(vmMemory, pcClassName, pcWindowName, uiIDElement, pstDeviceResources);
+	COTextV(vmMemory, pcClassName, pcWindowName, uiIDElement, pstDeviceResourcesA);
 
 	STFont stFont;
 	stFont.fontFamilyName = L"Arial";
@@ -129,7 +128,7 @@ void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In
 	he2Render[BUTTON_BYPASS] = CreateEvent(nullptr, true, false, nullptr);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+void __vectorcall RePag::DirectX::COButton::COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																											_In_ STDeviceResources* pstDeviceResources)
 {
 	COButtonV(vmMemory, pcRePag_Button, pcWindowName, uiIDElement, pstDeviceResources);
@@ -168,6 +167,7 @@ void __vectorcall RePag::DirectX::COButton::OnRender_Rectangle(_In_ bool bBlinkA
 		SafeRelease(&ifTextLayout);
 
 		if(!bLinearGradient || !bEnabled){
+			if(!bEnabled) ifButtonColor->SetColor(crfButton_3);
 			ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifButtonColor);
 			ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 		}
@@ -181,6 +181,7 @@ void __vectorcall RePag::DirectX::COButton::OnRender_Rectangle(_In_ bool bBlinkA
 				if(SUCCEEDED(ifD2D1Context6->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(ptfStartPoint, ptfEndPoint),
 																															 D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()), ifGradientStops, &ifLinearGradientBrush))){
 					ifD2D1Context6->FillRoundedRectangle(rrcfButton, ifLinearGradientBrush);
+					ifTextColor->SetColor(crfText);
 					ifD2D1Context6->DrawText(wc255Inhalt, (UINT32)szBytes_Text, ifText, rcfText, ifTextColor);
 					SafeRelease(&ifLinearGradientBrush);
 				}
@@ -199,10 +200,17 @@ void __vectorcall RePag::DirectX::COButton::OnPaint(void)
 	ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::InitPaint(void)
+void __vectorcall RePag::DirectX::COButton::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton_1_0, &ifButtonColor);
+
+	if(bEnabled) EnableWindow(hWndElement, true);
+	else{
+		EnableWindow(hWndElement, false);
+		ifButtonColor->SetColor(crfButton_3);
+		ResetEvent(he2Render[BUTTON_BYPASS]);
+	} 
 
 	if(ptfStartPoint.x == 0.0f && ptfStartPoint.y == 0.0f && ptfEndPoint.x == 0.0f && ptfEndPoint.y == 0.0f){
 		ptfStartPoint = {(float)lWidth / 2.0f, 0.0f}; ptfEndPoint = {(float)lWidth / 2.0f, (float)lHeight};
@@ -218,13 +226,6 @@ void __vectorcall RePag::DirectX::COButton::InitPaint(void)
 void __vectorcall RePag::DirectX::COButton::WM_Create(void)
 {
 	CharacterMetric();
-
-	if(bEnabled) EnableWindow(hWndElement, true);
-	else{
-		EnableWindow(hWndElement, false);
-		ifButtonColor->SetColor(crfButton_3);
-		ResetEvent(he2Render[BUTTON_BYPASS]);
-	} 
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COButton::WM_Size(_In_ LPARAM lParam)
@@ -306,7 +307,7 @@ void __vectorcall RePag::DirectX::COButton::SetTextColor(_In_ unsigned char ucRe
 {
 	ThreadSafe_Begin();
 	crfText = D2D1::ColorF(RGB(ucBlue, ucGreen, ucRed), fAlpha);
-	if(ifTextColor) ifTextColor->SetColor(crfText);
+  if(ifTextColor) ifTextColor->SetColor(crfText);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -407,7 +408,7 @@ void __vectorcall RePag::DirectX::COButton::SetButtonColor_3(_In_ D2D1_COLOR_F& 
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COButton::LinearGradient(_In_ bool bLinearGradientA)
+void __vectorcall RePag::DirectX::COButton::SetLinearGradient(_In_ bool bLinearGradientA)
 {
 	ThreadSafe_Begin();
 	bLinearGradient = bLinearGradientA;
@@ -449,6 +450,7 @@ void __vectorcall RePag::DirectX::COButton::Enable(_In_ bool bEnable)
 			ResetEvent(he2Render[BUTTON_BYPASS]);
 			ifButtonColor->SetColor(crfButton_3);
 		}
+		else ifButtonColor->SetColor(crfButton_1_0);
 		OnRender(false);
 		ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 	}

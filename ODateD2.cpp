@@ -40,15 +40,16 @@ constexpr BYTE CALENDAR = 6;
 char pcIncorrectDateTimeText[] = "The date is invalid.\nIt is being reset to its previous value.";
 char pcIncorrectDate[] = "Incorrect date";
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::CODate* __vectorcall RePag::DirectX::CODateV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::CODate* __vectorcall RePag::DirectX::CODateV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
+																														 _In_ STDeviceResources* pstDeviceResources)
 {
 	CODate* vDate = (CODate*)VMBlock(VMDialog(), sizeof(CODate));
 	vDate->CODateV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources);
 	return vDate;
 }
 //---------------------------------------------------------------------------
-RePag::DirectX::CODate* __vectorcall RePag::DirectX::CODateV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																										 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::CODate* __vectorcall RePag::DirectX::CODateV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																														 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
 	CODate* vDate = (CODate*)VMBlock(vmMemory, sizeof(CODate));
 	vDate->CODateV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
@@ -66,7 +67,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Date(_In_ HWND hWnd, _In_ unsigned int 
 													if(pCalendar) pCalendar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_KILLFOCUS		: ((CODate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_KillFocus();
 													return NULL;
@@ -104,6 +105,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditDate(_In_ HWND hWnd, _In_ unsigned 
 		case WM_SIZE					: pEditDate = (CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 														if(pEditDate) pEditDate->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
+														return NULL;
+		case WM_INITPAINT			: ((CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 														return NULL;
 		case WM_SETFOCUS			: ((CODate::COEditDate*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 														return NULL;
@@ -143,10 +146,10 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditDate(_In_ HWND hWnd, _In_ unsigned 
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::CODate::CODateV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																									_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::CODate::CODateV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,	
+																									_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COGraphicV(vmMemory, pcRePag_Date, pcWindowName, uiIDElementA, pstDeviceResources);
+	COGraphicV(vmMemory, pcRePag_Date, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 	WindowStyle(WS_CHILDWINDOW | WS_CLIPSIBLINGS);
 
 	fColumnWidth = fRowHeight = 0.0f;
@@ -228,9 +231,9 @@ void CALLBACK RePag::DirectX::Timer_Caret_EditDate(_In_ void* pvParam, _In_ bool
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::COEditDateV(_In_ VMEMORY vmSpeicher, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																																	_In_ CODate* pCalendarA,_In_ STDeviceResources* pstDeviceResources)
+																																	_In_ CODate* pCalendarA,_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COEditLineV(vmSpeicher, pcRePag_EditDate, pcWindowName, uiIDElementA, pstDeviceResources);
+	COEditLineV(vmSpeicher, pcRePag_EditDate, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	pCalendar = pCalendarA;
 
@@ -490,7 +493,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->EndDraw();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::CODate::COEditDate::InitPaint(void)
+void __vectorcall RePag::DirectX::CODate::COEditDate::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor);
@@ -498,8 +501,10 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::InitPaint(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfCaret, &ifCaretColor);
 
-	OnRender(true);
+	OnRender(false);
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
+
+	DateTimeText();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::COEditDate::ButtonSize(void)
@@ -1013,7 +1018,7 @@ void __vectorcall RePag::DirectX::CODate::COEditDate::DeSelect(void)
 	SetEvent(heCaret);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::CODate::InitPaint(void)
+void __vectorcall RePag::DirectX::CODate::WM_InitPaint(void)
 {
 	if(crfBackground.a == 0.0f) crfBackground.a = 1.0f;
 
@@ -1024,21 +1029,19 @@ void __vectorcall RePag::DirectX::CODate::InitPaint(void)
 	ifD2D1Context6->CreateSolidColorBrush(crfHead_Background, &ifHead_Background);
 
 	edEditDate->CreateWindowGraphic(GetParent(hWndElement), lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y);
-	edEditDate->InitPaint();
-	edEditDate->DateTimeText();
 
 	ptPosition.y += lHeight_EditDate; lHeight -= lHeight_EditDate;
 	if(lWidth_Calendar){
 		lWidth = lWidth_Calendar;
-		MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+		SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, lWidth, lHeight, SWP_NOZORDER | SWP_NOACTIVATE);
 		CreateWindowSizeDependentResources();
 	}
-	else MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+	else SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, lWidth, lHeight, SWP_NOZORDER | SWP_NOACTIVATE);
 
 	OnRender();
 	ifDXGISwapChain4->Present1(0, NULL, &dxgiPresent);
 
-	lbMonth->CreateWindowGraphic(hWndElement, lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+	lbMonth->CreateWindowGraphic(hWndElement, ((lHeight - (long)fRowHeight) / (long)fRowHeight) * (long)fRowHeight, lWidth, 0, (long)fRowHeight);
 	lbMonth->SetVisible(false);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -1058,22 +1061,14 @@ void __vectorcall RePag::DirectX::CODate::WM_Size(_In_ LPARAM lParam)
 	if(lHeight != HIWORD(lParam) || lWidth != LOWORD(lParam)){
 		lHeight = HIWORD(lParam); lWidth = LOWORD(lParam);
 
-    static long lWidthA = lWidth;
-		if(lWidth_Calendar && lWidth_Calendar != lWidth){
-			lWidthA = lWidth;
-			MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth_Calendar, lHeight, false);
-		}
-		else{
-			MoveWindow(hWndElement, ptPosition.x, ptPosition.y + lHeight_EditDate, lWidth, lHeight, false);
-			CreateWindowSizeDependentResources();
+		CreateWindowSizeDependentResources();
 
-			OnRender();
-			ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
+		OnRender();
+		ifDXGISwapChain4->Present1(1, NULL, &dxgiPresent);
 
-      lbMonth->NewWindow(lHeight - (long)fRowHeight, lWidth, 0, (long)fRowHeight);
-			edEditDate->NewWindow(lHeight_EditDate, lWidthA, ptPosition.x, ptPosition.y);
-			edEditDate->OnPaint();
-		}
+    lbMonth->NewWindow(((lHeight - (long)fRowHeight) / (long)fRowHeight) * (long)fRowHeight, lWidth, 0, (long)fRowHeight);
+		edEditDate->NewWindow(lHeight_EditDate, lWidth, ptPosition.x, ptPosition.y - lHeight_EditDate);
+		edEditDate->OnPaint();
 	}
 	ThreadSafe_End();
 }
@@ -1255,7 +1250,8 @@ bool __vectorcall RePag::DirectX::CODate::WM_LButtonUp(_In_ LPARAM lParam)
 	}
 
 	SetDayOfWeek(); edEditDate->DateTimeText();
-	SetFocus(edEditDate->HWND_Element());
+	//SetFocus(edEditDate->HWND_Element());
+	ShowWindow(hWndElement, SW_HIDE);
 
 	ThreadSafe_End();
 	return true;
@@ -1300,8 +1296,7 @@ void __vectorcall RePag::DirectX::CODate::NewWindowPosition(_In_ long lPos_x, _I
 {
 	ThreadSafe_Begin();
 	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+	SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	edEditDate->NewWindowPosition(ptPosition.x, ptPosition.y - lHeight_EditDate);
 	ThreadSafe_End();
 }
@@ -1311,68 +1306,47 @@ void __vectorcall RePag::DirectX::CODate::NewWindowPosition(_In_ POINT& ptPositi
 	ThreadSafe_Begin();
 	ptPosition = ptPositionA;
 	ptPosition.y += lHeight_EditDate;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
+	SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	edEditDate->NewWindowPosition(ptPosition.x, ptPosition.y - lHeight_EditDate);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-//void __vectorcall RePag::DirectX::CODate::NewWindow(long lHeightA, long lWidthA, long lPos_x, long lPos_y)
-//{
-//	ThreadSafe_Begin();
-//	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
-//	lWidth_Calendar ? lWidth = lWidth_Calendar : lWidth = lWidthA;
-//
-//	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
-//	ThreadSafe_End();
-//}
-////---------------------------------------------------------------------------------------------------------------------------------------
+void __vectorcall RePag::DirectX::CODate::NewWindow(long lHeightA, long lWidthA, long lPos_x, long lPos_y)
+{
+	ThreadSafe_Begin();
+	ptPosition.x = lPos_x; ptPosition.y = lPos_y + lHeight_EditDate;
+	lWidthA = lWidth_Calendar ? lWidth_Calendar : lWidthA;
+	SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, lWidthA, lHeightA - lHeight_EditDate, SWP_NOZORDER | SWP_NOACTIVATE);
+	ThreadSafe_End();
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::NewWindowSize(long lHeightA, long lWidthA)
 {
 	ThreadSafe_Begin();
-	lHeight = lHeightA - lHeight_EditDate;
-	lWidth_Calendar > lWidthA ? lWidth = lWidth_Calendar : lWidth = lWidthA;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
-	edEditDate->NewWindowSize(lHeight_EditDate, lWidthA);
-	edEditDate->OnPaint();
+	lWidthA = lWidth_Calendar ? lWidth_Calendar : lWidthA;
+	SetWindowPos(hWndElement, NULL, NULL, NULL, lWidthA, lHeightA - lHeight_EditDate, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::NewWindowHeight(long lHeightA)
 {
 	ThreadSafe_Begin();
-	lHeight = lHeightA - lHeight_EditDate;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, false);
-	edEditDate->NewWindowHeight(lHeight_EditDate);
-	edEditDate->OnPaint();
+	SetWindowPos(hWndElement, NULL, NULL, NULL, lWidth, lHeightA - lHeight_EditDate, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::NewWindowWidth(long lWidthA)
 {
 	ThreadSafe_Begin();
-	lWidth_Calendar > lWidthA ? lWidth = lWidth_Calendar : lWidth = lWidthA;
-
-	CreateWindowSizeDependentResources();
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	edEditDate->NewWindowWidth(lWidthA);
-	edEditDate->OnPaint();
+	lWidthA = lWidth_Calendar ? lWidth_Calendar : lWidthA;
+	SetWindowPos(hWndElement, NULL, NULL, NULL, lWidthA, lHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::CODate::ChangeWindowSize(long lHeightA, long lWidthA)
 {
 	ThreadSafe_Begin();
-	lHeight += lHeightA;
-	lWidth += lWidthA;
-
-	CreateWindowSizeDependentResources();
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	edEditDate->ChangeWindowSize(0, lWidthA);
-	edEditDate->OnPaint();
-
+	SetWindowPos(hWndElement, NULL, NULL, NULL, lWidth + lWidthA, lHeight + lHeightA, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -1380,9 +1354,8 @@ void __vectorcall RePag::DirectX::CODate::ChangeWindowPosition(long lPos_x, long
 {
 	ThreadSafe_Begin();
 	ptPosition.x += lPos_x; ptPosition.y += lPos_y;
-
-	MoveWindow(hWndElement, ptPosition.x, ptPosition.y, lWidth, lHeight, IsWindowVisible(hWndElement));
-	edEditDate->ChangeWindowPosition(ptPosition.x, ptPosition.y);
+	SetWindowPos(hWndElement, NULL, ptPosition.x, ptPosition.y, NULL, NULL, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+	edEditDate->NewWindowPosition(ptPosition.x, ptPosition.y - lHeight_EditDate);
 	ThreadSafe_End();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------

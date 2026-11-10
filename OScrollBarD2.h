@@ -87,6 +87,7 @@ namespace RePag
 			protected:
 				void __vectorcall OnRender(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseOver(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -100,9 +101,8 @@ namespace RePag
 
 			public:
 				void __vectorcall COScrollBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																			 _In_ STDeviceResources* pstDeviceResources, bool bHorizontalA);
+																			 _In_ STDeviceResources* pstDeviceResourcesA, bool bHorizontalA);
 				VMEMORY __vectorcall COFreiV(void);
-				void __vectorcall InitPaint(void);
 				void __vectorcall GetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall SetScrollInfo(_In_ STScrollInfo& siScrollInfoA);
 				void __vectorcall ScaleArrowThumb(_In_ float fScale);
@@ -129,8 +129,8 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																																 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal);
-		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal);
+		__declspec(dllexport) COScrollBar* __vectorcall COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

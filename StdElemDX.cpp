@@ -157,37 +157,24 @@ void __vectorcall RegisterClassName(void)
 //---------------------------------------------------------------------------
 void __vectorcall UnRegisterClassName(void)
 {
-  WNDCLASSEX wndClass; char pcUnregister[] = "Unregister";
-  wndClass.cbSize = sizeof(WNDCLASSEX);
-  wndClass.style = CS_OWNDC;
-  wndClass.cbClsExtra = 0;
-  wndClass.cbWndExtra = 0;
-  wndClass.hInstance = NULL;
-  wndClass.hIcon = NULL;
-  wndClass.hCursor = NULL;
-  wndClass.hbrBackground = NULL;
-  wndClass.lpszMenuName = NULL;
-  wndClass.hIconSm = NULL;
-  wndClass.lpszClassName = pcUnregister;
-  wndClass.lpfnWndProc = NULL;
-  RegisterClassEx(&wndClass);
+  HINSTANCE hInstance = GetModuleHandle(NULL);
 
-  UnregisterClass(pcRePag_TextLine, wndClass.hInstance);
-  UnregisterClass(pcRePag_EditLine, wndClass.hInstance);
-  UnregisterClass(pcRePag_TextBox, wndClass.hInstance);
-  UnregisterClass(pcRePag_ScrollBar, wndClass.hInstance);
-  UnregisterClass(pcRePag_ListBox, wndClass.hInstance);
-  UnregisterClass(pcRePag_EditBox, wndClass.hInstance);
-  UnregisterClass(pcRePag_Password, wndClass.hInstance);
-  UnregisterClass(pcRePag_Button, wndClass.hInstance);
-  UnregisterClass(pcRePag_LookupBox, wndClass.hInstance);
-  UnregisterClass(pcRePag_LookupEntry, wndClass.hInstance);
-  UnregisterClass(pcRePag_Switch, wndClass.hInstance);
-  UnregisterClass(pcRePag_SwitchGroup, wndClass.hInstance);
-  UnregisterClass(pcRePag_Two_waySwitch, wndClass.hInstance);
-  UnregisterClass(pcRePag_ProgressBar, wndClass.hInstance);
-  UnregisterClass(pcRePag_Date, wndClass.hInstance);
-  UnregisterClass(pcRePag_EditDate, wndClass.hInstance);
-  UnregisterClass(pcRePag_Light, wndClass.hInstance);
+  UnregisterClass(pcRePag_TextLine, hInstance);
+  UnregisterClass(pcRePag_EditLine, hInstance);
+  UnregisterClass(pcRePag_TextBox, hInstance);
+  UnregisterClass(pcRePag_ScrollBar, hInstance);
+  UnregisterClass(pcRePag_ListBox, hInstance);
+  UnregisterClass(pcRePag_EditBox, hInstance);
+  UnregisterClass(pcRePag_Password, hInstance);
+  UnregisterClass(pcRePag_Button, hInstance);
+  UnregisterClass(pcRePag_LookupBox, hInstance);
+  UnregisterClass(pcRePag_LookupEntry, hInstance);
+  UnregisterClass(pcRePag_Switch, hInstance);
+  UnregisterClass(pcRePag_SwitchGroup, hInstance);
+  UnregisterClass(pcRePag_Two_waySwitch, hInstance);
+  UnregisterClass(pcRePag_ProgressBar, hInstance);
+  UnregisterClass(pcRePag_Date, hInstance);
+  UnregisterClass(pcRePag_EditDate, hInstance);
+  UnregisterClass(pcRePag_Light, hInstance);
 }
 //---------------------------------------------------------------------------

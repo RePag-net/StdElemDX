@@ -29,15 +29,16 @@ SOFTWARE.
 
 #define _Password ((RePag::DirectX::COPassword*)pvParam)
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COPassword* __vectorcall RePag::DirectX::COPasswordV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COPassword* __vectorcall RePag::DirectX::COPasswordV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																		 _In_ STDeviceResources* pstDeviceResources)
 {
 	COPassword* vPassword = (COPassword*)VMBlock(VMDialog(), sizeof(COPassword));
 	vPassword->COPasswordV(VMDialog(), pcWindowName, uiIDElement, pstDeviceResources);
 	return vPassword;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COPassword* __vectorcall RePag::DirectX::COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																		 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COPassword* __vectorcall RePag::DirectX::COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																		 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
 	COPassword* vPassword = (COPassword*)VMBlock(vmMemory, sizeof(COPassword));
 	vPassword->COPasswordV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
@@ -55,7 +56,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Password(_In_ HWND hWnd, _In_ unsigned 
 													if(pPassword) pPassword->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_SETFOCUS		: ((COPassword*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
@@ -88,10 +89,10 @@ void CALLBACK RePag::DirectX::Timer_Caret_Password(_In_ void* pvParam, _In_ bool
 	_Password->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COPassword::COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																													_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COPassword::COPasswordV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,	_In_ unsigned int uiIDElementA,
+																													_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COEditLineV(vmMemory, pcRePag_Password, pcWindowName, uiIDElementA, pstDeviceResources);
+	COEditLineV(vmMemory, pcRePag_Password, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	vasPassword = COStringAV(vmMemory);
 

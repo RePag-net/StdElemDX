@@ -49,7 +49,7 @@ namespace RePag
 					protected:
 
 					public:
-						void __vectorcall COTwo_waySwitchV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+						void __vectorcall COTwo_waySwitchV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA, 
 																							 _In_ COSwitchGroup* pSwitchGroupA, _In_ STDeviceResources* pstDeviceResources);
 						void __vectorcall OnPaint(void);
 						bool bGroup;
@@ -59,8 +59,8 @@ namespace RePag
 				D2D1_COLOR_F crfText;
 				ID2D1SolidColorBrush* ifTextColor;
 				bool bLinearGradient;
-				D2D1_COLOR_F crfGradientColor_1_0;
-				D2D1_COLOR_F crfGradientColor_2_1;
+				D2D1_COLOR_F crfGradient_1_0;
+				D2D1_COLOR_F crfGradient_2_1;
 				ID2D1SolidColorBrush* ifBackground;
 				ID2D1LinearGradientBrush* ifLinearGradientBrush;
 				D2D1_POINT_2F ptfStartPoint;
@@ -74,7 +74,7 @@ namespace RePag
 				short sMausPos_x;
 				unsigned char ucSwitch;
 				void __vectorcall OnRender(void);
-				void __vectorcall InitPaint(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -82,8 +82,9 @@ namespace RePag
 			protected:
 
 			public:
-				void __vectorcall COSwitchGroupV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ unsigned char ucNumberOfSwitches,
-																				 _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResources); // Note: one uiIDElement for each switch plus one for group !!!
+				void __vectorcall COSwitchGroupV(_In_ VMEMORY vmMemory, _In_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																				 _In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResourcesA);
+																					// Note: one uiIDElement for each switch plus one for group !!!
 				//void __vectorcall COTabellenKopfV(VMEMORY vmSpeicher, const char* pcFensterName, unsigned int uiIDElementA, unsigned char ucSchalteranzahl);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall CreateSwitchInGroup(_In_ unsigned char ucSchalterA, _In_ long lHoheA, _In_ long lBreiteA, _In_ long lPos_x, _In_ long lPos_y);
@@ -115,6 +116,9 @@ namespace RePag
 				void __vectorcall Switch_SetButtonColor_2_1(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor);
 				void __vectorcall Switch_SetButtonColor_3(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall Switch_SetButtonColor_3(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfSwitchColor);
+				void __vectorcall Switch_SetTextColor(_In_ unsigned char ucSwitchA, _In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall Switch_SetTextColor(_In_ unsigned char ucSwitchA, _In_ D2D1_COLOR_F& crfTextA);
+				void __vectorcall Switch_SetGradient(_In_ unsigned char ucSwitchA, _In_ bool bLinearGradient);
 				long& __vectorcall Switch_Pos_X(_In_ unsigned char ucSwitchA, _Out_ long& lPos_x);
 				long& __vectorcall Switch_Pos_Y(_In_ unsigned char ucSwitchA, _Out_ long& lPos_y);
 				void __vectorcall Switch_NewPosition(_In_ unsigned char ucSwitchA, _In_ long lPos_x, _In_ long lPos_y);
@@ -131,15 +135,21 @@ namespace RePag
 				bool __vectorcall GetLinearGradient(void);
 				void __vectorcall LinearGradientStartPoint(_Out_ D2D1_POINT_2F& ptfStartPointA);
 				void __vectorcall LinearGradientEndPoint(_Out_ D2D1_POINT_2F& ptfEndPointA);
-				void __vectorcall GradientStops(_Out_ D2D1_GRADIENT_STOP GradientStopsA[2]);
+				void __vectorcall GetGradientStops(_Out_ D2D1_GRADIENT_STOP GradientStopsA[2]);
+				void __vectorcall SetGradientStops(_In_ D2D1_GRADIENT_STOP gs2GradientStopsA[2]);
+				void __vectorcall SetGradientColor_1_0(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetGradientColor_1_0(_In_ D2D1_COLOR_F& crfGradient);
+				void __vectorcall SetGradientColor_2_1(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
+				void __vectorcall SetGradientColor_2_1(_In_ D2D1_COLOR_F& crfGradient);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COSwitchGroup* __vectorcall COSwitchGroupV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ unsigned char ucNumberOfSwitches,
-																																		 _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COSwitchGroup* __vectorcall COSwitchGroupV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
-																																		 _In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus,
+		__declspec(dllexport) COSwitchGroup* __vectorcall COSwitchGroupV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																																		 _In_ unsigned char ucNumberOfSwitches, _In_ unsigned char ucWechselmodus, 
 																																		 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COSwitchGroup* __vectorcall COSwitchGroupV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																		 _In_ unsigned int uiIDElement, _In_ unsigned char ucNumberOfSwitches, 
+																																		 _In_ unsigned char ucWechselmodus, _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

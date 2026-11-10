@@ -46,11 +46,13 @@ namespace RePag
 				void __vectorcall WM_HScroll(_In_ WPARAM wParam);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam);
 				void __vectorcall WM_Char(_In_ WPARAM wParam);
-				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
+				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																		 _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
+																			// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 
 			public:
-				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
+				void __vectorcall COListBoxV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
+																		 _In_ STDeviceResources* pstDeviceResourcesA);
 				void(__vectorcall* pfnWM_LButtonDown)(_In_ COListBox*, _In_ WPARAM, _In_ LPARAM);
 				void(__vectorcall* pfnWM_Char_Return)(_In_ COListBox*);
 				bool __vectorcall SetSelectIndex(_In_ unsigned char ucIndexA);
@@ -65,7 +67,8 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COListBox* __vectorcall COListBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COListBox* __vectorcall COListBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																														 _In_ STDeviceResources* pstDeviceResources);
 		__declspec(dllexport) COListBox* __vectorcall COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------

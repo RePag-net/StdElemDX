@@ -41,7 +41,7 @@ constexpr CHAR THUMB_DOWN = 1;
 constexpr CHAR THUMB_LEFT = -1;
 constexpr CHAR THUMB_RIGHT = -1;
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																																			 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(VMDialog(), sizeof(COScrollBar));
@@ -49,8 +49,9 @@ RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_z_ co
 	return vScrollBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																			 _In_ STDeviceResources* pstDeviceResources, _In_ bool bHorizontal)
+RePag::DirectX::COScrollBar* __vectorcall RePag::DirectX::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																			 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources, 
+																																			 _In_ bool bHorizontal)
 {
 	COScrollBar* vScrollBar = (COScrollBar*)VMBlock(vmMemory, sizeof(COScrollBar));
 	vScrollBar->COScrollBarV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources, bHorizontal);
@@ -68,7 +69,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(_In_ HWND hWnd, _In_ unsigned
 													if(pScrollBar) pScrollBar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_VSCROLL			: ((COScrollBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_VScroll(wParam);
 													return NULL;
@@ -91,8 +92,9 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ScrollBar(_In_ HWND hWnd, _In_ unsigned
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
-																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA, _In_ bool bHorizontalA)
+void __vectorcall RePag::DirectX::COScrollBar::COScrollBarV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																														_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA,
+																														_In_ bool bHorizontalA)
 {
 	COGraphicV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
@@ -157,7 +159,7 @@ void __vectorcall RePag::DirectX::COScrollBar::OnRender(void)
 	ifD2D1Context6->EndDraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COScrollBar::InitPaint(void)
+void __vectorcall RePag::DirectX::COScrollBar::WM_InitPaint(void)
 {
 	if(!ifButtonColor_Up){
 		ifD2D1Context6->CreateSolidColorBrush(crfButton, &ifButtonColor_Up);

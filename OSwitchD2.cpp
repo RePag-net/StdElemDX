@@ -36,7 +36,7 @@ RePag::DirectX::COSwitch* __vectorcall RePag::DirectX::COSwitchV(_In_z_ const ch
 	return vSwitch;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COSwitch* __vectorcall RePag::DirectX::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COSwitch* __vectorcall RePag::DirectX::COSwitchV(_In_ VMEMORY vmMemory,_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																																 _In_ STDeviceResources* pstDeviceResources)
 {
 	COSwitch* vSwitch = (COSwitch*)VMBlock(vmMemory, sizeof(COSwitch));
@@ -55,7 +55,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Switch(_In_ HWND hWnd, _In_ unsigned in
 													if(pSwitch) pSwitch->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COSwitch*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_COMMAND			: PostMessage(GetParent(hWnd), WM_COMMAND, wParam, lParam);
 													break;
@@ -71,20 +71,20 @@ LRESULT CALLBACK RePag::DirectX::WndProc_Switch(_In_ HWND hWnd, _In_ unsigned in
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																											_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																											_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COButtonV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResources);
+	COButtonV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	asLabel_On = "Switch On";
 	asLabel_Off = "Switch Off";
 	bOn = false; *vasContent = asLabel_Off;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																											_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COSwitch::COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName,	_In_ unsigned int uiIDElementA,
+																											_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COButtonV(vmMemory, pcRePag_Switch, pcWindowName, uiIDElementA, pstDeviceResources);
+	COButtonV(vmMemory, pcRePag_Switch, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
 	asLabel_On = "Switch On";
 	asLabel_Off = "Switch Off";
@@ -99,7 +99,7 @@ void __vectorcall RePag::DirectX::COSwitch::OnRender(_In_ bool bBlinkA)
 	ifD2D1Context6->EndDraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COSwitch::InitPaint(void)
+void __vectorcall RePag::DirectX::COSwitch::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfButton_1_0, &ifButtonColor);
@@ -121,10 +121,12 @@ void __vectorcall RePag::DirectX::COSwitch::Background(void)
 	D2D1_POINT_2F ptfStartPoint = D2D1::Point2F(0.0f, 0.0f); D2D1_POINT_2F ptfEndPoint = D2D1::Point2F(0.0f, 0.0f);
 	if(bSwitchGroup){
 		COSwitchGroup* pSwitchGroup = (COSwitchGroup*)GetWindowLongPtr(GetParent(hWndElement), GWLP_USERDATA);
-		if(!pSwitchGroup->GetLinearGradient()) ifD2D1Context6->Clear(pSwitchGroup->GetBackgroundColor(crfBackground));
+		if(!pSwitchGroup->GetLinearGradient()){	D2D1_COLOR_F crfBackgroundA;
+			ifD2D1Context6->Clear(pSwitchGroup->GetBackgroundColor(crfBackgroundA)); return;
+		}
 		else{
 			D2D1_GRADIENT_STOP gs2GradientStops[2];
-			pSwitchGroup->GradientStops(gs2GradientStops);
+			pSwitchGroup->GetGradientStops(gs2GradientStops);
 			if(FAILED(ifD2D1Context6->CreateGradientStopCollection(gs2GradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &ifGradientStops))) goto Error;
 			pSwitchGroup->LinearGradientStartPoint(ptfStartPoint);
 			ptfStartPoint.x -= (float)ptPosition.x; ptfStartPoint.y -= (float)ptPosition.y;
@@ -132,7 +134,7 @@ void __vectorcall RePag::DirectX::COSwitch::Background(void)
 			ptfEndPoint.x -= (float)ptPosition.x; ptfEndPoint.y -= (float)ptPosition.y;
 		}
 	}
-	else if(!Background_Dialog(ifGradientStops, ptfStartPoint, ptfEndPoint)) goto Error;
+  else if(!Background_Dialog(ifGradientStops, ptfStartPoint, ptfEndPoint)) goto Error;
 	Background_Rectangle(ifGradientStops, ptfStartPoint, ptfEndPoint);
 Error:
 	SafeRelease(&ifGradientStops);

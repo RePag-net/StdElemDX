@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Von Microsoft Visual C++ generierte Includedatei.
-// Verwendet durch StdElemD2.rc
+// Verwendet durch StdElemDX.rc
 //
 #define IDR_TYPELIB1                    1
 

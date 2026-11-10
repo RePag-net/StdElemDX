@@ -28,7 +28,7 @@ SOFTWARE.
 #include "OSelectD2.h"
 //---------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COSelect::COSelectV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
-														_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA)
+																											_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COTextV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 

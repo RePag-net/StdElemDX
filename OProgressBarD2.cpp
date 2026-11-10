@@ -27,7 +27,7 @@ SOFTWARE.
 #include "HStdElemDX.h"
 #include "OProgressBarD2.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COProgressBar* __vectorcall RePag::DirectX::COProgressBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+RePag::DirectX::COProgressBar* __vectorcall RePag::DirectX::COProgressBarV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																																					 _In_ STDeviceResources* pstDeviceResources)
 {
 	COProgressBar* vProgressBar = (COProgressBar*)VMBlock(VMDialog(), sizeof(COProgressBar));
@@ -35,8 +35,8 @@ RePag::DirectX::COProgressBar* __vectorcall RePag::DirectX::COProgressBarV(_In_z
 	return vProgressBar;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COProgressBar* __vectorcall RePag::DirectX::COProgressBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																					 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COProgressBar* __vectorcall RePag::DirectX::COProgressBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, 
+																																					 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
 	COProgressBar* vProgressBar = (COProgressBar*)VMBlock(vmMemory, sizeof(COProgressBar));
 	vProgressBar->COProgressBarV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
@@ -53,7 +53,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ProgressBar(_In_ HWND hWnd, _In_ unsign
 													if(vProgressBar) vProgressBar->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_LBUTTONDOWN	: ((COProgressBar*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_LButtonDown(wParam, lParam);
 													return NULL;
@@ -67,10 +67,10 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ProgressBar(_In_ HWND hWnd, _In_ unsign
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COProgressBar::COProgressBarV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA,
-																																_In_ STDeviceResources* pstDeviceResources)
+void __vectorcall RePag::DirectX::COProgressBar::COProgressBarV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcFensterName,
+																																_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
-	COGraphicV(vmSpeicher, pcRePag_ProgressBar, pcFensterName, uiIDElementA, pstDeviceResources);
+	COGraphicV(vmSpeicher, pcRePag_ProgressBar, pcFensterName, uiIDElementA, pstDeviceResourcesA);
 
 	crfBackground = D2D1::ColorF(RGB(100, 100, 100), 1.0f);
 
@@ -103,7 +103,7 @@ void __vectorcall RePag::DirectX::COProgressBar::OnRender(void)
 	ifD2D1Context6->EndDraw();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COProgressBar::InitPaint(void)
+void __vectorcall RePag::DirectX::COProgressBar::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfFillColor, &ifFillColor);
 

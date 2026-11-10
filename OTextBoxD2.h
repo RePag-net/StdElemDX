@@ -55,10 +55,11 @@ namespace RePag
 				long lLine;
 				void* pvLine;
 				void __vectorcall OnRender(_In_ bool bCaret);
-				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
-				void __vectorcall WM_VHScroll(_In_ WPARAM wParam);
+				void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
+				void __vectorcall WM_HScroll(void);
 				void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 				bool __vectorcall WM_Command(_In_ WPARAM wParam);
@@ -75,13 +76,13 @@ namespace RePag
 				void __vectorcall SelectText_Up(D2D_POINT_2F& ptfCaret_old, ULONG& ulCharacterPos_old);
 				void __vectorcall SelectText_Down(D2D_POINT_2F& ptfCaret_old, ULONG& ulCharacterPos_old);
 				void __vectorcall LButtonDown(_In_ LPARAM lParam);
-				void __vectorcall DeSelect(void);
-				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars !!!
+				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																		 _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
+																			// Note: three numbers uiIDElement, because COScrollBars !!!
 
 			public:
 				void __vectorcall COTextBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		 _In_ STDeviceResources* pstDeviceResources);
+																		 _In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				bool(__vectorcall* pfnWM_Command)(_In_ COTextBox*, _In_  WPARAM);
 				void(__vectorcall* pfnWM_KillFocus)(_In_ COTextBox*);
@@ -92,14 +93,16 @@ namespace RePag
 				unsigned long __vectorcall LineNumbers(void);
 				void __vectorcall SetScrollBarSize(_In_ BYTE ucWidth_Height);
 				BYTE __vectorcall GetScrollBarSize(_In_ BYTE ucBar, _Out_ BYTE ucWidth_Height);
+				void __vectorcall DeSelect(void);
 				void __vectorcall DoNotCopy(_In_ bool bDoNotCopyA);
 				void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COTextBox* __vectorcall COTextBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COTextBox* __vectorcall COTextBoxV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) COTextBox* __vectorcall COTextBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																														 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COTextBox* __vectorcall COTextBoxV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																														 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

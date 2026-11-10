@@ -69,20 +69,20 @@ namespace RePag
 				D2D1_COLOR_F crfGradientStop_1;
 				void __vectorcall OnRender(_In_ bool bBlinkA);
 				void __vectorcall OnRender_Rectangle(_In_ bool bBlinkA);
-				void __vectorcall InitPaint(void);
 				void __vectorcall WM_Create(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_SetFocus(void);
 				void __vectorcall WM_KillFocus(void);
 				void __vectorcall WM_Char(_In_ WPARAM wParam);
 				void __vectorcall WM_LButtonDown(void);
 				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
-				void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResources);
+				void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
+																		_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResources);
 
 			public:
 				void __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResources);
+																		_In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void(__vectorcall* pfnWM_LButtonDown)(COButton*);
 				void(__vectorcall* pfnWM_LButtonUp)(COButton*);
@@ -100,7 +100,7 @@ namespace RePag
 				void __vectorcall SetButtonColor_2_1(_In_ D2D1_COLOR_F& crfButtonColor);
 				void __vectorcall SetButtonColor_3(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall SetButtonColor_3(_In_ D2D1_COLOR_F& crfButtonColor);
-				void __vectorcall LinearGradient(_In_ bool bLinearGradientA);
+				void __vectorcall SetLinearGradient(_In_ bool bLinearGradientA);
 				void __vectorcall StartPoint(D2D1_POINT_2F ptfStartPointA);
 				void __vectorcall EndPoint(D2D1_POINT_2F ptfEndPointA);
 				void __vectorcall Label(const char* pcLabel);
@@ -113,7 +113,8 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COButton* __vectorcall COButtonV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COButton* __vectorcall COButtonV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																													 _In_ STDeviceResources* pstDeviceResources);
 		__declspec(dllexport) COButton* __vectorcall COButtonV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																													 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------

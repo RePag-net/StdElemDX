@@ -55,7 +55,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 													if(pListBox) pListBox->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_KILLFOCUS   : pListBox = (COListBox*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 													if(pListBox->pfnWM_KillFocus){ pListBox->ThreadSafe_Begin(); pListBox->pfnWM_KillFocus(pListBox); pListBox->ThreadSafe_End(); }
@@ -94,7 +94,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_ListBox(_In_ HWND hWnd, _In_ unsigned i
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+void __vectorcall RePag::DirectX::COListBox::COListBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, 
 																												_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	// Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!

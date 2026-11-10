@@ -41,8 +41,6 @@ namespace RePag
 			void __vectorcall WM_Size(_In_ LPARAM lParam);
 			void __vectorcall WM_SetFocus(void);
 			void __vectorcall WM_KillFocus(void);
-			void __vectorcall WM_VScroll(_In_ WPARAM wParam, _In_ LPARAM lParam);
-			void __vectorcall WM_HScroll(void);
 			void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
 			void __vectorcall WM_LButtonDown(_In_ LPARAM lParam);
 			void __vectorcall WM_KeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -53,16 +51,17 @@ namespace RePag
 
 		public:
 			void __vectorcall COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																	 _In_ STDeviceResources* pstDeviceResources); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
+																	 _In_ STDeviceResources* pstDeviceResourcesA); // Note: three numbers uiIDElement, because COScrollBars by COTextBox!!!
 			void(__vectorcall* pfnWM_Char_ShiftReturn)(_In_ COEditBox*);
 			COStringA* __vectorcall Content(_Out_ COStringA* vasInhaltA);
 			void __vectorcall OnPaint(void);
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																														 _In_ STDeviceResources* pstDeviceResources);
 		__declspec(dllexport) COEditBox* __vectorcall COEditBoxV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																						 _In_ STDeviceResources* pstDeviceResources);
+																														 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

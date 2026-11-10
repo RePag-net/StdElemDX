@@ -35,8 +35,8 @@ RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_z_ cons
 	return vTextZeile;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																		 _In_ STDeviceResources* pstDeviceResourcesA)
+RePag::DirectX::COTextLine* __vectorcall RePag::DirectX::COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																		 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COTextLine* vTextZeile = (COTextLine*)VMBlock(vmMemory, sizeof(COTextLine));
 	vTextZeile->COTextLineV(vmMemory, pcWindowName, uiIDElement, pstDeviceResourcesA);
@@ -54,7 +54,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 													if(pTextZeile) pTextZeile->WM_Size(lParam);
 													else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 													return NULL;
-		case WM_INITPAINT		: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT		: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 													return NULL;
 		case WM_SETFOCUS		: ((COTextLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 													return NULL;
@@ -74,8 +74,8 @@ LRESULT CALLBACK RePag::DirectX::WndProc_TextLine(HWND hWnd, unsigned int uiMess
 	return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
-																											_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
+void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmMemory,_In_z_ const char* pcClassName,	_In_z_ const char* pcWindowName,
+																													_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COSelectV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
@@ -85,7 +85,7 @@ void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmM
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
 void __vectorcall RePag::DirectX::COTextLine::COTextLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																											_In_ STDeviceResources* pstDeviceResourcesA)
+																													_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	COTextLineV(vmMemory, pcRePag_TextLine, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 }
@@ -148,7 +148,7 @@ void __vectorcall RePag::DirectX::COTextLine::OnRender(_In_ bool bCaret)
 	ifD2D1Context6->EndDraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COTextLine::InitPaint(void)
+void __vectorcall RePag::DirectX::COTextLine::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);

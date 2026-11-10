@@ -74,14 +74,14 @@ namespace RePag
 				float fBackgroundGradient_Radius_X;
 				float fBackgroundGradient_Radius_Y;
 				void __vectorcall OnRender(_In_ bool bLight_On);
-				void __vectorcall InitPaint(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 
 			protected:
 
 			public:
 				void __vectorcall COLightV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																	 _In_ STDeviceResources* pstDeviceResources);
+																	 _In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall Lightcolor_1_0(_In_ unsigned char ucRed, _In_ unsigned char ucGreen, _In_ unsigned char ucBlue, _In_ float fAlpha);
 				void __vectorcall Lightcolor_1_0(_In_ D2D1_COLOR_F& crfLightColor);
@@ -107,7 +107,7 @@ namespace RePag
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		__declspec(dllexport) COLight* __vectorcall COLightV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																												 _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COLight* __vectorcall COLightV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) COLight* __vectorcall COLightV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, 
 																												 _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}

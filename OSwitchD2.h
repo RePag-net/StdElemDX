@@ -39,7 +39,7 @@ namespace RePag
 
 			private:
 				bool bOn;
-				void __vectorcall InitPaint(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_LButtonUp(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall Background(void);
 
@@ -48,12 +48,12 @@ namespace RePag
 				COStringA asLabel_Off;
 				void __vectorcall OnRender(_In_ bool bBlinkA);
 				void __vectorcall Switch(_In_ bool bOn);
-				void __vectorcall COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResourcesA);
+				void __vectorcall COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																		_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA);
 
 			public:
 				void __vectorcall COSwitchV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																		_In_ STDeviceResources* pstDeviceResources);
+																		_In_ STDeviceResources* pstDeviceResourcesA);
 				void(__vectorcall* pfnWM_LButtonDown)(COSwitch*);
 				void(__vectorcall* pfnWM_LButtonUp)(COSwitch*);
 				bool __vectorcall IsOn(void);
@@ -65,7 +65,8 @@ namespace RePag
 		
 		};
 //---------------------------------------------------------------------------------------------------------------------------------------
-__declspec(dllexport) COSwitch* __vectorcall COSwitchV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
+__declspec(dllexport) COSwitch* __vectorcall COSwitchV(_In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
+																											 _In_ STDeviceResources* pstDeviceResources);
 __declspec(dllexport) COSwitch* __vectorcall COSwitchV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
 																											 _In_ STDeviceResources* pstDeviceResources);
 //---------------------------------------------------------------------------------------------------------------------------------------

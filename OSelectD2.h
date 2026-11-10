@@ -55,7 +55,7 @@ namespace RePag
 				bool __vectorcall GetTextPoint(_In_ char* pcText, _In_ unsigned long ulTextLength, _Out_ D2D_SIZE_F& szfTextPoint);
 				inline long __vectorcall FloatToLong(_In_ float fNumber);
 				void __vectorcall COSelectV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
-																	_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
+																		_In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResourcesA);
 
 			public:
 				VMEMORY __vectorcall COFreiV(void);

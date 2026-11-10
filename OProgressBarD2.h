@@ -43,7 +43,7 @@ namespace RePag
 				D2D1_COLOR_F crfFillColor;
 				ID2D1SolidColorBrush* ifFillColor;
 				ID2D1RectangleGeometry* ifProgressBar;
-				void __vectorcall InitPaint(void);
+				void __vectorcall WM_InitPaint(void);
 				void __vectorcall WM_Size(_In_ LPARAM lParam);
 				void __vectorcall WM_LButtonDown(_In_ WPARAM wParam, _In_ LPARAM lParam);
 				void __vectorcall WM_MouseMove(_In_ WPARAM wParam, _In_ LPARAM lParam);
@@ -52,7 +52,8 @@ namespace RePag
 			protected:
 
 			public:
-				void __vectorcall COProgressBarV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcFensterName, _In_ unsigned int uiIDElementA, _In_ STDeviceResources* pstDeviceResources);
+				void __vectorcall COProgressBarV(_In_ VMEMORY vmSpeicher, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA, 
+																				 _In_ STDeviceResources* pstDeviceResourcesA);
 				VMEMORY __vectorcall COFreiV(void);
 				void __vectorcall SetPosition_Max(_In_ unsigned long ulPosition);
 				void __vectorcall SetPosition_Min(_In_ unsigned long ulPosition);
@@ -65,9 +66,10 @@ namespace RePag
 
 		};
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		__declspec(dllexport) COProgressBar* __vectorcall COProgressBarV(_In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
-		__declspec(dllexport) COProgressBar* __vectorcall COProgressBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement,
+		__declspec(dllexport) COProgressBar* __vectorcall COProgressBarV(_In_z_ const char* pcWindowsName, _In_ unsigned int uiIDElement,
 																																		 _In_ STDeviceResources* pstDeviceResources);
+		__declspec(dllexport) COProgressBar* __vectorcall COProgressBarV(_In_ VMEMORY vmMemory, _In_z_ const char* pcWindowsName,
+																																		 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources);
 		//---------------------------------------------------------------------------------------------------------------------------------------
 	}
 }

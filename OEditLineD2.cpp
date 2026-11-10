@@ -37,8 +37,8 @@ RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_z_ cons
 	return vEditLine;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElement,
-																																		 _In_ STDeviceResources* pstDeviceResources)
+RePag::DirectX::COEditLine* __vectorcall RePag::DirectX::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcWindowName,
+																																		 _In_ unsigned int uiIDElement, _In_ STDeviceResources* pstDeviceResources)
 {
 	COEditLine* vEditLine = (COEditLine*)VMBlock(vmMemory, sizeof(COEditLine));
 	vEditLine->COEditLineV(vmMemory, pcWindowName, uiIDElement, pstDeviceResources);
@@ -56,7 +56,7 @@ LRESULT CALLBACK RePag::DirectX::WndProc_EditLine(_In_ HWND hWnd, _In_ unsigned 
 														if(pEditLine)	pEditLine->WM_Size(lParam);
 														else return DefWindowProc(hWnd, uiMessage, wParam, lParam);
 														return NULL;
-		case WM_INITPAINT			: ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->InitPaint();
+		case WM_INITPAINT			: ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_InitPaint();
 														return NULL;
 		case WM_SETFOCUS      : ((COEditLine*)GetWindowLongPtr(hWnd, GWLP_USERDATA))->WM_SetFocus();
 														return NULL;
@@ -106,8 +106,8 @@ void CALLBACK RePag::DirectX::Timer_Caret_EditLine(_In_ void* pvParam, _In_ bool
 	_EditLine->ThreadSafe_End();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName, _In_ unsigned int uiIDElementA,
-																													_In_ STDeviceResources* pstDeviceResourcesA)
+void __vectorcall RePag::DirectX::COEditLine::COEditLineV(_In_ const VMEMORY vmMemory, _In_z_ const char* pcClassName, _In_z_ const char* pcWindowName,
+																													_In_ unsigned int uiIDElementA,	_In_ STDeviceResources* pstDeviceResourcesA)
 {
 	 COTextLineV(vmMemory, pcClassName, pcWindowName, uiIDElementA, pstDeviceResourcesA);
 
@@ -138,7 +138,7 @@ VMEMORY __vectorcall RePag::DirectX::COEditLine::COFreiV(void)
 	return ((COTextLine*)this)->COFreiV();
 }
 //---------------------------------------------------------------------------------------------------------------------------------------
-void __vectorcall RePag::DirectX::COEditLine::InitPaint(void)
+void __vectorcall RePag::DirectX::COEditLine::WM_InitPaint(void)
 {
 	ifD2D1Context6->CreateSolidColorBrush(crfText, &ifTextColor);
 	ifD2D1Context6->CreateSolidColorBrush(crfSelectBack, &ifSelectBackColor);
